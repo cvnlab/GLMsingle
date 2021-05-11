@@ -18,7 +18,12 @@ and then TBD...
 
 To install: 
 
-Code dependencies:
+```bash
+pip install -r requirements.txt
+pip install .
+```
+
+Code dependencies: see requirements.txt
 
 ## Additional information
 
