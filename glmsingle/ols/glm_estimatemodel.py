@@ -2,13 +2,13 @@ import time
 import numpy as np
 from itertools import compress
 from tqdm import tqdm
-from glmdenoise.check_inputs import check_inputs
-from glmdenoise.cod.calc_cod import calc_cod, calc_cod_stack
-from glmdenoise.hrf.gethrf import getcanonicalhrf
-from glmdenoise.hrf.normalisemax import normalisemax
-from glmdenoise.ols.fit_model import fit_model
-from glmdenoise.ols.glm_predictresponses import glm_predictresponses
-from glmdenoise.ols.make_poly_matrix import (make_polynomial_matrix,
+from glmsingle.check_inputs import check_inputs
+from glmsingle.cod.calc_cod import calc_cod, calc_cod_stack
+from glmsingle.hrf.gethrf import getcanonicalhrf
+from glmsingle.hrf.normalisemax import normalisemax
+from glmsingle.ols.fit_model import fit_model
+from glmsingle.ols.glm_predictresponses import glm_predictresponses
+from glmsingle.ols.make_poly_matrix import (make_polynomial_matrix,
                                              make_projection_matrix)
 
 

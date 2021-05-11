@@ -1,6 +1,6 @@
 import numpy as np
-from glmdenoise.utils.robustrange import robustrange
-from glmdenoise.utils.picksubset import picksubset
+from glmsingle.utils.robustrange import robustrange
+from glmsingle.utils.picksubset import picksubset
 from sklearn.mixture import GaussianMixture as gmdist
 import matplotlib.pyplot as plt
 

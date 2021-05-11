@@ -1,6 +1,6 @@
 import numpy as np
-from glmdenoise.design.construct_stim_matrices import construct_stim_matrices
-from glmdenoise.design.convolve_design import convolve_design
+from glmsingle.design.construct_stim_matrices import construct_stim_matrices
+from glmsingle.design.convolve_design import convolve_design
 
 
 def glm_predictresponses(model, design, tr, numtimepoints, dimdata=0):

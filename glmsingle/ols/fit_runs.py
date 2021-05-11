@@ -1,5 +1,5 @@
 import numpy as np
-from glmdenoise.ols.olsmatrix import olsmatrix
+from glmsingle.ols.olsmatrix import olsmatrix
 import warnings
 warnings.simplefilter(action="ignore", category=FutureWarning)
 

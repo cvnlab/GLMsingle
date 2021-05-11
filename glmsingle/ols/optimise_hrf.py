@@ -1,9 +1,9 @@
 import numpy as np
-from glmdenoise.cod.calc_cod import calc_cod, calc_cod_stack
-from glmdenoise.design.construct_stim_matrices import construct_stim_matrices
-from glmdenoise.design.make_design_matrix import make_design
-from glmdenoise.ols.mtimes_stack import mtimes_stack
-from glmdenoise.ols.olsmatrix import olsmatrix
+from glmsingle.cod.calc_cod import calc_cod, calc_cod_stack
+from glmsingle.design.construct_stim_matrices import construct_stim_matrices
+from glmsingle.design.make_design_matrix import make_design
+from glmsingle.ols.mtimes_stack import mtimes_stack
+from glmsingle.ols.olsmatrix import olsmatrix
 
 
 def optimise_hrf(

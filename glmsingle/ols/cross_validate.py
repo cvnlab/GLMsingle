@@ -2,11 +2,11 @@ import numpy as np
 from itertools import compress
 from tqdm import tqdm
 import warnings
-from glmdenoise.cod.r2_nom_denom import R2_nom_denom
-from glmdenoise.ols.fit_runs import fit_runs
-from glmdenoise.ols.make_poly_matrix import (make_polynomial_matrix,
+from glmsingle.cod.r2_nom_denom import R2_nom_denom
+from glmsingle.ols.fit_runs import fit_runs
+from glmsingle.ols.make_poly_matrix import (make_polynomial_matrix,
                                              make_projection_matrix)
-from glmdenoise.ols.whiten_data import whiten_data
+from glmsingle.ols.whiten_data import whiten_data
 warnings.simplefilter(action="ignore", category=FutureWarning)
 
 

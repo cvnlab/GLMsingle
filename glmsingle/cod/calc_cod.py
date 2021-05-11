@@ -1,5 +1,5 @@
 import numpy as np
-from glmdenoise.utils.zerodiv import zerodiv
+from glmsingle.utils.zerodiv import zerodiv
 
 
 def calc_cod(x, y, dim=None, wantgain=0, wantmeansub=1):

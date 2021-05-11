@@ -1,7 +1,7 @@
 
 import numpy as np
-from glmdenoise.utils.choose import choose as ch
-from glmdenoise.utils.isrowvector import isrowvector as isr
+from glmsingle.utils.choose import choose as ch
+from glmsingle.utils.isrowvector import isrowvector as isr
 
 
 def normalisemax(m, dim=None):

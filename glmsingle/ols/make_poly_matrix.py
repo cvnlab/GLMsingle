@@ -1,4 +1,4 @@
-from glmdenoise.ols.olsmatrix import olsmatrix_ulen
+from glmsingle.ols.olsmatrix import olsmatrix_ulen
 from sklearn.preprocessing import normalize
 import numpy as np
 

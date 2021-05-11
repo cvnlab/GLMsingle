@@ -1,7 +1,7 @@
 
 import numpy as np
-from glmdenoise.ols.make_poly_matrix import (make_polynomial_matrix,
-                                             make_projection_matrix)
+from glmsingle.ols.make_poly_matrix import (make_polynomial_matrix,
+                                            make_projection_matrix)
 import warnings
 warnings.simplefilter(action="ignore", category=FutureWarning)
 
