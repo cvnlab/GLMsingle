@@ -6,6 +6,9 @@ in fMRI time-series data. We provide both MATLAB and Python implementations.
 GLMsingle can be viewed as a wholesale replacement of its predecessor,
 GLMdenoise (http://github.com/kendrickkay/GLMdenoise).
 
+For additional information, please see the Wiki page of
+the GLMsingle repository (http://github.com/kendrickkay/GLMsingle).
+
 ## MATLAB
 
 To use the GLMsingle toolbox, add it to your MATLAB path:
