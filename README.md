@@ -39,7 +39,7 @@ repository: https://github.com/kendrickkay/GLMsingle/wiki
 Terms of use: This content is licensed under a BSD 3-Clause License.
 
 If you use GLMsingle in your research, please cite the following paper:
-*  Allen, E.J., St-Yves, G., Wu, Y., Breedlove, J.L., Dowdle, L.T., Caron, B., Pestilli, F., Charest, I., Hutchinson, J.B., Naselaris, T.\*, Kay, K.\* A massive 7T fMRI dataset to bridge cognitive and computational neuroscience. bioRxiv (2021).
+* [Allen, E.J., St-Yves, G., Wu, Y., Breedlove, J.L., Dowdle, L.T., Caron, B., Pestilli, F., Charest, I., Hutchinson, J.B., Naselaris, T.\*, Kay, K.\* A massive 7T fMRI dataset to bridge cognitive and computational neuroscience. bioRxiv (2021).](https://www.biorxiv.org/content/10.1101/2021.02.22.432340v1)
 
 ## Change history
 
