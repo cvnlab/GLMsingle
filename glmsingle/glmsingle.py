@@ -258,7 +258,8 @@ class GLM_single():
 
         params = params or dict()
         for key, _ in default_params.items():
-            params[key] = params.get(key) or default_params[key]
+            if key not in params.keys():
+		            params[key] = default_params[key]
 
         self.params = params
 
@@ -462,7 +463,7 @@ class GLM_single():
 
         # deal with special library stuff
         if params['wantlibrary'] == 0:
-            params['hrflibrary'] = params['hrftoassume']
+            params['hrflibrary'] = params['hrftoassume'].reshape(-1,1)
 
         # calc
         # if the data was passed as 3d, unpack xyz
@@ -1014,44 +1015,44 @@ class GLM_single():
                         results0,
                         params['sessionindicator']
                         )  # voxels x regularization levels
-        # compute xvaltrend
-        ix = np.flatnonzero(
-            (onoffR2.flatten() > params['pcR2cutoff']) * (np.asarray(
-                params['pcR2cutoffmask']).flatten()))  # vector of indices
+            # compute xvaltrend
+            ix = np.flatnonzero(
+                (onoffR2.flatten() > params['pcR2cutoff']) * (np.asarray(
+                    params['pcR2cutoffmask']).flatten()))  # vector of indices
 
-        if ix.size == 0:
-            print(
-                'Warning: no voxels passed the pcR2cutoff'
-                'and pcR2cutoffmask criteria. Using the'
-                'best 100 voxels.\n')
-            if params['pcR2cutoffmask'] == 1:
-                ix2 = np.flatnonzero(np.ones(onoffR2.shape))
-            else:
-                ix2 = np.flatnonzero(params['pcR2cutoffmask'] == 1)
+            if ix.size == 0:
+                print(
+                    'Warning: no voxels passed the pcR2cutoff'
+                    'and pcR2cutoffmask criteria. Using the'
+                    'best 100 voxels.\n')
+                if params['pcR2cutoffmask'] == 1:
+                    ix2 = np.flatnonzero(np.ones(onoffR2.shape))
+                else:
+                    ix2 = np.flatnonzero(params['pcR2cutoffmask'] == 1)
 
-            np.testing.assert_equal(
-                len(ix2) > 0, True, err_msg='no voxels are in pcR2cutoffmask')
+                np.testing.assert_equal(
+                    len(ix2) > 0, True, err_msg='no voxels are in pcR2cutoffmask')
 
-            ix3 = np.argsort(onoffR2[ix2])[::-1]
-            num = np.min([100, len(ix2)])
-            ix = ix2[ix3[range(num)]]
+                ix3 = np.argsort(onoffR2[ix2])[::-1]
+                num = np.min([100, len(ix2)])
+                ix = ix2[ix3[range(num)]]
 
-        # NOTE: sign flip so that high is good
-        xvaltrend = -np.median(glmbadness[ix, :], axis=0)
-        np.testing.assert_equal(np.all(np.isfinite(xvaltrend)), True)
+            # NOTE: sign flip so that high is good
+            xvaltrend = -np.median(glmbadness[ix, :], axis=0)
+            np.testing.assert_equal(np.all(np.isfinite(xvaltrend)), True)
 
-        # create for safe-keeping
-        pcvoxels = np.zeros((nx*ny*nz), dtype=bool)
-        pcvoxels[ix] = 1
+            # create for safe-keeping
+            pcvoxels = np.zeros((nx*ny*nz), dtype=bool)
+            pcvoxels[ix] = 1
 
-        # choose number of PCs
-        # this is the performance curve that starts
-        # at 0 (corresponding to 0 PCs)
-        pcnum = select_noise_regressors(xvaltrend, params['pcstop'])
+            # choose number of PCs
+            # this is the performance curve that starts
+            # at 0 (corresponding to 0 PCs)
+            pcnum = select_noise_regressors(xvaltrend, params['pcstop'])
 
-        # deal with dimensions
-        # NOTE skip for now
-        # glmbadness = np.reshape(glmbadness, [nx, ny, nz, -1])
+            # deal with dimensions
+            # NOTE skip for now
+            # glmbadness = np.reshape(glmbadness, [nx, ny, nz, -1])
 
         # FIT TYPE-C + TYPE-D MODELS [FITHRF_GLMDENOISE, FITHRF_GLMDENOISE_RR]
 
