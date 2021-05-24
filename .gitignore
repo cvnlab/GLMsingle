@@ -114,3 +114,8 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# mat and npy files
+*.mat
+*.npy
+
