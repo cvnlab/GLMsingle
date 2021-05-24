@@ -30,16 +30,20 @@ clc
 whos
 
 % data -> Consists of several runs of 4D volume files (x,y,z,t)  where
-% (t)ime is the 4th dimention.
+% (t)ime is the 4th dimention. In this example data consists of only a %
+% single slice and and has been prepared with a 1 sec TR.
 
-% ROI -> Manually defined region in the occipital cortex. It is a binary 
-% mask where 1 corresponds to the cortical area that responded to visual 
+
+% ROI -> Manually defined region in the occipital cortex. It is a binary
+% mask where 1 corresponds to the cortical area that responded to visual
 % stimuli in the NSD project
 
 fprintf('There are %d runs in total.\n',length(design));
 fprintf('The dimensions of the data for the first run are %s.\n',mat2str(size(data{1})));
 fprintf('The stimulus duration is %.6f seconds.\n',stimdur);
 fprintf('The sampling rate (TR) is %.6f seconds.\n',tr);
+
+%%
 
 figure(1);clf
 %Show example design matrix.
@@ -58,11 +62,9 @@ end
 % design matrix is binary with 1 specfing the time (TR) when stimulus is
 % presented on the screen.
 
-% In this NSD scan session there were 571 distinct images shown and hence 
-% there are 571 predictor columns. Notice that white square are pseudo 
-% randomized they indicate when the presentaion of each image occurs. 
-
-
+% In this NSD scan session there were 571 distinct images shown and hence
+% there are 571 predictor columns. Notice that white square are pseudo
+% randomized they indicate when the presentaion of each image occurs.
 set(gcf,'Position',[ 1000         786         861         552])
 %%
 % Show an example slice of the average fMRI volume
@@ -92,7 +94,7 @@ set(gca,'FontSize',15)
 % wantfracridge = 1  -> Use ridge regression to improve beta estimates
 % chunknum = 50000 -> is the number of voxels that we will process at the
 %   same time. For setups with lower memory deacrease this number.
-% 
+%
 
 % wantmemoryoutputs is a logical vector [A B C D] indicating which of the
 %     four model types to return in the output <results>. The user must be careful with this,
@@ -113,7 +115,7 @@ set(gca,'FontSize',15)
 opt = struct('wantmemoryoutputs',[1 1 1 1]);
 % [results] = GLMestimatesingletrial(design,data,stimdur,tr,dataset,opt);
 load results
-% We assing outputs from GLMestimatesingletrial to "models" structure
+% We assign outputs from GLMestimatesingletrial to "models" structure
 models.FIT_HRF = results{2};
 models.FIT_HRF_GLMDENOISE = results{3};
 models.FIT_HRF_GLMDENOISE_RR = results{4};
@@ -250,33 +252,35 @@ for m = 1 : length(model_names)
     vox_reliabilities{m} = calccorrelation(betas_reshaped(:,:,:,1,:),betas_reshaped(:,:,:,2,:),5);
     
 end
-%% Plot reliability index as an overlay.
+%% Plot split-half reliability as an overlay.
 figure(4);clf
-
-
-    
-%calculate mean volume across runs and TRs - for visalization purposes only
+% figure; hold on;
 for m = 1 : 4
     
     vox_reliability = vox_reliabilities{m};
-    subplot(2,2,m);
     underlay = data{1}(:,:,:,1);
     ROI(ROI~=1) = NaN;
-    overlay = vox_reliability.*ROI;
-    imagesc(underlay); colormap gray
-    freezeColors
-    hold on;
-    imAlpha = ones(size(overlay));
-    imAlpha(isnan(overlay)) = 0;
-    imagesc(overlay, 'AlphaData', imAlpha,[-0.5 0.5]);
+    overlay = vox_reliability;
+    
+    im1 = cmaplookup(underlay,min(underlay(:)),max(underlay(:)),[],gray(256));
+    im2 = cmaplookup(overlay,-0.5,0.5,[],hot(256));
+    
+    mask = ROI==1;
+        
+    subplot(2,2,m);
+    hold on
+    imagesc(im1);
+    imagesc(im2, 'AlphaData', mask);
+    hold off
+
     colormap hot
     axis image  off
-    title(model_names{m},'Interpreter','None')
-    drawnow
     c = colorbar;
-    c.Label.String = 'Reliabiliy Index';
-    set(gca,'Fontsize',15)
-    
+    c.Label.String = 'Split-half reliability';
+    c.Ticks = [0 0.5 1];
+    c.TickLabels = {'-0.5';'0';'0.5'};
+    set(gca,'FontSize',15)
+
 end
 set(gcf,'Position',[ 1000         786         861         552])
 %% Plot median reliability for each GLM.
@@ -284,9 +288,9 @@ figure(5);clf
 
 
 cmap = [0.2314    0.6039    0.6980
-        0.8615    0.7890    0.2457
-        0.8824    0.6863         0
-        0.9490    0.1020         0];
+    0.8615    0.7890    0.2457
+    0.8824    0.6863         0
+    0.9490    0.1020         0];
 % For each GLM type we calculate median reliability for voxels within the
 % visual ROI.
 
@@ -302,4 +306,4 @@ xtickangle(0)
 xticks([])
 ylim([0.1 0.2])
 set(gcf,'Position',[ 1000         585         650         753])
-title('mean voxel split-half reliability of GLM models')
+title('Median voxel split-half reliability of GLM models')
