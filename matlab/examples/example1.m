@@ -1,11 +1,12 @@
 %% Add dependencies and download the data.
 
-% add path to GLMsingle
+
+% Add path to GLMsingle
+addpath(genpath('./../'))
+
 % You also need fracridge repository to run this code
 % https://github.com/nrdg/fracridge.git
-
-addpath(genpath('./../'))
-addpath(genpath('/Users/jankurzawski/Documents/fracridge'))
+addpath(genpath('/Users/jk7127/Documents/fracridge'))
 
 clear
 clc
@@ -22,7 +23,7 @@ if ~exist('./data/nsdcoreexampledataset.mat','file')
     !curl -L --output ./data/nsdcoreexampledataset.mat https://osf.io/k89b2/download
 end
 load('./data/nsdcoreexampledataset.mat')
-% Data comes from subject1, session1 from NSD dataset
+% Data comes from subject1, NSD01 session from NSD dataset.
 % https://www.biorxiv.org/content/10.1101/2021.02.22.432340v1.full.pdf
 %% Data overview.
 clc
@@ -31,33 +32,42 @@ whos
 % data -> Consists of several runs of 4D volume files (x,y,z,t)  where
 % (t)ime is the 4th dimention.
 
-% design -> Each run has a corresponding design matrix where each colum
-% describes single condition (conditions are repeated across runs). Each
-% design matrix is binary with 1 specfing the time (TR) when stimulus is
-% presented on the screen.
-% ROI -> Manually defined region in the occipital cortex.
+% ROI -> Manually defined region in the occipital cortex. It is a binary 
+% mask where 1 corresponds to the cortical area that responded to visual 
+% stimuli in the NSD project
 
 fprintf('There are %d runs in total.\n',length(design));
 fprintf('The dimensions of the data for the first run are %s.\n',mat2str(size(data{1})));
 fprintf('The stimulus duration is %.6f seconds.\n',stimdur);
 fprintf('The sampling rate (TR) is %.6f seconds.\n',tr);
 
-figure(1);clf % Show example design matrix.
+figure(1);clf
+%Show example design matrix.
 
 for d = 1
     imagesc(design{d}); colormap gray; drawnow
     xlabel('Conditions')
     ylabel('TRs')
     title(sprintf('Design matrix for run%i',d))
-    set(gca,'YDir','normal')
     axis image
 end
+
+
+% design -> Each run has a corresponding design matrix where each colum
+% describes single condition (conditions are repeated across runs). Each
+% design matrix is binary with 1 specfing the time (TR) when stimulus is
+% presented on the screen.
+
+% In this NSD scan session there were 571 distinct images shown and hence 
+% there are 571 predictor columns. Notice that white square are pseudo 
+% randomized they indicate when the presentaion of each image occurs. 
+
+
 set(gcf,'Position',[ 1000         786         861         552])
 %%
-% Show an example slice of the first fMRI volume
+% Show an example slice of the average fMRI volume
 figure(2);clf
-
-imagesc(makeimagestack(data{1}(:,:,:,1)));
+imagesc(data{1}(:,:,:,1));
 colormap(gray);
 axis equal tight;
 c=colorbar;
@@ -67,8 +77,8 @@ axis off
 c.Label.String = 'T2*w intensity';
 set(gca,'FontSize',15)
 %% Call GLMestimatesingletrial with default parameters.
-% Outputs and figures will be stored in folder in the current directory or 
-% saved to the results variable which is the only output of 
+% Outputs and figures will be stored in folder in the current directory or
+% saved to the results variable which is the only output of
 % GLMestimatesingletrial
 
 % Optional parameters below can be assigned to a variable i.e
@@ -80,8 +90,9 @@ set(gca,'FontSize',15)
 % wantlibrary = 1 -> Fit hRF to each voxel
 % wantglmdenoise = 1 -> Use GLMdenoise
 % wantfracridge = 1  -> Use ridge regression to improve beta estimates
-% chunknum = 5000 -> is the number of voxels that we will process at the
-% same time. For setups with lower memory deacrease this number.
+% chunknum = 50000 -> is the number of voxels that we will process at the
+%   same time. For setups with lower memory deacrease this number.
+% 
 
 % wantmemoryoutputs is a logical vector [A B C D] indicating which of the
 %     four model types to return in the output <results>. The user must be careful with this,
@@ -96,33 +107,56 @@ set(gca,'FontSize',15)
 %     C = 0/1 for saving the results of the FITHRF_GLMDENOISE model
 %     D = 0/1 for saving the results of the FITHRF_GLMDENOISE_RR model
 %     Default: [1 1 1 1] which means save all computed results to disk.
-% [results] = GLMestimatesingletrial(design,data,stimdur,tr,dataset);
-load('results')
+
+
+% For the purpose of this example we will keep all outputs in the memory
+opt = struct('wantmemoryoutputs',[1 1 1 1]);
+% [results] = GLMestimatesingletrial(design,data,stimdur,tr,dataset,opt);
+load results
+% We assing outputs from GLMestimatesingletrial to "models" structure
+models.FIT_HRF = results{2};
+models.FIT_HRF_GLMDENOISE = results{3};
+models.FIT_HRF_GLMDENOISE_RR = results{4};
+
+
 %% Important outputs.
 
 % R2 -> is model accuracy expressed in terms of R^2 (percentage).
 % modelmd -> is the full set of single-trial beta weights (X x Y x Z x
 % TRIALS). Beta weights are arranged in a chronological order)
-% HRFindex -> is the 1-index of the best fit HRF. HRFs can be recovered 
+% HRFindex -> is the 1-index of the best fit HRF. HRFs can be recovered
 % with getcanonicalhrflibrary(stimdur,tr)
 % FRACvalue -> is the fractional ridge regression regularization level
 % chosen for each voxel.
 
-%% Plot a slice of brain with GLMSingle outputs.
+%% Plot a slice of brain with GLMSingle outputs for FIT_HRF_GLMDENOISE_RR model.
 
 slice = 1;
-val2plot = {'meanvol';'R2';'HRFindex';'FRACvalue'};
-cmaps = {gray;hot;jet;copper};
+val2plot = {'modelmd';'R2';'HRFindex';'FRACvalue'};
+cmaps = {hot;hot;jet;copper};
 figure(3);clf
 
 for v = 1 : length(val2plot)
     f=subplot(2,2,v);
-    imagesc(results{4}.(val2plot{v})(:,:,slice)); axis off image;
-    colormap(f,cmaps{v}) % Error message is related to this line
+    
+    if contains('modelmd',val2plot{v})
+        
+        imagesc(nanmean(results{4}.(val2plot{v})(:,:,slice),4),[0 10]); axis off image;
+        title('BETA WEIGHT (averaged across conditions)')
+        
+    else
+        
+        imagesc(results{4}.(val2plot{v})(:,:,slice)); axis off image;
+        title(val2plot{v})
+        
+    end
+    
+    colormap(f,cmaps{v})
     colorbar
-    title(val2plot{v})
-    set(gca,'FontSize',15)    
+    
+    set(gca,'FontSize',15)
 end
+
 set(gcf,'Position',[ 1000         786         861         552])
 %% Run standard GLM.
 % Additionally, for comparison purposes we are going to run standard GLM
@@ -134,15 +168,12 @@ opt.wantfracridge = 0; % switch off Ridge regression
 opt.wantfileoutputs =[0 0 0 0];
 opt.wantmemoryoutputs =[0 1 0 0];
 [ASSUME_HRF] = GLMestimatesingletrial(design,data,stimdur,tr,NaN,opt);
-% Results are going to be stored in ASSUME_HRF variable.
-%%
-cmap = [0.2314    0.6039    0.6980
-        0.8615    0.7890    0.2457
-        0.8824    0.6863         0
-        0.9490    0.1020         0];
-models = {'';'TYPEB_FITHRF.mat';'TYPEC_FITHRF_GLMDENOISE.mat';'TYPED_FITHRF_GLMDENOISE_RR.mat'};
-%No need to load ASSUME_HRF as it is already in matlab's memory
-model_names = {'ASSUME_HRF','FIT_HRF','FIT_HRF_GLMDENOISE','FIT_HRF_GLMDENOISE_RR'};
+
+% We assing outputs from GLMestimatesingletrial to "models" structure
+models.ASSUME_HRF = ASSUME_HRF{2};
+
+%% Now "models" variable hold solutions for 4 GLM models
+disp(fieldnames(models))
 %% Compare GLM results.
 % To compare the results of different GLMs we are going to calculate the
 % reliablity voxel-wise index for each model. Reliablity index represents a
@@ -150,98 +181,89 @@ model_names = {'ASSUME_HRF','FIT_HRF','FIT_HRF_GLMDENOISE','FIT_HRF_GLMDENOISE_R
 % stimuli. In short, we are going to check how reliable/reproducible are
 % single trial responses to repeated images estimated with each GLM type.
 
-% First, we are going to locate the indices in the beta weight GLMsingle
-% outputs modelmd(x,y,z,trials) that correspond to repated images. Here we
-% only consider stimuli that have been repeated once. For the purpose of
-% the example we ignore the 3rd repetition of the stimulus.
-condition = zeros(size(design{1},1),length(design));
-newdesign = design;
-for r = 1 : length(design)
-    dm = full(design{r});
-    newdm = zeros(size(dm));
-    for cond = 1 : size(dm,2)
-        tmp = dm(:,cond) == 1;
-        newdm(tmp,cond) = cond;
+% This NSD scan session has a large number of images that are just shown once
+% during the session, some images that are shown twice, and a few that are
+% shown three times. In the code below, we are attempting to locate the
+% indices in the beta weight GLMsingle outputs modelmd(x,y,z,trials) that
+% correspond to repated images. Here we only consider stimuli that have
+% been repeated once. For the purpose of the example we ignore the 3rd
+% repetition of the stimulus.
+
+% consolidate design matrices
+designALL = cat(1,design{:});
+
+% compute a vector containing 1-indexed condition numbers in chronological order.
+corder = [];
+for p=1:size(designALL,1)
+    if any(designALL(p,:))
+        corder = [corder find(designALL(p,:))];
     end
-    
-    condition(:,r) = sum(newdm,2);
 end
 
-condition(condition==0) = [];
-unique_betas = unique(condition);
-duplicates = cell(1,length(unique_betas))';
+% let's take a look at the first few entries
+corder(1:3)
 
-for u = 1:length(unique_betas)    
-    duplicates{u} = find(condition==unique_betas(u));
+% Note that [375 497 8] means that the first stimulus trial involved
+% presentation of the 375th condition, the second stimulus trial involved
+% presentation of the 497th condition, and so on.
+
+% in order to compute split-half reliability, we have to do some indexing.
+% we want to find images with least two repetitions and then prepare a useful
+% matrix of indices that refer to when these occur.
+repindices = [];  % 2 x images containing stimulus trial indices.
+% the first row refers to the first presentation;
+% the second row refers to the second presentation.
+for p=1:size(designALL,2)  % loop over every condition
+    temp = find(corder==p);
+    if length(temp) >= 2
+        repindices = cat(2,repindices,[temp(1); temp(2)]);  % note that for images with 3 presentations, we are simply ignoring the third trial
+    end
 end
 
-% Find images that have been repeated at least twice.
-Idx = cellfun(@(x) (length(x) > 1), duplicates);
-duplicates=(duplicates(Idx));
-maxRep = max(cellfun(@(x) (length(x)), duplicates));
-duplicates_mat = NaN(length(duplicates),maxRep);
+% let's take a look at a few entries
+repindices(:,1:3)
 
-for d = 1 : length(duplicates_mat)    
-    duplicates_mat(d,1:length(duplicates{d})) = duplicates{d};
-end
 
-fprintf('There are %i repeated images in the experiment \n',length(duplicates))
+fprintf('There are %i repeated images in the experiment \n',length(repindices))
 
-% For each voxel we are going to correlate beta weights describing the 
-% response to images presented for the first time for each condition 
-% with beta weights describing the response from the repetition of the same
-% image. With 136 repeated images R value for each voxel will correspond 
+% Now, for each voxel we are going to correlate beta weights describing the
+% response to images presented for the first time  with beta weights
+% describing the response from the repetition of the same
+% image. With 136 repeated images R value for each voxel will correspond
 % to correlation between vectors with 136 beta weights.
 
 %% Calculate reliability index.
 
+model_names = fieldnames(models);
+% We arrange models from least to most sophisticated
+model_names = model_names([4 1 2 3]);
 vox_reliabilities = cell(1,length(models));
 
-for m = 1 : 4
-    %load GLM model    
-    if m == 1
-        betas=ASSUME_HRF{2}.modelmd;
-        %No need to laod the data as it is stored in matlab's memory in
-        %ASSUME_HRF variable
-    else
-        load(sprintf('./nsdcore/%s',models{m}))
-        betas = modelmd;
-    end
+for m = 1 : length(model_names)
     
-    dims = size(betas);
-    Xdim = dims(1);
-    Ydim = dims(2);
-    Zdim = dims(3);
-    vox_reliability = NaN(Xdim, Ydim, Zdim);
+    % Notice that the first condition is presented on the 217th stimulus trial
+    % and the 486th stimulus trial, the second condition is presented on the
+    % 218th and 621st stimulus trials, and so on.
+    % Finally, let's compute some split-half reliability.
+    betas = models.(model_names{m}).modelmd(:,:,:,repindices);  % use indexing to pull out the trials we want
+    betas_reshaped = reshape(betas,size(betas,1),size(betas,2),size(betas,3),2,[]);  % reshape to X x Y x Z x 2 x CONDITIONS
+    vox_reliabilities{m} = calccorrelation(betas_reshaped(:,:,:,1,:),betas_reshaped(:,:,:,2,:),5);
     
-    %For each voxel we find beta weights corresponding to the first
-    %presentation of the image and second presentaion of the same image.
-    
-    for i = 1:Xdim
-        for j = 1:Ydim
-            for k = 1:Zdim      
-                vox_data = squeeze(betas(i,j,k,:));
-                repetition_1 = vox_data(duplicates_mat(:,1));
-                repetition_2 = vox_data(duplicates_mat(:,2));
-                r = corr(repetition_1, repetition_2);
-                vox_reliability(i,j,k) = r;                
-            end
-        end
-    end
-    %We store results for each model
-    vox_reliabilities{m} = vox_reliability;    
 end
 %% Plot reliability index as an overlay.
 figure(4);clf
 
+
+    
+%calculate mean volume across runs and TRs - for visalization purposes only
 for m = 1 : 4
     
     vox_reliability = vox_reliabilities{m};
     subplot(2,2,m);
-    data = meanvol(:,:);
+    underlay = data{1}(:,:,:,1);
     ROI(ROI~=1) = NaN;
     overlay = vox_reliability.*ROI;
-    imagesc(data); colormap gray
+    imagesc(underlay); colormap gray
     freezeColors
     hold on;
     imAlpha = ones(size(overlay));
@@ -260,7 +282,12 @@ set(gcf,'Position',[ 1000         786         861         552])
 %% Plot median reliability for each GLM.
 figure(5);clf
 
-% For each GLM type we calculate median reliability for voxels within the 
+
+cmap = [0.2314    0.6039    0.6980
+        0.8615    0.7890    0.2457
+        0.8824    0.6863         0
+        0.9490    0.1020         0];
+% For each GLM type we calculate median reliability for voxels within the
 % visual ROI.
 
 for m = 1 : 4
