@@ -180,7 +180,7 @@ for v = 1 : length(val2plot)
 end
 
 set(gcf,'Position',[418   412   782   605])
-%% Run standard GLM.
+%% Run a standard GLM.
 
 % Additionally, for comparison purposes we are going to run a standard GLM
 % without HRF fitting, GLMdenoise or ridge regression regularization. We
