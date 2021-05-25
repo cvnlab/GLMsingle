@@ -136,8 +136,10 @@ set(gca,'FontSize',15)
 opt = struct('wantmemoryoutputs',[1 1 1 1]);
 [results] = GLMestimatesingletrial(design,data,stimdur,tr,dataset,opt);
 % We assign outputs of GLMestimatesingletrial to "models" structure. Note
-% that results{1} contains GLM estimates from a single ON/OFF model where
-% all images are treated as the same conditions
+% that results{1} contains GLM estimates from a ON/OFF model where
+% all images are treated as the same condition. These estimates could be
+% potentially usefull to find cortical areas that respond to visual
+% stimuli.
 models.FIT_HRF = results{2};
 models.FIT_HRF_GLMdenoise = results{3};
 models.FIT_HRF_GLMdenoise_RR = results{4};
