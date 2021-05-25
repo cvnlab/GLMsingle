@@ -158,7 +158,6 @@ figure(3);clf
 
 for v = 1 : length(val2plot)
     f=subplot(2,2,v);
-    
     if contains('modelmd',val2plot{v})
         imagesc(nanmean(models.FIT_HRF_GLMDENOISE_RR.(val2plot{v})(:,:,slice),4),[0 10]); axis off image;
         title('BETA WEIGHT (averaged across conditions)')
