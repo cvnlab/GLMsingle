@@ -259,7 +259,7 @@ class GLM_single():
         params = params or dict()
         for key, _ in default_params.items():
             if key not in params.keys():
-		            params[key] = default_params[key]
+                params[key] = default_params[key]
 
         self.params = params
 
@@ -376,7 +376,7 @@ class GLM_single():
         # xyz can either be a tuple of dimensions x y z
         # or a boolean indicating that data was 2D
         data, design, xyz = check_inputs(data, design)
-
+        
         # keep class bound data and design
         self.data = data
         self.design = design
@@ -1042,7 +1042,7 @@ class GLM_single():
             np.testing.assert_equal(np.all(np.isfinite(xvaltrend)), True)
 
             # create for safe-keeping
-            pcvoxels = np.zeros((nx*ny*nz), dtype=bool)
+            pcvoxels = np.zeros((numvoxels), dtype=bool)
             pcvoxels[ix] = 1
 
             # choose number of PCs
@@ -1111,26 +1111,26 @@ class GLM_single():
 
             # initialize
             # XYZ x trialbetas  [the final beta estimates]
-            modelmd = np.zeros((nx*ny*nz, numtrials), dtype=np.float32)
+            modelmd = np.zeros((numvoxels, numtrials), dtype=np.float32)
             # XYZ [the R2 for the specific optimal frac]
-            R2 = np.zeros(nx*ny*nz, dtype=np.float32)
+            R2 = np.zeros(numvoxels, dtype=np.float32)
 
             # XYZ x runs [the R2 separated by runs for the optimal frac]
-            R2run = np.zeros((nx*ny*nz, numruns), dtype=np.float32)
+            R2run = np.zeros((numvoxels, numruns), dtype=np.float32)
 
             # XYZ [best fraction]
-            FRACvalue = np.zeros(nx*ny*nz, dtype=np.float32)
+            FRACvalue = np.zeros(numvoxels, dtype=np.float32)
 
             if fractoselectix is None:
                 # XYZ [rr cross-validation performance]
                 rrbadness = np.zeros(
-                    (nx*ny*nz, len(params['fracs'])),
+                    (numvoxels, len(params['fracs'])),
                     dtype=np.float32)
             else:
                 rrbadness = []
 
             # XYZ x 2 [scale and offset]
-            scaleoffset = np.zeros((nx*ny*nz, 2), dtype=np.float32)
+            scaleoffset = np.zeros((numvoxels, 2), dtype=np.float32)
 
             # loop over chunks
             if whmodel == 2:
@@ -1269,14 +1269,16 @@ class GLM_single():
 
             # deal with dimensions
             modelmd = (modelmd / np.abs(meanvol)[:, np.newaxis]) * 100
-            modelmd = np.reshape(modelmd, [nx, ny, nz, numtrials])
-            R2 = np.reshape(R2, [nx, ny, nz])
-            R2run = np.reshape(R2run, [nx, ny, nz, numruns])
-            if scaleoffset.size > 0:
-                scaleoffset = np.reshape(scaleoffset, [nx, ny, nz, 2])
+            
+            if xyz:
+                modelmd = np.reshape(modelmd, [nx, ny, nz, numtrials])
+                R2 = np.reshape(R2, [nx, ny, nz])
+                R2run = np.reshape(R2run, [nx, ny, nz, numruns])
+                if scaleoffset.size > 0:
+                    scaleoffset = np.reshape(scaleoffset, [nx, ny, nz, 2])
 
-            if fractoselectix is None:
-                rrbadness = np.reshape(rrbadness, [nx, ny, nz, -1])
+                if fractoselectix is None:
+                    rrbadness = np.reshape(rrbadness, [nx, ny, nz, -1])
 
             # save to disk if desired
             if whmodel == 2:
