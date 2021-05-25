@@ -135,7 +135,9 @@ set(gca,'FontSize',15)
 % For the purpose of this example we will keep all outputs in the memory.
 opt = struct('wantmemoryoutputs',[1 1 1 1]);
 [results] = GLMestimatesingletrial(design,data,stimdur,tr,dataset,opt);
-% We assign outputs of GLMestimatesingletrial to "models" structure
+% We assign outputs of GLMestimatesingletrial to "models" structure. Note
+% that results{1} contains GLM estimates from a single ON/OFF model where
+% all images are treated as the same conditions
 models.FIT_HRF = results{2};
 models.FIT_HRF_GLMdenoise = results{3};
 models.FIT_HRF_GLMdenoise_RR = results{4};
