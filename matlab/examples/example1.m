@@ -57,7 +57,7 @@ for d = 1
 end
 
 xticks(0:53:length(design{d}))
-set(gcf,'Position',[418 179 1296 838])
+set(gcf,'Position',[418   412   782   605])
 %%
 
 % design -> Each run has a corresponding design matrix where each column
@@ -69,8 +69,8 @@ set(gcf,'Position',[418 179 1296 838])
 % there are 583 predictor columns/conditions. Notice that white rectangles 
 % are pseudo randomized and they indicate when the presentaion of each 
 % image occurs. Note that in some runs not all images are shown, if a
-% columns does not have a white rectangle it means that this image is
-% shown in a different run
+% column does not have a white rectangle it means that this image is
+% shown in a different run.
 %%
 
 % Show an example slice of the first fMRI volume.
@@ -80,7 +80,7 @@ colormap(gray);
 axis equal tight;
 c=colorbar;
 title('fMRI data (first volume)');
-set(gcf,'Position',[418 179 1296 838])
+set(gcf,'Position',[418   412   782   605])
 axis off
 c.Label.String = 'T2*w intensity';
 set(gca,'FontSize',15)
@@ -134,7 +134,8 @@ set(gca,'FontSize',15)
 
 % For the purpose of this example we will keep all outputs in the memory.
 opt = struct('wantmemoryoutputs',[1 1 1 1]);
-[results] = GLMestimatesingletrial(design,data,stimdur,tr,dataset,opt);
+% [results] = GLMestimatesingletrial(design,data,stimdur,tr,dataset,opt);
+load results
 % We assign outputs of GLMestimatesingletrial to "models" structure
 models.FIT_HRF = results{2};
 models.FIT_HRF_GLMdenoise = results{3};
@@ -175,7 +176,7 @@ for v = 1 : length(val2plot)
     set(gca,'FontSize',15)
 end
 
-set(gcf,'Position',[418 179 1296 838])
+set(gcf,'Position',[418   412   782   605])
 %% Run standard GLM.
 
 % Additionally, for comparison purposes we are going to run a standard GLM
@@ -188,7 +189,8 @@ opt.wantfileoutputs = [0 0 0 0];
 opt.wantmemoryoutputs = [0 1 0 0];
 % By changing the 5th argument to NaN we are not creating an output folder
 % with the results and figures.
-[ASSUME_HRF] = GLMestimatesingletrial(design,data,stimdur,tr,NaN,opt);
+% [ASSUME_HRF] = GLMestimatesingletrial(design,data,stimdur,tr,NaN,opt);
+load ASSUME_HRF
 % We assign outputs from GLMestimatesingletrial to "models" structure
 models.ASSUME_HRF = ASSUME_HRF{2};
 
@@ -228,6 +230,7 @@ for p=1:size(designALL,1)
 end
 
 %%
+
 % let's take a look at the first few entries
 corder(1:3)
 
@@ -236,6 +239,7 @@ corder(1:3)
 % presentation of the 497th condition, and so on.
 
 %%
+
 % In order to compute split-half reliability, we have to do some indexing.
 % we want to find images with least two repetitions and then prepare a useful
 % matrix of indices that refer to when these occur.
@@ -283,7 +287,7 @@ for m = 1 : length(model_names)
     vox_reliabilities{m} = calccorrelation(betas_reshaped(:,:,:,1,:),betas_reshaped(:,:,:,2,:),5);
     
 end
-%% Plot split-half reliability
+%% Plot split-half reliability.
 
 % For each model we plot the results of reliablity as an overlay.
 figure(4);clf
@@ -315,8 +319,8 @@ for m = 1 : length(model_names)
     title(model_names{m},'Interpreter','None')
 
 end
-set(gcf,'Position',[418 179 1296 838])
-%% Compare visual voxel reliabilities between beta versions
+set(gcf,'Position',[418   412   782   605])
+%% Compare visual voxel reliabilities between beta versions.
 figure(5);clf
 
 cmap = [0.2314    0.6039    0.6980
@@ -336,5 +340,5 @@ set(gca,'TickLabelInterpreter','none')
 xtickangle(0)
 xticks([])
 ylim([0.1 0.2])
-set(gcf,'Position',[418 179 1296 838])
+set(gcf,'Position',[418   412   782   605])
 title('Median voxel split-half reliability of GLM models')
