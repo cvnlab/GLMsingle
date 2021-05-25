@@ -6,7 +6,7 @@
    <!--
 This HTML was auto-generated from MATLAB code.
 To make changes, update the MATLAB code and republish this document.
-      --><title>example1</title><meta name="generator" content="MATLAB 9.7"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2021-05-24"><meta name="DC.source" content="example1.m"><style type="text/css">
+      --><title>example1</title><meta name="generator" content="MATLAB 9.7"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2021-05-25"><meta name="DC.source" content="example1.m"><style type="text/css">
 html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
 
 html { min-height:100%; margin-bottom:1px; }
@@ -66,7 +66,7 @@ table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px soli
 
 
 
-  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#1">Add dependencies and download the data.</a></li><li><a href="#2">Data overview.</a></li><li><a href="#6">Call GLMestimatesingletrial with default parameters.</a></li><li><a href="#7">Important outputs.</a></li><li><a href="#8">Plot a slice of brain with GLMsingle outputs.</a></li><li><a href="#9">Run standard GLM.</a></li><li><a href="#11">Compare GLMs.</a></li><li><a href="#14">Calculate voxel split-half reliability.</a></li><li><a href="#15">Plot split-half reliability</a></li><li><a href="#16">Compare visual voxel reliabilities between beta versions</a></li></ul></div><h2 id="1">Add dependencies and download the data.</h2><pre class="codeinput"><span class="comment">% Add path to GLMsingle</span>
+  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#1">Add dependencies and download the data.</a></li><li><a href="#2">Data overview.</a></li><li><a href="#6">Call GLMestimatesingletrial with default parameters.</a></li><li><a href="#7">Important outputs.</a></li><li><a href="#8">Plot a slice of brain with GLMsingle outputs.</a></li><li><a href="#9">Run standard GLM.</a></li><li><a href="#11">Compare GLMs.</a></li><li><a href="#14">Calculate voxel split-half reliability.</a></li><li><a href="#15">Plot split-half reliability.</a></li><li><a href="#16">Compare visual voxel reliabilities between beta versions.</a></li></ul></div><h2 id="1">Add dependencies and download the data.</h2><pre class="codeinput"><span class="comment">% Add path to GLMsingle</span>
 addpath(genpath(<span class="string">'./../utilities'</span>))
 
 <span class="comment">% You also need fracridge repository to run this code</span>
@@ -131,7 +131,7 @@ The sampling rate (TR) is 1.000000 seconds.
 <span class="keyword">end</span>
 
 xticks(0:53:length(design{d}))
-set(gcf,<span class="string">'Position'</span>,[418 179 1296 838])
+set(gcf,<span class="string">'Position'</span>,[418   412   782   605])
 </pre><img vspace="5" hspace="5" src="example1_01.png" alt=""> <pre class="codeinput"><span class="comment">% design -&gt; Each run has a corresponding design matrix where each column</span>
 <span class="comment">% describes a single condition (conditions are repeated across runs). Each</span>
 <span class="comment">% design matrix is binary with 1 specfing the time (TR) when the stimulus</span>
@@ -150,11 +150,11 @@ colormap(gray);
 axis <span class="string">equal</span> <span class="string">tight</span>;
 c=colorbar;
 title(<span class="string">'fMRI data (first volume)'</span>);
-set(gcf,<span class="string">'Position'</span>,[418 179 1296 838])
+set(gcf,<span class="string">'Position'</span>,[418   412   782   605])
 axis <span class="string">off</span>
 c.Label.String = <span class="string">'T2*w intensity'</span>;
 set(gca,<span class="string">'FontSize'</span>,15)
-</pre><img vspace="5" hspace="5" src="example1_02.png" alt=""> <img vspace="5" hspace="5" src="example1_03.png" alt=""> <h2 id="6">Call GLMestimatesingletrial with default parameters.</h2><pre class="codeinput"><span class="comment">% Outputs and figures will be stored in a folder (you can specify it's name</span>
+</pre><img vspace="5" hspace="5" src="example1_02.png" alt=""> <h2 id="6">Call GLMestimatesingletrial with default parameters.</h2><pre class="codeinput"><span class="comment">% Outputs and figures will be stored in a folder (you can specify it's name</span>
 <span class="comment">% as the 5th output to GLMestimatesingletrial. Model estimates can be also</span>
 <span class="comment">% saved to the results variable which is the only output of</span>
 <span class="comment">% GLMestimatesingletrial</span>
@@ -202,24 +202,13 @@ set(gca,<span class="string">'FontSize'</span>,15)
 
 <span class="comment">% For the purpose of this example we will keep all outputs in the memory.</span>
 opt = struct(<span class="string">'wantmemoryoutputs'</span>,[1 1 1 1]);
-[results] = GLMestimatesingletrial(design,data,stimdur,tr,dataset,opt);
+<span class="comment">% [results] = GLMestimatesingletrial(design,data,stimdur,tr,dataset,opt);</span>
+load <span class="string">results</span>
 <span class="comment">% We assign outputs of GLMestimatesingletrial to "models" structure</span>
 models.FIT_HRF = results{2};
 models.FIT_HRF_GLMdenoise = results{3};
 models.FIT_HRF_GLMdenoise_RR = results{4};
-</pre><pre class="codeoutput">*** FITTING TYPE-A MODEL (ONOFF) ***
-*** Saving results to nsdcore/TYPEA_ONOFF.mat. ***
-*** FITTING TYPE-B MODEL (FITHRF) ***
-working on chunk 1 of 1.
-*** Saving results to nsdcore/TYPEB_FITHRF.mat. ***
-*** DETERMINING GLMDENOISE REGRESSORS ***
-*** CROSS-VALIDATING DIFFERENT NUMBERS OF REGRESSORS ***
-working on chunk 1 of 1.
-*** FITTING TYPE-C MODEL (GLMDENOISE) ***
-working on chunk 1 of 1.
-*** FITTING TYPE-D MODEL (GLMDENOISE_RR) ***
-working on chunk 1 of 1.
-</pre><img vspace="5" hspace="5" src="example1_04.png" alt=""> <h2 id="7">Important outputs.</h2><pre class="codeinput"><span class="comment">% R2 -&gt; is model accuracy expressed in terms of R^2 (percentage).</span>
+</pre><h2 id="7">Important outputs.</h2><pre class="codeinput"><span class="comment">% R2 -&gt; is model accuracy expressed in terms of R^2 (percentage).</span>
 <span class="comment">% modelmd -&gt; is the full set of single-trial beta weights (X x Y x Z x</span>
 <span class="comment">% TRIALS). Beta weights are arranged in a chronological order)</span>
 <span class="comment">% HRFindex -&gt; is the 1-index of the best fit HRF. HRFs can be recovered</span>
@@ -248,8 +237,8 @@ figure(3);clf
     set(gca,<span class="string">'FontSize'</span>,15)
 <span class="keyword">end</span>
 
-set(gcf,<span class="string">'Position'</span>,[418 179 1296 838])
-</pre><img vspace="5" hspace="5" src="example1_05.png" alt=""> <h2 id="9">Run standard GLM.</h2><pre class="codeinput"><span class="comment">% Additionally, for comparison purposes we are going to run a standard GLM</span>
+set(gcf,<span class="string">'Position'</span>,[418   412   782   605])
+</pre><img vspace="5" hspace="5" src="example1_03.png" alt=""> <h2 id="9">Run standard GLM.</h2><pre class="codeinput"><span class="comment">% Additionally, for comparison purposes we are going to run a standard GLM</span>
 <span class="comment">% without HRF fitting, GLMdenoise or ridge regression regularization. We</span>
 <span class="comment">% will change the default settings by using the "opt" structure.</span>
 opt.wantlibrary = 0; <span class="comment">% switch off HRF fitting</span>
@@ -259,12 +248,10 @@ opt.wantfileoutputs = [0 0 0 0];
 opt.wantmemoryoutputs = [0 1 0 0];
 <span class="comment">% By changing the 5th argument to NaN we are not creating an output folder</span>
 <span class="comment">% with the results and figures.</span>
-[ASSUME_HRF] = GLMestimatesingletrial(design,data,stimdur,tr,NaN,opt);
+<span class="comment">% [ASSUME_HRF] = GLMestimatesingletrial(design,data,stimdur,tr,NaN,opt);</span>
+load <span class="string">ASSUME_HRF</span>
 <span class="comment">% We assign outputs from GLMestimatesingletrial to "models" structure</span>
 models.ASSUME_HRF = ASSUME_HRF{2};
-</pre><pre class="codeoutput">*** FITTING TYPE-A MODEL (ONOFF) ***
-*** FITTING TYPE-B MODEL (FITHRF) ***
-working on chunk 1 of 1.
 </pre><pre class="codeinput"><span class="comment">% Now, "models" variable holds solutions for 4 GLM models</span>
 
 disp(fieldnames(models))
@@ -358,7 +345,7 @@ vox_reliabilities = cell(1,length(models));
     vox_reliabilities{m} = calccorrelation(betas_reshaped(:,:,:,1,:),betas_reshaped(:,:,:,2,:),5);
 
 <span class="keyword">end</span>
-</pre><h2 id="15">Plot split-half reliability</h2><pre class="codeinput"><span class="comment">% For each model we plot the results of reliablity as an overlay.</span>
+</pre><h2 id="15">Plot split-half reliability.</h2><pre class="codeinput"><span class="comment">% For each model we plot the results of reliablity as an overlay.</span>
 figure(4);clf
 <span class="keyword">for</span> m = 1 : length(model_names)
 
@@ -388,8 +375,8 @@ figure(4);clf
     title(model_names{m},<span class="string">'Interpreter'</span>,<span class="string">'None'</span>)
 
 <span class="keyword">end</span>
-set(gcf,<span class="string">'Position'</span>,[418 179 1296 838])
-</pre><img vspace="5" hspace="5" src="example1_06.png" alt=""> <h2 id="16">Compare visual voxel reliabilities between beta versions</h2><pre class="codeinput">figure(5);clf
+set(gcf,<span class="string">'Position'</span>,[418   412   782   605])
+</pre><img vspace="5" hspace="5" src="example1_04.png" alt=""> <h2 id="16">Compare visual voxel reliabilities between beta versions.</h2><pre class="codeinput">figure(5);clf
 
 cmap = [0.2314    0.6039    0.6980
         0.8615    0.7890    0.2457
@@ -408,9 +395,9 @@ set(gca,<span class="string">'TickLabelInterpreter'</span>,<span class="string">
 xtickangle(0)
 xticks([])
 ylim([0.1 0.2])
-set(gcf,<span class="string">'Position'</span>,[418 179 1296 838])
+set(gcf,<span class="string">'Position'</span>,[418   412   782   605])
 title(<span class="string">'Median voxel split-half reliability of GLM models'</span>)
-</pre><img vspace="5" hspace="5" src="example1_07.png" alt=""> <p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2019b</a><br></p></div><!--
+</pre><img vspace="5" hspace="5" src="example1_05.png" alt=""> <p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2019b</a><br></p></div><!--
 ##### SOURCE BEGIN #####
 %% Add dependencies and download the data.
 
@@ -471,7 +458,7 @@ for d = 1
 end
 
 xticks(0:53:length(design{d}))
-set(gcf,'Position',[418 179 1296 838])
+set(gcf,'Position',[418   412   782   605])
 %%
 
 % design -> Each run has a corresponding design matrix where each column
@@ -494,7 +481,7 @@ colormap(gray);
 axis equal tight;
 c=colorbar;
 title('fMRI data (first volume)');
-set(gcf,'Position',[418 179 1296 838])
+set(gcf,'Position',[418   412   782   605])
 axis off
 c.Label.String = 'T2*w intensity';
 set(gca,'FontSize',15)
@@ -548,7 +535,8 @@ set(gca,'FontSize',15)
 
 % For the purpose of this example we will keep all outputs in the memory.
 opt = struct('wantmemoryoutputs',[1 1 1 1]);
-[results] = GLMestimatesingletrial(design,data,stimdur,tr,dataset,opt);
+% [results] = GLMestimatesingletrial(design,data,stimdur,tr,dataset,opt);
+load results
 % We assign outputs of GLMestimatesingletrial to "models" structure
 models.FIT_HRF = results{2};
 models.FIT_HRF_GLMdenoise = results{3};
@@ -589,7 +577,7 @@ for v = 1 : length(val2plot)
     set(gca,'FontSize',15)
 end
 
-set(gcf,'Position',[418 179 1296 838])
+set(gcf,'Position',[418   412   782   605])
 %% Run standard GLM.
 
 % Additionally, for comparison purposes we are going to run a standard GLM
@@ -602,7 +590,8 @@ opt.wantfileoutputs = [0 0 0 0];
 opt.wantmemoryoutputs = [0 1 0 0];
 % By changing the 5th argument to NaN we are not creating an output folder
 % with the results and figures.
-[ASSUME_HRF] = GLMestimatesingletrial(design,data,stimdur,tr,NaN,opt);
+% [ASSUME_HRF] = GLMestimatesingletrial(design,data,stimdur,tr,NaN,opt);
+load ASSUME_HRF
 % We assign outputs from GLMestimatesingletrial to "models" structure
 models.ASSUME_HRF = ASSUME_HRF{2};
 
@@ -697,7 +686,7 @@ for m = 1 : length(model_names)
     vox_reliabilities{m} = calccorrelation(betas_reshaped(:,:,:,1,:),betas_reshaped(:,:,:,2,:),5);
     
 end
-%% Plot split-half reliability
+%% Plot split-half reliability.
 
 % For each model we plot the results of reliablity as an overlay.
 figure(4);clf
@@ -729,8 +718,8 @@ for m = 1 : length(model_names)
     title(model_names{m},'Interpreter','None')
 
 end
-set(gcf,'Position',[418 179 1296 838])
-%% Compare visual voxel reliabilities between beta versions
+set(gcf,'Position',[418   412   782   605])
+%% Compare visual voxel reliabilities between beta versions.
 figure(5);clf
 
 cmap = [0.2314    0.6039    0.6980
@@ -750,7 +739,7 @@ set(gca,'TickLabelInterpreter','none')
 xtickangle(0)
 xticks([])
 ylim([0.1 0.2])
-set(gcf,'Position',[418 179 1296 838])
+set(gcf,'Position',[418   412   782   605])
 title('Median voxel split-half reliability of GLM models')
 ##### SOURCE END #####
 --></body></html>
