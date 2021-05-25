@@ -287,7 +287,8 @@ corder = [];
         corder = [corder find(designALL(p,:))];
     <span class="keyword">end</span>
 <span class="keyword">end</span>
-</pre><p>let's take a look at the first few entries</p><pre class="codeinput">corder(1:3)
+</pre><pre class="codeinput"><span class="comment">% let's take a look at the first few entries</span>
+corder(1:3)
 
 <span class="comment">% Note that [375 497 8] means that the first stimulus trial involved</span>
 <span class="comment">% presentation of the 375th condition, the second stimulus trial involved</span>
@@ -297,7 +298,10 @@ ans =
 
    375   497     8
 
-</pre><p>In order to compute split-half reliability, we have to do some indexing. we want to find images with least two repetitions and then prepare a useful matrix of indices that refer to when these occur.</p><pre class="codeinput">repindices = [];  <span class="comment">% 2 x images containing stimulus trial indices.</span>
+</pre><pre class="codeinput"><span class="comment">% In order to compute split-half reliability, we have to do some indexing.</span>
+<span class="comment">% we want to find images with least two repetitions and then prepare a useful</span>
+<span class="comment">% matrix of indices that refer to when these occur.</span>
+repindices = [];  <span class="comment">% 2 x images containing stimulus trial indices.</span>
 <span class="comment">% the first row refers to the first presentation;</span>
 <span class="comment">% the second row refers to the second presentation.</span>
 <span class="keyword">for</span> p=1:size(designALL,2)  <span class="comment">% loop over every condition</span>
@@ -631,6 +635,7 @@ for p=1:size(designALL,1)
 end
 
 %%
+
 % let's take a look at the first few entries
 corder(1:3)
 
@@ -639,6 +644,7 @@ corder(1:3)
 % presentation of the 497th condition, and so on.
 
 %%
+
 % In order to compute split-half reliability, we have to do some indexing.
 % we want to find images with least two repetitions and then prepare a useful
 % matrix of indices that refer to when these occur.
