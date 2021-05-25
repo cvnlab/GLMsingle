@@ -816,6 +816,29 @@ class GLM_single():
                             cnt = cnt + numtrialrun[rrr]
 
             # FIT TYPE-B MODEL (LSS) INTERLUDE END
+            
+            # if user provided XYZ, reshape disk/memory output fields into XYZ
+            if xyz:
+                results_out = {'FitHRFR2': np.reshape(FitHRFR2, [nx, ny, nz, nh]),
+                     'FitHRFR2run': np.reshape(FitHRFR2run, [nx, ny, nz, numruns, nh]),
+                     'HRFindex': np.reshape(HRFindex, [nx, ny, nz]),
+                     'HRFindexrun': np.reshape(HRFindexrun, [nx, ny, nz, numruns]),
+                     'R2': np.reshape(R2, [nx, ny, nz]),
+                     'R2run': np.reshape(R2run, [nx, ny, nz, numruns]),
+                     'betasmd': np.reshape(modelmd, [nx, ny, nz, numtrials]),
+                     'meanvol':  meanvol
+                     }
+            else:
+                results_out = {
+                    'FitHRFR2': FitHRFR2,
+                    'FitHRFR2run': FitHRFR2run,
+                    'HRFindex': HRFindex,
+                    'HRFindexrun': HRFindexrun,
+                    'R2': R2,
+                    'R2run': R2run,
+                    'betasmd': modelmd,
+                    'meanvol': meanvol
+                }
 
             # save to disk if desired
             if params['wantfileoutputs'][whmodel] == 1:
@@ -823,15 +846,7 @@ class GLM_single():
                 print(f'\n*** Saving results to {file0}. ***\n')
                 np.save(
                     file0,
-                    {'FitHRFR2': FitHRFR2,
-                     'FitHRFR2run': FitHRFR2run,
-                     'HRFindex': HRFindex,
-                     'HRFindexrun': HRFindexrun,
-                     'R2': R2,
-                     'R2run': R2run,
-                     'betasmd': modelmd,
-                     'meanvol':  meanvol
-                     }
+                    results_out
                 )
 
             # figures?
@@ -852,16 +867,7 @@ class GLM_single():
 
             # preserve in memory if desired, and then clean up
             if params['wantmemoryoutputs'][whmodel] == 1:
-                results['typeb'] = {
-                    'FitHRFR2': FitHRFR2,
-                    'FitHRFR2run': FitHRFR2run,
-                    'HRFindex': HRFindex,
-                    'HRFindexrun': HRFindexrun,
-                    'R2': R2,
-                    'R2run': R2run,
-                    'betasmd': modelmd,
-                    'meanvol': meanvol
-                }
+                results['typeb'] = results_out
 
         # COMPUTE GLMDENOISE REGRESSORS
 
