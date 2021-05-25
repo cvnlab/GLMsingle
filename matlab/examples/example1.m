@@ -194,7 +194,8 @@ opt.wantmemoryoutputs = [0 1 0 0];
 % with the results and figures.
 [ASSUME_HRF] = GLMestimatesingletrial(design,data,stimdur,tr,NaN,opt);
 % We assign outputs from GLMestimatesingletrial to "models" structure.
-% Again, results{1} contains GLM estimates from an ONOFF model.
+% Again, results{1} contains GLM estimates from an ONOFF model so we are 
+% not going to extract it.
 models.ASSUME_HRF = ASSUME_HRF{2};
 
 %%
