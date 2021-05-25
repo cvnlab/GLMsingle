@@ -174,6 +174,7 @@ end
 
 set(gcf,'Position',[1000 786 861 552])
 %% Run standard GLM.
+
 % Additionally, for comparison purposes we are going to run a standard GLM
 % without hrf fitting, GLMdenoise or Ridge regression regularization.
 opt.wantlibrary= 0; % switch off hrf fitting
@@ -221,6 +222,7 @@ for p=1:size(designALL,1)
     end
 end
 
+%%
 % let's take a look at the first few entries
 corder(1:3)
 
@@ -228,6 +230,7 @@ corder(1:3)
 % presentation of the 375th condition, the second stimulus trial involved
 % presentation of the 497th condition, and so on.
 
+%%
 % In order to compute split-half reliability, we have to do some indexing.
 % we want to find images with least two repetitions and then prepare a useful
 % matrix of indices that refer to when these occur.
@@ -273,7 +276,7 @@ for m = 1 : length(model_names)
 end
 %% Plot split-half reliability
 
-% For each model we plot the results of each GLM as an overaly.
+% For each model we plot the results of each GLM as an overlay.
 
 figure(4);clf
 for m = 1 : length(model_names)
@@ -305,13 +308,14 @@ for m = 1 : length(model_names)
 
 end
 set(gcf,'Position',[1000 786 861 552])
-%% Plot median reliability for each GLM.
+%% Quantify split-half reliability for each GLM in the visual ROI
 figure(5);clf
 
 cmap = [0.2314    0.6039    0.6980
         0.8615    0.7890    0.2457
         0.8824    0.6863         0
         0.9490    0.1020         0];
+    
 % For each GLM type we calculate median reliability for voxels within the
 % visual ROI and plot is as a bar plot.
 for m = 1 : 4
