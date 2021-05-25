@@ -176,7 +176,8 @@ set(gcf,'Position',[1000 786 861 552])
 %% Run standard GLM.
 
 % Additionally, for comparison purposes we are going to run a standard GLM
-% without hrf fitting, GLMdenoise or Ridge regression regularization.
+% without hrf fitting, GLMdenoise or Ridge regression regularization. We
+% will change the default settings by using "opt" structure.
 opt.wantlibrary= 0; % switch off hrf fitting
 opt.assume = 1; % assume one hrf
 opt.wantglmdenoise = 0; % switch off glmdenoise
