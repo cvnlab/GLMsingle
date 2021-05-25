@@ -203,7 +203,9 @@ set(gca,<span class="string">'FontSize'</span>,15)
 <span class="comment">% For the purpose of this example we will keep all outputs in the memory.</span>
 opt = struct(<span class="string">'wantmemoryoutputs'</span>,[1 1 1 1]);
 [results] = GLMestimatesingletrial(design,data,stimdur,tr,dataset,opt);
-<span class="comment">% We assign outputs of GLMestimatesingletrial to "models" structure</span>
+<span class="comment">% We assign outputs of GLMestimatesingletrial to "models" structure. Note</span>
+<span class="comment">% that results{1} contains GLM estimates from a single ON/OFF model where</span>
+<span class="comment">% all images are treated as the same conditions</span>
 models.FIT_HRF = results{2};
 models.FIT_HRF_GLMdenoise = results{3};
 models.FIT_HRF_GLMdenoise_RR = results{4};
@@ -364,7 +366,6 @@ vox_reliabilities = cell(1,length(models));
 <span class="keyword">end</span>
 </pre><h2 id="15">Plot split-half reliability.</h2><pre class="codeinput"><span class="comment">% For each model we plot the results of reliablity as an overlay.</span>
 figure(4);clf
-
 <span class="keyword">for</span> m = 1 : length(model_names)
 
     vox_reliability = vox_reliabilities{m};
@@ -554,7 +555,9 @@ set(gca,'FontSize',15)
 % For the purpose of this example we will keep all outputs in the memory.
 opt = struct('wantmemoryoutputs',[1 1 1 1]);
 [results] = GLMestimatesingletrial(design,data,stimdur,tr,dataset,opt);
-% We assign outputs of GLMestimatesingletrial to "models" structure
+% We assign outputs of GLMestimatesingletrial to "models" structure. Note
+% that results{1} contains GLM estimates from a single ON/OFF model where
+% all images are treated as the same conditions
 models.FIT_HRF = results{2};
 models.FIT_HRF_GLMdenoise = results{3};
 models.FIT_HRF_GLMdenoise_RR = results{4};
@@ -708,7 +711,6 @@ end
 
 % For each model we plot the results of reliablity as an overlay.
 figure(4);clf
-
 for m = 1 : length(model_names)
     
     vox_reliability = vox_reliabilities{m};
