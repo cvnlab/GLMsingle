@@ -202,12 +202,23 @@ set(gca,<span class="string">'FontSize'</span>,15)
 
 <span class="comment">% For the purpose of this example we will keep all outputs in the memory.</span>
 opt = struct(<span class="string">'wantmemoryoutputs'</span>,[1 1 1 1]);
-<span class="comment">% [results] = GLMestimatesingletrial(design,data,stimdur,tr,dataset,opt);</span>
-load <span class="string">results</span>
+[results] = GLMestimatesingletrial(design,data,stimdur,tr,dataset,opt);
 <span class="comment">% We assign outputs of GLMestimatesingletrial to "models" structure</span>
 models.FIT_HRF = results{2};
 models.FIT_HRF_GLMdenoise = results{3};
 models.FIT_HRF_GLMdenoise_RR = results{4};
+</pre><pre class="codeoutput">*** FITTING TYPE-A MODEL (ONOFF) ***
+*** Saving results to nsdcore/TYPEA_ONOFF.mat. ***
+*** FITTING TYPE-B MODEL (FITHRF) ***
+working on chunk 1 of 1.
+*** Saving results to nsdcore/TYPEB_FITHRF.mat. ***
+*** DETERMINING GLMDENOISE REGRESSORS ***
+*** CROSS-VALIDATING DIFFERENT NUMBERS OF REGRESSORS ***
+working on chunk 1 of 1.
+*** FITTING TYPE-C MODEL (GLMDENOISE) ***
+working on chunk 1 of 1.
+*** FITTING TYPE-D MODEL (GLMDENOISE_RR) ***
+working on chunk 1 of 1.
 </pre><h2 id="7">Important outputs.</h2><pre class="codeinput"><span class="comment">% R2 -&gt; is model accuracy expressed in terms of R^2 (percentage).</span>
 <span class="comment">% modelmd -&gt; is the full set of single-trial beta weights (X x Y x Z x</span>
 <span class="comment">% TRIALS). Beta weights are arranged in a chronological order)</span>
@@ -248,10 +259,12 @@ opt.wantfileoutputs = [0 0 0 0];
 opt.wantmemoryoutputs = [0 1 0 0];
 <span class="comment">% By changing the 5th argument to NaN we are not creating an output folder</span>
 <span class="comment">% with the results and figures.</span>
-<span class="comment">% [ASSUME_HRF] = GLMestimatesingletrial(design,data,stimdur,tr,NaN,opt);</span>
-load <span class="string">ASSUME_HRF</span>
+[ASSUME_HRF] = GLMestimatesingletrial(design,data,stimdur,tr,NaN,opt);
 <span class="comment">% We assign outputs from GLMestimatesingletrial to "models" structure</span>
 models.ASSUME_HRF = ASSUME_HRF{2};
+</pre><pre class="codeoutput">*** FITTING TYPE-A MODEL (ONOFF) ***
+*** FITTING TYPE-B MODEL (FITHRF) ***
+working on chunk 1 of 1.
 </pre><pre class="codeinput"><span class="comment">% Now, "models" variable holds solutions for 4 GLM models</span>
 
 disp(fieldnames(models))
@@ -349,7 +362,7 @@ vox_reliabilities = cell(1,length(models));
     vox_reliabilities{m} = calccorrelation(betas_reshaped(:,:,:,1,:),betas_reshaped(:,:,:,2,:),5);
 
 <span class="keyword">end</span>
-</pre><h2 id="15">Plot split-half reliability.</h2><pre class="codeinput"><span class="comment">% For each model we plot the results of reliablity as an overlay.</span>
+</pre><img vspace="5" hspace="5" src="example1_04.png" alt=""> <h2 id="15">Plot split-half reliability.</h2><pre class="codeinput"><span class="comment">% For each model we plot the results of reliablity as an overlay.</span>
 figure(4);clf
 <span class="keyword">for</span> m = 1 : length(model_names)
 
@@ -380,7 +393,7 @@ figure(4);clf
 
 <span class="keyword">end</span>
 set(gcf,<span class="string">'Position'</span>,[418   412   782   605])
-</pre><img vspace="5" hspace="5" src="example1_04.png" alt=""> <h2 id="16">Compare visual voxel reliabilities between beta versions.</h2><pre class="codeinput">figure(5);clf
+</pre><img vspace="5" hspace="5" src="example1_05.png" alt=""> <h2 id="16">Compare visual voxel reliabilities between beta versions.</h2><pre class="codeinput">figure(5);clf
 
 cmap = [0.2314    0.6039    0.6980
         0.8615    0.7890    0.2457
@@ -388,7 +401,7 @@ cmap = [0.2314    0.6039    0.6980
         0.9490    0.1020         0];
 
 <span class="comment">% For each GLM type we calculate median reliability for voxels within the</span>
-<span class="comment">% visual ROI and plot is as a bar plot.</span>
+<span class="comment">% visual ROI and plot it as a bar plot.</span>
 <span class="keyword">for</span> m = 1 : 4
     bar(m,nanmedian(vox_reliabilities{m}(ROI==1)),<span class="string">'FaceColor'</span>,<span class="string">'None'</span>,<span class="string">'Linewidth'</span>,3,<span class="string">'EdgeColor'</span>,cmap(m,:)); hold <span class="string">on</span>
 <span class="keyword">end</span>
@@ -401,7 +414,7 @@ xticks([])
 ylim([0.1 0.2])
 set(gcf,<span class="string">'Position'</span>,[418   412   782   605])
 title(<span class="string">'Median voxel split-half reliability of GLM models'</span>)
-</pre><img vspace="5" hspace="5" src="example1_05.png" alt=""> <p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2019b</a><br></p></div><!--
+</pre><img vspace="5" hspace="5" src="example1_06.png" alt=""> <p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2019b</a><br></p></div><!--
 ##### SOURCE BEGIN #####
 %% Add dependencies and download the data.
 
@@ -539,8 +552,7 @@ set(gca,'FontSize',15)
 
 % For the purpose of this example we will keep all outputs in the memory.
 opt = struct('wantmemoryoutputs',[1 1 1 1]);
-% [results] = GLMestimatesingletrial(design,data,stimdur,tr,dataset,opt);
-load results
+[results] = GLMestimatesingletrial(design,data,stimdur,tr,dataset,opt);
 % We assign outputs of GLMestimatesingletrial to "models" structure
 models.FIT_HRF = results{2};
 models.FIT_HRF_GLMdenoise = results{3};
@@ -594,8 +606,7 @@ opt.wantfileoutputs = [0 0 0 0];
 opt.wantmemoryoutputs = [0 1 0 0];
 % By changing the 5th argument to NaN we are not creating an output folder
 % with the results and figures.
-% [ASSUME_HRF] = GLMestimatesingletrial(design,data,stimdur,tr,NaN,opt);
-load ASSUME_HRF
+[ASSUME_HRF] = GLMestimatesingletrial(design,data,stimdur,tr,NaN,opt);
 % We assign outputs from GLMestimatesingletrial to "models" structure
 models.ASSUME_HRF = ASSUME_HRF{2};
 
@@ -734,7 +745,7 @@ cmap = [0.2314    0.6039    0.6980
         0.9490    0.1020         0];
     
 % For each GLM type we calculate median reliability for voxels within the
-% visual ROI and plot is as a bar plot.
+% visual ROI and plot it as a bar plot.
 for m = 1 : 4
     bar(m,nanmedian(vox_reliabilities{m}(ROI==1)),'FaceColor','None','Linewidth',3,'EdgeColor',cmap(m,:)); hold on
 end
