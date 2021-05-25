@@ -136,7 +136,7 @@ set(gca,'FontSize',15)
 opt = struct('wantmemoryoutputs',[1 1 1 1]);
 [results] = GLMestimatesingletrial(design,data,stimdur,tr,dataset,opt);
 % We assign outputs of GLMestimatesingletrial to "models" structure. Note
-% that results{1} contains GLM estimates from a ON/OFF model where
+% that results{1} contains GLM estimates from an ONOFF model where
 % all images are treated as the same condition. These estimates could be
 % potentially usefull to find cortical areas that respond to visual
 % stimuli.
@@ -193,7 +193,8 @@ opt.wantmemoryoutputs = [0 1 0 0];
 % By changing the 5th argument to NaN we are not creating an output folder
 % with the results and figures.
 [ASSUME_HRF] = GLMestimatesingletrial(design,data,stimdur,tr,NaN,opt);
-% We assign outputs from GLMestimatesingletrial to "models" structure
+% We assign outputs from GLMestimatesingletrial to "models" structure.
+% Again, results{1} contains GLM estimates from an ONOFF model.
 models.ASSUME_HRF = ASSUME_HRF{2};
 
 %%
