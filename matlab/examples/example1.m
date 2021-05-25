@@ -180,8 +180,8 @@ set(gcf,'Position',[1000 786 861 552])
 opt.wantlibrary= 0; % switch off hrf fitting
 opt.wantglmdenoise = 0; % switch off glmdenoise
 opt.wantfracridge = 0; % switch off Ridge regression
-opt.wantfileoutputs =[0 0 0 0];
-opt.wantmemoryoutputs =[0 1 0 0];
+opt.wantfileoutputs = [0 0 0 0];
+opt.wantmemoryoutputs = [0 1 0 0];
 [ASSUME_HRF] = GLMestimatesingletrial(design,data,stimdur,tr,NaN,opt);
 % We assign outputs from GLMestimatesingletrial to "models" structure
 models.ASSUME_HRF = ASSUME_HRF{2};
