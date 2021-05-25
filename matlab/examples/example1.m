@@ -2,7 +2,7 @@
 
 
 % Add path to GLMsingle
-addpath(genpath('./../'))
+addpath(genpath('./../utilities'))
 
 % You also need fracridge repository to run this code
 % https://github.com/nrdg/fracridge.git
@@ -149,7 +149,7 @@ models.FIT_HRF_GLMDENOISE_RR = results{4};
 
 %% Plot a slice of brain with GLMSingle outputs.
 
-% We are going to plot several outputs form FIT_HRF_GLMDENOISE_RR GLM.
+% We are going to plot several outputs from FIT_HRF_GLMDENOISE_RR GLM.
 
 slice = 1;
 val2plot = {'modelmd';'R2';'HRFindex';'FRACvalue'};
@@ -175,8 +175,8 @@ set(gcf,'Position',[1000 786 861 552])
 %% Run standard GLM.
 
 % Additionally, for comparison purposes we are going to run a standard GLM
-% without hrf fitting, GLMdenoise or Ridge regression regularization. We
-% will change the default settings by using "opt" structure.
+% without hRF fitting, GLMdenoise or Ridge Regression regularization. We
+% will change the default settings by using the "opt" structure.
 opt.wantlibrary= 0; % switch off hrf fitting
 opt.wantglmdenoise = 0; % switch off glmdenoise
 opt.wantfracridge = 0; % switch off Ridge regression
@@ -193,13 +193,14 @@ models.ASSUME_HRF = ASSUME_HRF{2};
 disp(fieldnames(models))
 %% Compare GLMs.
 % To compare the results of different GLMs we are going to calculate the
-% reliablity voxel-wise index for each model. Reliablity index represents a
-% correlation between beta weights for repeated presentations of the same
-% stimuli. In short, we are going to check how reliable/reproducible are
-% single trial responses to repeated images estimated with each GLM type.
+% voxel-wise split-half reliablity for each model. Reliablity index 
+% represents a correlation between beta weights for repeated presentations 
+% of the same stimuli. In short, we are going to check how 
+% reliable/reproducible are single trial responses to repeated images 
+% estimated with each GLM type.
 
 % This NSD scan session has a large number of images that are just shown 
-% onceduring the session, some images that are shown twice, and a few that 
+% once during the session, some images that are shown twice, and a few that 
 % are shown three times. In the code below, we are attempting to locate the
 % indices in the beta weight GLMsingle outputs modelmd(x,y,z,trials) that
 % correspond to repated images. Here we only consider stimuli that have
@@ -254,18 +255,22 @@ fprintf('There are %i repeated images in the experiment \n',length(repindices))
 % response to images presented for the first time  with beta weights
 % describing the response from the repetition of the same
 % image. With 136 repeated images R value for each voxel will correspond
-% to correlation between vectors with 136 beta weights.
+% to correlation between two vectors with 136 beta weights each.
 
 %% Calculate voxel split-half reliability.
 
 model_names = fieldnames(models);
-% We arrange models from least to most sophisticated.
 model_names = model_names([4 1 2 3]);
+% We arrange models from least to most sophisticated (for visualization
+% purposes)
+
 vox_reliabilities = cell(1,length(models));
+% Finally, let's compute some split-half reliability. We are going to loop
+% through our 4 models and calculate split-half reliability for each of
+% them
 
 for m = 1 : length(model_names)
     
-    % Finally, let's compute some split-half reliability.
     betas = models.(model_names{m}).modelmd(:,:,:,repindices);  % use indexing to pull out the trials we want
     betas_reshaped = reshape(betas,size(betas,1),size(betas,2),size(betas,3),2,[]);  % reshape to X x Y x Z x 2 x CONDITIONS
     vox_reliabilities{m} = calccorrelation(betas_reshaped(:,:,:,1,:),betas_reshaped(:,:,:,2,:),5);
@@ -273,7 +278,8 @@ for m = 1 : length(model_names)
 end
 %% Plot split-half reliability
 
-% For each model we plot the results of each GLM as an overlay.
+% For each model we plot the results of reliablity as an overlay. Higher
+% values mean higher relialbily. 
 
 figure(4);clf
 for m = 1 : length(model_names)
