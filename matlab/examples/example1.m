@@ -134,8 +134,7 @@ set(gca,'FontSize',15)
 
 % For the purpose of this example we will keep all outputs in the memory.
 opt = struct('wantmemoryoutputs',[1 1 1 1]);
-% [results] = GLMestimatesingletrial(design,data,stimdur,tr,dataset,opt);
-load results
+[results] = GLMestimatesingletrial(design,data,stimdur,tr,dataset,opt);
 % We assign outputs of GLMestimatesingletrial to "models" structure
 models.FIT_HRF = results{2};
 models.FIT_HRF_GLMdenoise = results{3};
@@ -189,8 +188,7 @@ opt.wantfileoutputs = [0 0 0 0];
 opt.wantmemoryoutputs = [0 1 0 0];
 % By changing the 5th argument to NaN we are not creating an output folder
 % with the results and figures.
-% [ASSUME_HRF] = GLMestimatesingletrial(design,data,stimdur,tr,NaN,opt);
-load ASSUME_HRF
+[ASSUME_HRF] = GLMestimatesingletrial(design,data,stimdur,tr,NaN,opt);
 % We assign outputs from GLMestimatesingletrial to "models" structure
 models.ASSUME_HRF = ASSUME_HRF{2};
 
