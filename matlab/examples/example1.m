@@ -130,8 +130,7 @@ set(gca,'FontSize',15)
 
 % For the purpose of this example we will keep all outputs in the memory.
 opt = struct('wantmemoryoutputs',[1 1 1 1]);
-% [results] = GLMestimatesingletrial(design,data,stimdur,tr,dataset,opt);
-load results
+[results] = GLMestimatesingletrial(design,data,stimdur,tr,dataset,opt);
 % We assign outputs of GLMestimatesingletrial to "models" structure
 models.FIT_HRF = results{2};
 models.FIT_HRF_GLMDENOISE = results{3};
@@ -179,14 +178,11 @@ set(gcf,'Position',[1000 786 861 552])
 % without hrf fitting, GLMdenoise or Ridge regression regularization. We
 % will change the default settings by using "opt" structure.
 opt.wantlibrary= 0; % switch off hrf fitting
-opt.assume = 1; % assume one hrf
 opt.wantglmdenoise = 0; % switch off glmdenoise
 opt.wantfracridge = 0; % switch off Ridge regression
 opt.wantfileoutputs =[0 0 0 0];
 opt.wantmemoryoutputs =[0 1 0 0];
-% [ASSUME_HRF] = GLMestimatesingletrial(design,data,stimdur,tr,NaN,opt);
-% save('ASSUME_HRF','ASSUME_HRF')
-load('ASSUME_HRF')
+[ASSUME_HRF] = GLMestimatesingletrial(design,data,stimdur,tr,NaN,opt);
 % We assign outputs from GLMestimatesingletrial to "models" structure
 models.ASSUME_HRF = ASSUME_HRF{2};
 
