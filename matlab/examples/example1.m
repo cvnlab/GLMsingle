@@ -329,7 +329,7 @@ cmap = [0.2314    0.6039    0.6980
         0.9490    0.1020         0];
     
 % For each GLM type we calculate median reliability for voxels within the
-% visual ROI and plot is as a bar plot.
+% visual ROI and plot it as a bar plot.
 for m = 1 : 4
     bar(m,nanmedian(vox_reliabilities{m}(ROI==1)),'FaceColor','None','Linewidth',3,'EdgeColor',cmap(m,:)); hold on
 end
