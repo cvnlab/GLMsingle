@@ -145,7 +145,7 @@ models.FIT_HRF_GLMDENOISE_RR = results{4};
 % HRFindex -> is the 1-index of the best fit hRF. hRFs can be recovered
 % with getcanonicalhrflibrary(stimdur,tr)
 % FRACvalue -> is the fractional ridge regression regularization level
-% chosen for each voxel.
+% chosen for each voxel. Values closer to 1 mean less regularization.
 
 %% Plot a slice of brain with GLMSingle outputs.
 
