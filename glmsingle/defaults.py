@@ -14,7 +14,7 @@ default_params = {
     'wantlibrary': 1,
     'wantglmdenoise': 1,
     'wantfracridge': 1,
-    'chunklen': 45000,
+    'chunklen': 50000,
     'wantfileoutputs': [1, 1, 1, 1],
     'wantmemoryoutputs': [1, 1, 1, 1],
     'wantparametric': 0,
