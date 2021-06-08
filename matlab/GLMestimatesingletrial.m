@@ -384,7 +384,7 @@ if ~iscell(outputdir)
   outputdir = {outputdir};
 end
 if length(outputdir) < 2
-  outputdir = {outputdir outputdir};
+  outputdir = repmat(outputdir,[1 2]);
 end
 
 % deal with length issues and other miscellaneous things
