@@ -1,14 +1,11 @@
 from __future__ import absolute_import, division, print_function
 import os
-import warnings
-
 import numpy as np
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import normalize
 from glmsingle.check_inputs import check_inputs
 from glmsingle.defaults import default_params
-import h5py
 from glmsingle.gmm.findtailthreshold import findtailthreshold
 from glmsingle.hrf.gethrf import getcanonicalhrf, getcanonicalhrflibrary
 from glmsingle.hrf.normalisemax import normalisemax
@@ -594,7 +591,6 @@ class GLM_single():
             file0 = os.path.join(outputdir, 'TYPEA_ONOFF.npy')
             print(f'\n*** Saving results to {file0}. ***\n')
             np.save(file0, onoffR2, meanvol, xyz)
-
 
         # figures
         if wantfig:
