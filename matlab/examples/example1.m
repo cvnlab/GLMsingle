@@ -2,6 +2,7 @@
 
 
 % Add path to GLMsingle
+addpath('./../')
 addpath(genpath('./../utilities'))
 
 % You also need fracridge repository to run this code
