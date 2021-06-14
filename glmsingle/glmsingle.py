@@ -96,7 +96,7 @@ class GLM_single():
          1 means perform ridge regression
          Default: 1.
 
-       <chunknum> (optional) is the number of voxels that we will process at
+       <chunklen> (optional) is the number of voxels that we will process at
          the same time. This number should be large in order to speed
          computation, but should not be so large that you run out of RAM.
          Default: 50000.
@@ -139,7 +139,7 @@ class GLM_single():
 
         *** GLM FLAGS ***
 
-        <extraregressors> (optional) is time x regressors or a cell vector
+        <extra_regressors> (optional) is time x regressors or a cell vector
          of elements that are each time x regressors. The dimensions of
          <extraregressors> should mirror that of <design> (i.e. same number of
          runs, same number of time points). The number of extra regressors
@@ -260,8 +260,13 @@ class GLM_single():
         for key, _ in default_params.items():
             if key not in params.keys():
                 params[key] = default_params[key]
+
+        # Check if all opt arguments are allowed
+        allowed = list(default_params.keys()) + [
+            'xvalscheme', 'sessionindicator', 'hrflibrary', 'hrftoassume', 'maxpolydeg'
+        ]
         for key in params.keys():
-            if key not in default_params.keys():
+            if key not in allowed:
                 raise ValueError(f"""
                 Input parameter not recognized: '{key}'
                 Possible input parameters are:\n{list(default_params.keys())}
