@@ -59,11 +59,14 @@ function results = GLMestimatesingletrial(design,data,stimdur,tr,outputdir,opt)
 %     positive integers indicating the run groupings that are interpreted as
 %     "sessions". The purpose of this input is to allow for session-wise z-scoring
 %     of single-trial beta weights for the purposes of hyperparameter evaluation. 
+%     For example, if you are analyzing data aggregated from multiple scan sessions,
+%     you may want beta weights to be z-scored per voxel within each session in order
+%     to compensate for any potential gross changes in betas across scan sessions.
 %     Note that the z-scoring has effect only INTERNALLY: it is used merely to 
 %     calculate the cross-validation performance and the associated hyperparameter
 %     selection; the outputs of this function do not reflect z-scoring, and the user
-%     may wish to apply z-scoring. Default: 1*ones(1,n) which means to interpret all 
-%     runs as coming from the same session.
+%     may wish to post-hoc apply z-scoring. Default: 1*ones(1,n) which means to interpret
+%     all runs as coming from the same session.
 %
 %   *** I/O FLAGS ***
 %
