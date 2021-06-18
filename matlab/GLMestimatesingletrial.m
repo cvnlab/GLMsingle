@@ -1042,6 +1042,7 @@ for ttt=1:length(todo)
     file0 = fullfile(outputdir{1},'TYPED_FITHRF_GLMDENOISE_RR.mat');
   end
   if opt.wantfileoutputs(whmodel)==1
+    fprintf('*** Saving results to %s. ***\n',file0);
     save(file0,allvars{:},'-v7.3');
   end
 
