@@ -269,7 +269,7 @@ class GLM_single():
             if key not in allowed:
                 raise ValueError(f"""
                 Input parameter not recognized: '{key}'
-                Possible input parameters are:\n{list(default_params.keys())}
+                Possible input parameters are:\n{allowed}
                 """)
 
         self.params = params
