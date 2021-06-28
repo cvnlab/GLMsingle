@@ -28,6 +28,8 @@ function results = GLMestimatesingletrial(design,data,stimdur,tr,outputdir,opt)
 %   directory does not exist, we create it; if the directory already exists,
 %   we delete its contents so we can start fresh.) If you set <outputdir>
 %   to NaN, we will not create a directory and no files will be written.
+%   If you provide {outputdir figuredir}, we will save the large output files
+%   to <outputdir> and the small figure files to <figuredir> (either or both can be NaN).
 %   Default is 'GLMestimatesingletrialoutputs' (created in the current working directory).
 % <opt> (optional) is a struct with the following optional fields:
 %
@@ -57,11 +59,14 @@ function results = GLMestimatesingletrial(design,data,stimdur,tr,outputdir,opt)
 %     positive integers indicating the run groupings that are interpreted as
 %     "sessions". The purpose of this input is to allow for session-wise z-scoring
 %     of single-trial beta weights for the purposes of hyperparameter evaluation. 
+%     For example, if you are analyzing data aggregated from multiple scan sessions,
+%     you may want beta weights to be z-scored per voxel within each session in order
+%     to compensate for any potential gross changes in betas across scan sessions.
 %     Note that the z-scoring has effect only INTERNALLY: it is used merely to 
 %     calculate the cross-validation performance and the associated hyperparameter
 %     selection; the outputs of this function do not reflect z-scoring, and the user
-%     may wish to apply z-scoring. Default: 1*ones(1,n) which means to interpret all 
-%     runs as coming from the same session.
+%     may wish to post-hoc apply z-scoring. Default: 1*ones(1,n) which means to interpret
+%     all runs as coming from the same session.
 %
 %   *** I/O FLAGS ***
 %
@@ -238,6 +243,7 @@ function results = GLMestimatesingletrial(design,data,stimdur,tr,outputdir,opt)
 % <scaleoffset> is the scale and offset applied to RR estimates to best match the unregularized result
 %
 % History (keep in line with Python version):
+% - 2021/06/03 - add the option for use to specify two directories for <outputdir>
 % - 2020/08/22 - Implement opt.sessionindicator. Also, now the cross-validation units now reflect
 %                the "session-wise z-scoring" hyperparameter selection approach; thus, the cross-
 %                validation units have been CHANGED relative to prior analyses!
@@ -376,6 +382,14 @@ if ~isfield(opt,'wantautoscale') || isempty(opt.wantautoscale)
   opt.wantautoscale = 1;
 end
 
+% deal with output directory
+if ~iscell(outputdir)
+  outputdir = {outputdir};
+end
+if length(outputdir) < 2
+  outputdir = repmat(outputdir,[1 2]);
+end
+
 % deal with length issues and other miscellaneous things
 if length(opt.maxpolydeg) == 1
   opt.maxpolydeg = repmat(opt.maxpolydeg,[1 numruns]);
@@ -385,15 +399,17 @@ opt.hrflibrary = normalizemax(opt.hrflibrary,1);
 opt.fracs = sort(unique(opt.fracs),'descend');
 assert(all(opt.fracs>0),'fracs must be greater than 0');
 assert(all(opt.fracs<=1),'fracs must be less than or equal to 1');
-wantfig = ischar(outputdir);  % if outputdir is not NaN, we want figures
+wantfig = ischar(outputdir{2});  % if outputdir{2} is not NaN, we want figures
 
 % deal with output directory
-if ischar(outputdir)
-  rmdirquiet(outputdir);
-  mkdirquiet(outputdir);
+for p=1:length(outputdir)
+  if ischar(outputdir{p})
+    rmdirquiet(outputdir{p});
+    mkdirquiet(outputdir{p});
+  end
 end
 if any(opt.wantfileoutputs)
-  assert(ischar(outputdir),'you must specify an <outputdir> in order to get file outputs');
+  assert(ischar(outputdir{1}),'you must specify an <outputdir> in order to get file outputs');
 end
 
 % deal with special library stuff
@@ -480,15 +496,15 @@ meanvol = results0.meanvol;
 
 % save to disk if desired
 if opt.wantfileoutputs(whmodel)==1
-  file0 = fullfile(outputdir,'TYPEA_ONOFF.mat');
+  file0 = fullfile(outputdir{1},'TYPEA_ONOFF.mat');
   fprintf('*** Saving results to %s. ***\n',file0);
   save(file0,'-struct','results0','-v7.3');
 end
 
 % figures?
 if wantfig && is3d
-  imwrite(uint8(255*makeimagestack(onoffR2,[0 100]).^0.5),hot(256),fullfile(outputdir,'onoffR2.png'));
-  imwrite(uint8(255*makeimagestack(meanvol,1)),gray(256),          fullfile(outputdir,'meanvol.png'));
+  imwrite(uint8(255*makeimagestack(onoffR2,[0 100]).^0.5),hot(256),fullfile(outputdir{2},'onoffR2.png'));
+  imwrite(uint8(255*makeimagestack(meanvol,1)),gray(256),          fullfile(outputdir{2},'meanvol.png'));
 end
 
 % preserve in memory if desired, and then clean up
@@ -501,7 +517,7 @@ clear results0;
 
 thresh = findtailthreshold(onoffR2(:),wantfig);
 if wantfig
-  figurewrite('onoffR2hist',[],[],outputdir);
+  figurewrite('onoffR2hist',[],[],outputdir{2});
 end
 if isempty(opt.brainR2)
   opt.brainR2 = thresh;
@@ -635,14 +651,14 @@ else
   % save to disk if desired
   allvars = {'FitHRFR2','FitHRFR2run','HRFindex','HRFindexrun','R2','R2run','modelmd','meanvol'};
   if opt.wantfileoutputs(whmodel)==1
-    file0 = fullfile(outputdir,'TYPEB_FITHRF.mat');
+    file0 = fullfile(outputdir{1},'TYPEB_FITHRF.mat');
     fprintf('*** Saving results to %s. ***\n',file0);
     save(file0,allvars{:},'-v7.3');
   end
 
   % figures?
   if wantfig && is3d
-    imwrite(uint8(255*makeimagestack(HRFindex,[1 nh])),jet(256),fullfile(outputdir,'HRFindex.png'));
+    imwrite(uint8(255*makeimagestack(HRFindex,[1 nh])),jet(256),fullfile(outputdir{2},'HRFindex.png'));
   end
 
   % preserve in memory if desired, and then clean up
@@ -1019,13 +1035,14 @@ for ttt=1:length(todo)
   if whmodel==3
     allvars = {'HRFindex','HRFindexrun','glmbadness','pcvoxels','pcnum','xvaltrend', ...
                'noisepool','pcregressors','modelmd','R2','R2run','meanvol'};
-    file0 = fullfile(outputdir,'TYPEC_FITHRF_GLMDENOISE.mat');
+    file0 = fullfile(outputdir{1},'TYPEC_FITHRF_GLMDENOISE.mat');
   else
     allvars = {'HRFindex','HRFindexrun','glmbadness','pcvoxels','pcnum','xvaltrend', ...
                'noisepool','pcregressors','modelmd','R2','R2run','rrbadness','FRACvalue','scaleoffset','meanvol'};
-    file0 = fullfile(outputdir,'TYPED_FITHRF_GLMDENOISE_RR.mat');
+    file0 = fullfile(outputdir{1},'TYPED_FITHRF_GLMDENOISE_RR.mat');
   end
   if opt.wantfileoutputs(whmodel)==1
+    fprintf('*** Saving results to %s. ***\n',file0);
     save(file0,allvars{:},'-v7.3');
   end
 
@@ -1033,19 +1050,19 @@ for ttt=1:length(todo)
   if wantfig
     if whmodel==3
       if is3d
-        imwrite(uint8(255*makeimagestack(noisepool,[0 1])),gray(256),fullfile(outputdir,'noisepool.png'));
-        imwrite(uint8(255*makeimagestack(pcvoxels, [0 1])),gray(256),fullfile(outputdir,'pcvoxels.png'));
+        imwrite(uint8(255*makeimagestack(noisepool,[0 1])),gray(256),fullfile(outputdir{2},'noisepool.png'));
+        imwrite(uint8(255*makeimagestack(pcvoxels, [0 1])),gray(256),fullfile(outputdir{2},'pcvoxels.png'));
       end
       figureprep;
       plot(0:opt.numpcstotry,xvaltrend);
       straightline(pcnum,'v','r-');
       xlabel('Number of GLMdenoise regressors');
       ylabel('Cross-validation performance (higher is better)');
-      figurewrite('xvaltrend',[],[],outputdir);
+      figurewrite('xvaltrend',[],[],outputdir{2});
     end
     if whmodel==4 && is3d
-      imwrite(uint8(255*makeimagestack(R2,[0 100]).^0.5),hot(256),fullfile(outputdir,'typeD_R2.png'));
-      imwrite(uint8(255*makeimagestack(FRACvalue,[0 1])),copper(256),fullfile(outputdir,'FRACvalue.png'));
+      imwrite(uint8(255*makeimagestack(R2,[0 100]).^0.5),hot(256),fullfile(outputdir{2},'typeD_R2.png'));
+      imwrite(uint8(255*makeimagestack(FRACvalue,[0 1])),copper(256),fullfile(outputdir{2},'FRACvalue.png'));
     end
   end
 

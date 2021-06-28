@@ -17,6 +17,7 @@ from glmsingle.utils.select_noise_regressors import select_noise_regressors
 from glmsingle.ssq.calcbadness import calcbadness
 from glmsingle.utils.chunking import chunking
 from glmsingle.utils.make_image_stack import make_image_stack
+from glmsingle.utils.alt_round import alt_round
 
 
 __all__ = ["GLM_single"]
@@ -96,7 +97,7 @@ class GLM_single():
          1 means perform ridge regression
          Default: 1.
 
-       <chunknum> (optional) is the number of voxels that we will process at
+       <chunklen> (optional) is the number of voxels that we will process at
          the same time. This number should be large in order to speed
          computation, but should not be so large that you run out of RAM.
          Default: 50000.
@@ -139,7 +140,7 @@ class GLM_single():
 
         *** GLM FLAGS ***
 
-        <extraregressors> (optional) is time x regressors or a cell vector
+        <extra_regressors> (optional) is time x regressors or a cell vector
          of elements that are each time x regressors. The dimensions of
          <extraregressors> should mirror that of <design> (i.e. same number of
          runs, same number of time points). The number of extra regressors
@@ -258,7 +259,19 @@ class GLM_single():
 
         params = params or dict()
         for key, _ in default_params.items():
-            params[key] = params.get(key) or default_params[key]
+            if key not in params.keys():
+                params[key] = default_params[key]
+
+        # Check if all opt arguments are allowed
+        allowed = list(default_params.keys()) + [
+            'xvalscheme', 'sessionindicator', 'hrflibrary', 'hrftoassume', 'maxpolydeg'
+        ]
+        for key in params.keys():
+            if key not in allowed:
+                raise ValueError(f"""
+                Input parameter not recognized: '{key}'
+                Possible input parameters are:\n{allowed}
+                """)
 
         self.params = params
 
@@ -375,7 +388,7 @@ class GLM_single():
         # xyz can either be a tuple of dimensions x y z
         # or a boolean indicating that data was 2D
         data, design, xyz = check_inputs(data, design)
-
+        
         # keep class bound data and design
         self.data = data
         self.design = design
@@ -399,7 +412,7 @@ class GLM_single():
         if 'maxpolydeg' not in params:
             params['maxpolydeg'] = [
                 np.arange(
-                    round(
+                    alt_round(
                         ((self.data[r].shape[1]*tr)/60)/2) + 1
                     ) for r in np.arange(numruns)]
 
@@ -462,7 +475,7 @@ class GLM_single():
 
         # deal with special library stuff
         if params['wantlibrary'] == 0:
-            params['hrflibrary'] = params['hrftoassume']
+            params['hrflibrary'] = params['hrftoassume'].reshape(-1,1)
 
         # calc
         # if the data was passed as 3d, unpack xyz
@@ -815,6 +828,29 @@ class GLM_single():
                             cnt = cnt + numtrialrun[rrr]
 
             # FIT TYPE-B MODEL (LSS) INTERLUDE END
+            
+            # if user provided XYZ, reshape disk/memory output fields into XYZ
+            if xyz:
+                results_out = {'FitHRFR2': np.reshape(FitHRFR2, [nx, ny, nz, nh]),
+                     'FitHRFR2run': np.reshape(FitHRFR2run, [nx, ny, nz, numruns, nh]),
+                     'HRFindex': np.reshape(HRFindex, [nx, ny, nz]),
+                     'HRFindexrun': np.reshape(HRFindexrun, [nx, ny, nz, numruns]),
+                     'R2': np.reshape(R2, [nx, ny, nz]),
+                     'R2run': np.reshape(R2run, [nx, ny, nz, numruns]),
+                     'betasmd': np.reshape(modelmd, [nx, ny, nz, numtrials]),
+                     'meanvol':  meanvol
+                     }
+            else:
+                results_out = {
+                    'FitHRFR2': FitHRFR2,
+                    'FitHRFR2run': FitHRFR2run,
+                    'HRFindex': HRFindex,
+                    'HRFindexrun': HRFindexrun,
+                    'R2': R2,
+                    'R2run': R2run,
+                    'betasmd': modelmd,
+                    'meanvol': meanvol
+                }
 
             # save to disk if desired
             if params['wantfileoutputs'][whmodel] == 1:
@@ -822,15 +858,7 @@ class GLM_single():
                 print(f'\n*** Saving results to {file0}. ***\n')
                 np.save(
                     file0,
-                    {'FitHRFR2': FitHRFR2,
-                     'FitHRFR2run': FitHRFR2run,
-                     'HRFindex': HRFindex,
-                     'HRFindexrun': HRFindexrun,
-                     'R2': R2,
-                     'R2run': R2run,
-                     'betasmd': modelmd,
-                     'meanvol':  meanvol
-                     }
+                    results_out
                 )
 
             # figures?
@@ -851,16 +879,7 @@ class GLM_single():
 
             # preserve in memory if desired, and then clean up
             if params['wantmemoryoutputs'][whmodel] == 1:
-                results['typeb'] = {
-                    'FitHRFR2': FitHRFR2,
-                    'FitHRFR2run': FitHRFR2run,
-                    'HRFindex': HRFindex,
-                    'HRFindexrun': HRFindexrun,
-                    'R2': R2,
-                    'R2run': R2run,
-                    'betasmd': modelmd,
-                    'meanvol': meanvol
-                }
+                results['typeb'] = results_out
 
         # COMPUTE GLMDENOISE REGRESSORS
 
@@ -1014,44 +1033,44 @@ class GLM_single():
                         results0,
                         params['sessionindicator']
                         )  # voxels x regularization levels
-        # compute xvaltrend
-        ix = np.flatnonzero(
-            (onoffR2.flatten() > params['pcR2cutoff']) * (np.asarray(
-                params['pcR2cutoffmask']).flatten()))  # vector of indices
+            # compute xvaltrend
+            ix = np.flatnonzero(
+                (onoffR2.flatten() > params['pcR2cutoff']) * (np.asarray(
+                    params['pcR2cutoffmask']).flatten()))  # vector of indices
 
-        if ix.size == 0:
-            print(
-                'Warning: no voxels passed the pcR2cutoff'
-                'and pcR2cutoffmask criteria. Using the'
-                'best 100 voxels.\n')
-            if params['pcR2cutoffmask'] == 1:
-                ix2 = np.flatnonzero(np.ones(onoffR2.shape))
-            else:
-                ix2 = np.flatnonzero(params['pcR2cutoffmask'] == 1)
+            if ix.size == 0:
+                print(
+                    'Warning: no voxels passed the pcR2cutoff'
+                    'and pcR2cutoffmask criteria. Using the'
+                    'best 100 voxels.\n')
+                if params['pcR2cutoffmask'] == 1:
+                    ix2 = np.flatnonzero(np.ones(onoffR2.shape))
+                else:
+                    ix2 = np.flatnonzero(params['pcR2cutoffmask'] == 1)
 
-            np.testing.assert_equal(
-                len(ix2) > 0, True, err_msg='no voxels are in pcR2cutoffmask')
+                np.testing.assert_equal(
+                    len(ix2) > 0, True, err_msg='no voxels are in pcR2cutoffmask')
 
-            ix3 = np.argsort(onoffR2[ix2])[::-1]
-            num = np.min([100, len(ix2)])
-            ix = ix2[ix3[range(num)]]
+                ix3 = np.argsort(onoffR2[ix2])[::-1]
+                num = np.min([100, len(ix2)])
+                ix = ix2[ix3[range(num)]]
 
-        # NOTE: sign flip so that high is good
-        xvaltrend = -np.median(glmbadness[ix, :], axis=0)
-        np.testing.assert_equal(np.all(np.isfinite(xvaltrend)), True)
+            # NOTE: sign flip so that high is good
+            xvaltrend = -np.median(glmbadness[ix, :], axis=0)
+            np.testing.assert_equal(np.all(np.isfinite(xvaltrend)), True)
 
-        # create for safe-keeping
-        pcvoxels = np.zeros((nx*ny*nz), dtype=bool)
-        pcvoxels[ix] = 1
+            # create for safe-keeping
+            pcvoxels = np.zeros((numvoxels), dtype=bool)
+            pcvoxels[ix] = 1
 
-        # choose number of PCs
-        # this is the performance curve that starts
-        # at 0 (corresponding to 0 PCs)
-        pcnum = select_noise_regressors(xvaltrend, params['pcstop'])
+            # choose number of PCs
+            # this is the performance curve that starts
+            # at 0 (corresponding to 0 PCs)
+            pcnum = select_noise_regressors(xvaltrend, params['pcstop'])
 
-        # deal with dimensions
-        # NOTE skip for now
-        # glmbadness = np.reshape(glmbadness, [nx, ny, nz, -1])
+            # deal with dimensions
+            # NOTE skip for now
+            # glmbadness = np.reshape(glmbadness, [nx, ny, nz, -1])
 
         # FIT TYPE-C + TYPE-D MODELS [FITHRF_GLMDENOISE, FITHRF_GLMDENOISE_RR]
 
@@ -1110,26 +1129,26 @@ class GLM_single():
 
             # initialize
             # XYZ x trialbetas  [the final beta estimates]
-            modelmd = np.zeros((nx*ny*nz, numtrials), dtype=np.float32)
+            modelmd = np.zeros((numvoxels, numtrials), dtype=np.float32)
             # XYZ [the R2 for the specific optimal frac]
-            R2 = np.zeros(nx*ny*nz, dtype=np.float32)
+            R2 = np.zeros(numvoxels, dtype=np.float32)
 
             # XYZ x runs [the R2 separated by runs for the optimal frac]
-            R2run = np.zeros((nx*ny*nz, numruns), dtype=np.float32)
+            R2run = np.zeros((numvoxels, numruns), dtype=np.float32)
 
             # XYZ [best fraction]
-            FRACvalue = np.zeros(nx*ny*nz, dtype=np.float32)
+            FRACvalue = np.zeros(numvoxels, dtype=np.float32)
 
             if fractoselectix is None:
                 # XYZ [rr cross-validation performance]
                 rrbadness = np.zeros(
-                    (nx*ny*nz, len(params['fracs'])),
+                    (numvoxels, len(params['fracs'])),
                     dtype=np.float32)
             else:
                 rrbadness = []
 
             # XYZ x 2 [scale and offset]
-            scaleoffset = np.zeros((nx*ny*nz, 2), dtype=np.float32)
+            scaleoffset = np.zeros((numvoxels, 2), dtype=np.float32)
 
             # loop over chunks
             if whmodel == 2:
@@ -1268,14 +1287,16 @@ class GLM_single():
 
             # deal with dimensions
             modelmd = (modelmd / np.abs(meanvol)[:, np.newaxis]) * 100
-            modelmd = np.reshape(modelmd, [nx, ny, nz, numtrials])
-            R2 = np.reshape(R2, [nx, ny, nz])
-            R2run = np.reshape(R2run, [nx, ny, nz, numruns])
-            if scaleoffset.size > 0:
-                scaleoffset = np.reshape(scaleoffset, [nx, ny, nz, 2])
+            
+            if xyz:
+                modelmd = np.reshape(modelmd, [nx, ny, nz, numtrials])
+                R2 = np.reshape(R2, [nx, ny, nz])
+                R2run = np.reshape(R2run, [nx, ny, nz, numruns])
+                if scaleoffset.size > 0:
+                    scaleoffset = np.reshape(scaleoffset, [nx, ny, nz, 2])
 
-            if fractoselectix is None:
-                rrbadness = np.reshape(rrbadness, [nx, ny, nz, -1])
+                if fractoselectix is None:
+                    rrbadness = np.reshape(rrbadness, [nx, ny, nz, -1])
 
             # save to disk if desired
             if whmodel == 2:

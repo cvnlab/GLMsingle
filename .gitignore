@@ -8,7 +8,7 @@ data/
 # various output
 figures/
 report.html
-*.png
+##*.png
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -114,3 +114,8 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# mat and npy files
+*.mat
+*.npy
+
