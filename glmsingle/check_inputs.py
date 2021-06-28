@@ -78,13 +78,12 @@ def check_inputs(data, design):
                 'in <data> than <design>. We are truncating'
                 '<data>.\n')
             data[run_i] = data[run_i][:, np.arange(
-                design.shape[0])]
+                design[run_i].shape[0])]
 
         if data[run_i].shape[1] < design[run_i].shape[0]:
             print(
                 f'WARNING: run {run_i} has more time points in <design>'
                 'than <data>. We are truncating <design>.\n')
-            design[run_i] = design[run_i][np.arange(
-                data[run_i].shape[0]), :]
+            design[run_i] = design[run_i][np.arange(data[run_i].shape[-1]), :]
 
     return data, design, xyz
