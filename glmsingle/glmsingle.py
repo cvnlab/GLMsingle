@@ -17,6 +17,7 @@ from glmsingle.utils.select_noise_regressors import select_noise_regressors
 from glmsingle.ssq.calcbadness import calcbadness
 from glmsingle.utils.chunking import chunking
 from glmsingle.utils.make_image_stack import make_image_stack
+from glmsingle.utils.alt_round import alt_round
 
 
 __all__ = ["GLM_single"]
@@ -411,7 +412,7 @@ class GLM_single():
         if 'maxpolydeg' not in params:
             params['maxpolydeg'] = [
                 np.arange(
-                    round(
+                    alt_round(
                         ((self.data[r].shape[1]*tr)/60)/2) + 1
                     ) for r in np.arange(numruns)]
 

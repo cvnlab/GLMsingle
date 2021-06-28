@@ -13,3 +13,4 @@ tqdm
 joblib
 datalad
 imageio
+fracridge

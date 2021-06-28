@@ -1,7 +1,7 @@
 # GLMsingle
 
 GLMsingle is a toolbox for obtaining accurate single-trial estimates
-in fMRI time-series data. We provide both MATLAB and Python implementations.
+in fMRI time-series data. We provide both MATLAB and Python implementations. 
 
 GLMsingle can be viewed as a wholesale replacement of its predecessor,
 GLMdenoise (http://github.com/kendrickkay/GLMdenoise).

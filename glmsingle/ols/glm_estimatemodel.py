@@ -10,6 +10,7 @@ from glmsingle.ols.fit_model import fit_model
 from glmsingle.ols.glm_predictresponses import glm_predictresponses
 from glmsingle.ols.make_poly_matrix import (make_polynomial_matrix,
                                              make_projection_matrix)
+from glmsingle.utils.alt_round import alt_round
 
 
 def glm_estimatemodel(design, data, stimdur, tr, hrfmodel, hrfknobs,
@@ -438,7 +439,7 @@ def glm_estimatemodel(design, data, stimdur, tr, hrfmodel, hrfknobs,
     if 'maxpolydeg' not in opt:
         opt['maxpolydeg'] = [
             np.arange(
-                round(
+                alt_round(
                     ((data[r].shape[1]*tr)/60)/2) + 1
                 ) for r in range(numruns)]
 
@@ -488,11 +489,6 @@ def glm_estimatemodel(design, data, stimdur, tr, hrfmodel, hrfknobs,
         resamplecase = 'boot'
     else:
         resamplecase = 'xval'
-
-    if 'maxpolydeg' not in opt:
-        opt['maxpolydeg'] = [np.arange(
-            round(((data[r].shape[dimtime]*tr)/60)/2) + 1
-            ) for r in range(numruns)]
 
     if len(opt['maxpolydeg']) == 1:
         opt['maxpolydeg'] = np.tile(
