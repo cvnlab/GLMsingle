@@ -25,6 +25,7 @@ if  ~exist('./data/nsdflocexampledataset.mat','file')
     system('curl -L --output ./data/nsdflocexampledataset.mat https://osf.io/zxqu3/download')
 end
 load('./data/nsdflocexampledataset.mat')
+load floc
 % Data comes from subject1, fLoc session from NSD dataset.
 % https://www.biorxiv.org/content/10.1101/2021.02.22.432340v1.full.pdf
 %%
@@ -170,7 +171,7 @@ for m = 1 : length(model_names)
         for i = 1:Xdim
             for j = 1:Ydim
                 for k = 1:Zdim
-                    if ROI(i,j,k) == 1
+                    if ROI(i,j,k) > 0
                         
                         vox_data = squeeze(betas(i,j,k,:,:));
                         
@@ -186,9 +187,9 @@ for m = 1 : length(model_names)
                                 
                             end
                             
+                            even_data = nanmean(vox_data_shuffle(1:2:end,:));
+                            odd_data =  nanmean(vox_data_shuffle(2:2:end,:));
                             
-                            even_data = vox_data_shuffle(1,:);
-                            odd_data =  vox_data_shuffle(2,:);
                             r = corr(even_data', odd_data');
                             vox_perm(ii_rep) = r;
                             
@@ -217,10 +218,10 @@ figure(4);clf
 for m = 1 : length(model_names)
     
     vox_reliability = vox_reliabilities{m};
-    underlay = data{1}(:,:,20,1);
-    sliceofROI = ROI(:,:,20);
+    underlay = data{1}(:,:,8,1);
+    sliceofROI = ROI(:,:,8);
     sliceofROI(sliceofROI~=1) = NaN;
-    overlay = vox_reliability(:,:,20);
+    overlay = vox_reliability(:,:,8);
     
     underlay_im = cmaplookup(underlay,min(underlay(:)),max(underlay(:)),[],gray(256));
     overlay_im = cmaplookup(overlay,-0.5,0.5,[],hot(256));
@@ -257,7 +258,9 @@ cmap = [0.2314    0.6039    0.6980
 % For each GLM type we calculate median reliability for voxels within the
 % visual ROI and plot it as a bar plot.
 for m = 1 : 4
-    bar(m,nanmedian(vox_reliabilities{m}(ROI==1)),'FaceColor','None','Linewidth',3,'EdgeColor',cmap(m,:)); hold on
+    vox_reliability = vox_reliabilities{m};
+    bar(m,nanmedian(vox_reliability(ROI==2)),'FaceColor','None','Linewidth',3,'EdgeColor',cmap(m,:)); hold on
+%     ccc(m)= nanmedian(vox_reliability(ROI==0))
 end
 ylabel('Median reliability')
 legend(model_names,'Interpreter','None','Location','NorthWest')
