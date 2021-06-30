@@ -22,10 +22,9 @@ end
 
 if  ~exist('./data/nsdflocexampledataset.mat','file')
     % download data with curl
-    system('curl -L --output ./data/nsdflocexampledataset.mat https://osf.io/zxqu3/download')
+    system('curl -L --output ./data/nsdflocexampledataset.mat https://osf.io/g42tm/download')
 end
 load('./data/nsdflocexampledataset.mat')
-load floc
 % Data comes from subject1, fLoc session from NSD dataset.
 % https://www.biorxiv.org/content/10.1101/2021.02.22.432340v1.full.pdf
 %%
@@ -171,7 +170,7 @@ for m = 1 : length(model_names)
         for i = 1:Xdim
             for j = 1:Ydim
                 for k = 1:Zdim
-                    if ROI(i,j,k) > 0
+                    if visual.ROI(i,j,k) > 0 || floc.ROI(i,j,k) > 0
                         
                         vox_data = squeeze(betas(i,j,k,:,:));
                         
@@ -211,40 +210,6 @@ for m = 1 : length(model_names)
 end
 
 %%
-%% Plot split-half reliability.
-
-% For each model we plot the results of reliablity as an overlay.
-figure(4);clf
-for m = 1 : length(model_names)
-    
-    vox_reliability = vox_reliabilities{m};
-    underlay = data{1}(:,:,8,1);
-    sliceofROI = ROI(:,:,8);
-    sliceofROI(sliceofROI~=1) = NaN;
-    overlay = vox_reliability(:,:,8);
-    
-    underlay_im = cmaplookup(underlay,min(underlay(:)),max(underlay(:)),[],gray(256));
-    overlay_im = cmaplookup(overlay,-0.5,0.5,[],hot(256));
-    
-    mask = sliceofROI==1;
-        
-    subplot(2,2,m);
-    hold on
-    imagesc(underlay_im);
-    imagesc(overlay_im, 'AlphaData', mask);
-    hold off
-
-    colormap hot
-    axis image  off
-    c = colorbar;
-    c.Label.String = 'Split-half reliability (r)';
-    c.Ticks = [0 0.5 1];
-    c.TickLabels = {'-0.5';'0';'0.5'};
-    set(gca,'FontSize',15)
-    title(model_names{m},'Interpreter','None')
-
-end
-set(gcf,'Position',[418   412   782   605])
 
 %%
 %% Compare visual voxel reliabilities between beta versions.
@@ -259,15 +224,20 @@ cmap = [0.2314    0.6039    0.6980
 % visual ROI and plot it as a bar plot.
 for m = 1 : 4
     vox_reliability = vox_reliabilities{m};
-    bar(m,nanmedian(vox_reliability(ROI==2)),'FaceColor','None','Linewidth',3,'EdgeColor',cmap(m,:)); hold on
+    data(m,:) = [nanmedian(vox_reliability(floc.ROI==2)) nanmedian(vox_reliability(visual.ROI==1))]
+    
 %     ccc(m)= nanmedian(vox_reliability(ROI==0))
 end
+
+b=bar(data)
 ylabel('Median reliability')
-legend(model_names,'Interpreter','None','Location','NorthWest')
 set(gca,'Fontsize',16)
 set(gca,'TickLabelInterpreter','none')
 xtickangle(0)
-xticks([])
+% xticks([])
+legend({'FFA';'V1'},'Interpreter','None','Location','NorthWest')
+
 % ylim([0.1 0.2])
 set(gcf,'Position',[418   412   782   605])
 title('Median voxel split-half reliability of GLM models')
+xticklabels(model_names')
