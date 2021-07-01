@@ -64,11 +64,11 @@ def calcbadness(xvals, validcolumns, stimix, results, sessionindicator):
     if np.max(sessionindicator) == 1:
         sessions = [1]
     else:
-        sessions = range(1, np.max(sessionindicator))
+        sessions = range(1, np.max(sessionindicator) + 1)
 
     for sess in sessions:
 
-        wh = np.flatnonzero(sessionindicator == sess)
+        wh = np.flatnonzero(np.array(sessionindicator) == sess)
 
         whcol = np.concatenate(np.asarray(validcolumns)[wh])
 
