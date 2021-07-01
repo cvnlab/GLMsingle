@@ -9,6 +9,11 @@ GLMdenoise (http://github.com/kendrickkay/GLMdenoise).
 For additional information, please see the Wiki page of
 the GLMsingle repository (https://github.com/kendrickkay/GLMsingle/wiki).
 
+If you have questions or discussion points, please use the Discussions
+feature of this github repository, or alternatively, e-mail
+Kendrick (kay@umn.edu). If you find a bug, please let us know by
+raising a Github issue.
+
 ## MATLAB
 
 To use the GLMsingle toolbox, add it to your MATLAB path:
