@@ -31,6 +31,8 @@ pip install .
 
 Code dependencies: see requirements.txt
 
+Please note that GLMsingle is not (yet) compatible with Python 3.9 (due to an incompatibility between scikit-learn and Python 3.9). Please use Python 3.8 or earlier.
+
 ## Additional information
 
 For additional information, please visit the Wiki page associated with this
