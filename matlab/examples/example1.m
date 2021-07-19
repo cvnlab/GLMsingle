@@ -13,7 +13,7 @@ clear
 clc
 close all
 
-dataset = 'nsdcore';
+outputdir = 'example1outputs';
 
 % Download files to data directory
 if ~exist('./data','dir')
@@ -32,11 +32,11 @@ clc
 whos
 
 % data -> consists of several runs of 4D volume files (x,y,z,t)  where
-% (t)ime is the 4th dimention. In this example data consists of only a 
+% (t)ime is the 4th dimention. In this example data consists of only a
 % single slice and has been prepared with a TR = 1s
 
 % ROI -> manually defined region in the occipital cortex. It is a binary
-% matrix where (x,y,z) = 1 corresponds to the cortical area that responded 
+% matrix where (x,y,z) = 1 corresponds to the cortical area that responded
 % to visual stimuli used in the NSD project.
 
 fprintf('There are %d runs in total.\n',length(design));
@@ -63,12 +63,12 @@ set(gcf,'Position',[418   412   782   605])
 
 % design -> Each run has a corresponding design matrix where each column
 % describes a single condition (conditions are repeated across runs). Each
-% design matrix is binary with 1 specfing the time (TR) when the stimulus 
+% design matrix is binary with 1 specfing the time (TR) when the stimulus
 % is presented on the screen.
 
 % In this NSD scan session there were 583 distinct images shown and hence
-% there are 583 predictor columns/conditions. Notice that white rectangles 
-% are pseudo randomized and they indicate when the presentaion of each 
+% there are 583 predictor columns/conditions. Notice that white rectangles
+% are pseudo randomized and they indicate when the presentaion of each
 % image occurs. Note that in some runs not all images are shown, if a
 % column does not have a white rectangle it means that this image is
 % shown in a different run.
@@ -87,13 +87,13 @@ c.Label.String = 'T2*w intensity';
 set(gca,'FontSize',15)
 %% Call GLMestimatesingletrial with default parameters.
 
-% Outputs and figures will be stored in a folder (you can specify it's name 
+% Outputs and figures will be stored in a folder (you can specify it's name
 % as the 5th output to GLMestimatesingletrial. Model estimates can be also
-% saved to the results variable which is the only output of 
+% saved to the results variable which is the only output of
 % GLMestimatesingletrial
 
 % Optional parameters below can be assigned to a strucutre i.e
-% opt = struct('wantlibrary',1,'wantglmdenoise',1); Options are the 6th  
+% opt = struct('wantlibrary',1,'wantglmdenoise',1); Options are the 6th
 % input to GLMestimatesingletrial.
 
 % DEFAULT OPTIONS:
@@ -106,9 +106,9 @@ set(gca,'FontSize',15)
 %
 
 % wantmemoryoutputs is a logical vector [A B C D] indicating which of the
-%     four model types to return in the output <results>. The user must be 
+%     four model types to return in the output <results>. The user must be
 %     careful with this, as large datasets can require a lot of RAM. If you
-%     do not request the various model types, they will be cleared from 
+%     do not request the various model types, they will be cleared from
 %     memory (but still potentially saved to disk).
 %     Default: [0 0 0 1] which means return only the final type-D model.
 
@@ -124,27 +124,46 @@ set(gca,'FontSize',15)
 %     number of PCs to enter into the model. Default: 10.
 
 % fracs (optional) is a vector of fractions that are greater than 0
-%     and less than or equal to 1. We automatically sort in descending 
-%     order and ensure the fractions are unique. These fractions indicate 
-%     the regularization levels to evaluate using fractional ridge 
-%     regression (fracridge) and cross-validation. Default: 
-%     fliplr(.05:.05:1). A special case is when <fracs> is specified as a 
-%     single scalar value. In this case, cross-validation is NOT performed 
-%     for the type-D model, and we instead blindly use the supplied 
+%     and less than or equal to 1. We automatically sort in descending
+%     order and ensure the fractions are unique. These fractions indicate
+%     the regularization levels to evaluate using fractional ridge
+%     regression (fracridge) and cross-validation. Default:
+%     fliplr(.05:.05:1). A special case is when <fracs> is specified as a
+%     single scalar value. In this case, cross-validation is NOT performed
+%     for the type-D model, and we instead blindly use the supplied
 %     fractional value for the type-D model.
 
 % For the purpose of this example we will keep all outputs in the memory.
 opt = struct('wantmemoryoutputs',[1 1 1 1]);
-[results] = GLMestimatesingletrial(design,data,stimdur,tr,dataset,opt);
-% We assign outputs of GLMestimatesingletrial to "models" structure. Note
-% that results{1} contains GLM estimates from an ONOFF model, where
-% all images are treated as the same condition. These estimates could be
-% potentially used to find cortical areas that respond to visual
-% stimuli. We want to compare beta weights between conditions therefore we
-% are not going to store the ONOFF GLM results.
-models.FIT_HRF = results{2};
-models.FIT_HRF_GLMdenoise = results{3};
-models.FIT_HRF_GLMdenoise_RR = results{4};
+
+if ~exist([outputdir '/GLMsingle'],'dir')
+    
+    [results] = GLMestimatesingletrial(design,data,stimdur,tr,[outputdir '/GLMsingle'],opt);
+    
+    % We assign outputs of GLMestimatesingletrial to "models" structure. Note
+    % that results{1} contains GLM estimates from an ONOFF model, where
+    % all images are treated as the same condition. These estimates could be
+    % potentially used to find cortical areas that respond to visual
+    % stimuli. We want to compare beta weights between conditions therefore we
+    % are not going to store the ONOFF GLM results.
+    
+    models.FIT_HRF = results{2};
+    models.FIT_HRF_GLMdenoise = results{3};
+    models.FIT_HRF_GLMdenoise_RR = results{4};
+    
+    
+else
+    
+    results = load([outputdir '/GLMsingle/TYPEB_FITHRF.mat']);
+    models.FIT_HRF = results;
+    results = load([outputdir '/GLMsingle/TYPEC_FITHRF_GLMDENOISE.mat']);
+    models.FIT_HRF_GLMdenoise = results;
+    results = load([outputdir '/GLMsingle/TYPED_FITHRF_GLMDENOISE_RR.mat']);
+    models.FIT_HRF_GLMdenoise_RR = results;
+    
+end
+
+
 
 
 %% Important outputs.
@@ -190,15 +209,26 @@ set(gcf,'Position',[418   412   782   605])
 opt.wantlibrary = 0; % switch off HRF fitting
 opt.wantglmdenoise = 0; % switch off GLMdenoise
 opt.wantfracridge = 0; % switch off ridge regression
-opt.wantfileoutputs = [0 0 0 0];
+opt.wantfileoutputs = [0 1 0 0];
 opt.wantmemoryoutputs = [0 1 0 0];
 % By changing the 5th argument to NaN we are not creating an output folder
 % with the results and figures.
-[ASSUME_HRF] = GLMestimatesingletrial(design,data,stimdur,tr,NaN,opt);
+
+if ~exist([outputdir '/GLMbaseline'],'dir')
+    
+    [ASSUME_HRF] = GLMestimatesingletrial(design,data,stimdur,tr,[outputdir '/GLMbaseline'],opt);
+    models.ASSUME_HRF = ASSUME_HRF{2};
+
+else
+    
+     results = load([outputdir '/GLMbaseline/TYPEB_FITHRF.mat']);
+     models.ASSUME_HRF = results;
+
+end
+
 % We assign outputs from GLMestimatesingletrial to "models" structure.
-% Again, results{1} contains GLM estimates from an ONOFF model so we are 
+% Again, results{1} contains GLM estimates from an ONOFF model so we are
 % not going to extract it.
-models.ASSUME_HRF = ASSUME_HRF{2};
 
 %%
 
@@ -208,14 +238,14 @@ disp(fieldnames(models))
 %% Compare GLMs.
 
 % To compare the results of different GLMs we are going to calculate the
-% voxel-wise split-half reliablity for each model. Reliablity index 
-% represents a correlation between beta weights for repeated presentations 
-% of the same stimuli. In short, we are going to check how 
-% reliable/reproducible are single trial responses to repeated images 
+% voxel-wise split-half reliablity for each model. Reliablity index
+% represents a correlation between beta weights for repeated presentations
+% of the same stimuli. In short, we are going to check how
+% reliable/reproducible are single trial responses to repeated images
 % estimated with each GLM type.
 
-% This NSD scan session has a large number of images that are just shown 
-% once during the session, some images that are shown twice, and a few that 
+% This NSD scan session has a large number of images that are just shown
+% once during the session, some images that are shown twice, and a few that
 % are shown three times. In the code below, we are attempting to locate the
 % indices in the beta weight GLMsingle outputs modelmd(x,y,z,trials) that
 % correspond to repated images. Here we only consider stimuli that have
@@ -225,7 +255,7 @@ disp(fieldnames(models))
 % consolidate design matrices
 designALL = cat(1,design{:});
 
-% compute a vector containing 1-indexed condition numbers in chronological 
+% compute a vector containing 1-indexed condition numbers in chronological
 % order.
 
 corder = [];
@@ -308,13 +338,13 @@ for m = 1 : length(model_names)
     overlay_im = cmaplookup(overlay,-0.5,0.5,[],hot(256));
     
     mask = ROI==1;
-        
+    
     subplot(2,2,m);
     hold on
     imagesc(underlay_im);
     imagesc(overlay_im, 'AlphaData', mask);
     hold off
-
+    
     colormap hot
     axis image  off
     c = colorbar;
@@ -323,17 +353,17 @@ for m = 1 : length(model_names)
     c.TickLabels = {'-0.5';'0';'0.5'};
     set(gca,'FontSize',15)
     title(model_names{m},'Interpreter','None')
-
+    
 end
 set(gcf,'Position',[418   412   782   605])
 %% Compare visual voxel reliabilities between beta versions.
 figure(5);clf
 
 cmap = [0.2314    0.6039    0.6980
-        0.8615    0.7890    0.2457
-        0.8824    0.6863         0
-        0.9490    0.1020         0];
-    
+    0.8615    0.7890    0.2457
+    0.8824    0.6863         0
+    0.9490    0.1020         0];
+
 % For each GLM type we calculate median reliability for voxels within the
 % visual ROI and plot it as a bar plot.
 for m = 1 : 4
