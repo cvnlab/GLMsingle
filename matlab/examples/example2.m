@@ -7,13 +7,14 @@ addpath(genpath('./../utilities'))
 
 % You also need fracridge repository to run this code
 % https://github.com/nrdg/fracridge.git
-% addpath('fracridge')
+
 
 clear
 clc
 close all
 
-dataset = 'nsdfloc';
+outputdir = 'example2outputs';
+
 
 % Download files to data directory
 if ~exist('./data','dir')
@@ -64,7 +65,7 @@ end
 % In this NSD fLOC session there were 10 distinct images shown and hence
 % there are 10 predictor columns/conditions. Notice that white rectangles
 % are pseudo randomized and they indicate when the presentaion of each
-% image occurs. Details of the stimulus are described here
+% image occurs. Stimulus details are described here
 % https://github.com/VPNL/fLoc
 %%
 figure(2);clf
@@ -74,15 +75,30 @@ colormap(gray);
 axis equal tight;
 colorbar;
 title('fMRI data (first volume)');
-% Call GLMestimatesingletrial with default parameters.
-opt = struct('wantmemoryoutputs',[1 1 1 1]);
-[results] = GLMestimatesingletrial(design,data,stimdur,tr,dataset,opt);
-models.FIT_HRF = results{2};
-models.FIT_HRF_GLMdenoise = results{3};
-models.FIT_HRF_GLMdenoise_RR = results{4};
 
-% Plot 1 slice of brain data
-slice = 20; % adjust this number when using different datasets
+%% Call GLMestimatesingletrial with default parameters.
+opt = struct('wantmemoryoutputs',[1 1 1 1]);
+
+if ~exist([outputdir '/GLMsingle'],'dir')
+    
+    [results] = GLMestimatesingletrial(design,data,stimdur,tr,[outputdir '/GLMsingle'],opt);
+    models.FIT_HRF = results{2};
+    models.FIT_HRF_GLMdenoise = results{3};
+    models.FIT_HRF_GLMdenoise_RR = results{4};
+    
+else
+    
+    results = load([outputdir '/GLMsingle/TYPEB_FITHRF.mat']);
+    models.FIT_HRF = results;
+    results = load([outputdir '/GLMsingle/TYPEC_FITHRF_GLMDENOISE.mat']);
+    models.FIT_HRF_GLMdenoise = results;
+    results = load([outputdir '/GLMsingle/TYPED_FITHRF_GLMDENOISE_RR.mat']);
+    models.FIT_HRF_GLMdenoise_RR = results;
+end
+
+%% Plot a slice of brain with GLMsingle outputs.
+
+slice_v1 = 20;
 val2plot = {'meanvol';'R2';'HRFindex';'FRACvalue'};
 cmaps = {gray;hot;parula;copper};
 figure(3);clf
@@ -90,8 +106,8 @@ figure(3);clf
 for v = 1 : length(val2plot)
     
     f=subplot(2,2,v);
-    imagesc(models.FIT_HRF_GLMdenoise_RR.(val2plot{v})(:,:,slice)); axis off image;
-    colormap(f,cmaps{v}) % Error message is related to this line
+    imagesc(models.FIT_HRF_GLMdenoise_RR.(val2plot{v})(:,:,slice_v1)); axis off image;
+    colormap(f,cmaps{v}) 
     colorbar
     title(val2plot{v})
     set(gca,'FontSize',20)
@@ -100,20 +116,27 @@ end
 
 set(gcf,'Position',[1224 840 758 408])
 
-%%
-% Run a standard GLM.
+%% Run a standard GLM.
 opt.wantlibrary = 0; % switch off HRF fitting
 opt.wantglmdenoise = 0; % switch off GLMdenoise
 opt.wantfracridge = 0; % switch off ridge regression
-opt.wantfileoutputs = [0 0 0 0];
+opt.wantfileoutputs = [0 1 0 0];
 opt.wantmemoryoutputs = [0 1 0 0];
 
-[ASSUME_HRF] = GLMestimatesingletrial(design,data,stimdur,tr,NaN,opt);
-models.ASSUME_HRF = ASSUME_HRF{2};
+if ~exist([outputdir '/GLMbaseline'],'dir')
+    
+    [ASSUME_HRF] = GLMestimatesingletrial(design,data,stimdur,tr,[outputdir '/GLMbaseline'],opt);
+    models.ASSUME_HRF = ASSUME_HRF{2};
+    
+else
+    
+    results = load([outputdir '/GLMbaseline/TYPEB_FITHRF.mat']);
+    models.ASSUME_HRF = results;
+    
+end
 %%
 
 % Now, "models" variable holds solutions for 4 GLM models
-
 disp(fieldnames(models))
 
 %%
@@ -136,7 +159,23 @@ model_names = model_names([4 1 2 3]);
 % We arrange models from least to most sophisticated (for visualization
 % purposes)
 %%
+
+% In order to compute split-half reliability, we have to do some indexing.
+% We want to find all repetitions of the same image. For example we can
+% look up when during the 4 blocks image 1 was repeated. Each image should
+% be repeated exactly 24 times. 
+
+find(corder==1)
+fprintf('Image 1 was repeated %i times.\n',length(find(corder==1)));
+
+%%
+
+% To calculate the split-half reliability we are going to average the odd
+% and even beta weights extracted from the same condition and calculate the
+% correlation coefficent between these values. We do this for each voxel
+
 vox_reliabilities = cell(1,length(models));
+
 for m = 1 : length(model_names)
     
     
@@ -159,61 +198,82 @@ for m = 1 : length(model_names)
         betas(:,:,:,:,c) = modelmd(:,:,:,indx);
         
     end
-    
-    
-    ii_reps = 10;
-    vox_perm = nan(1,ii_reps);
+
     vox_reliability = NaN(Xdim, Ydim, Zdim);
-    
-    
-    
+
     for i = 1:Xdim
         for j = 1:Ydim
             for k = 1:Zdim
+                
+                % Calcualte the reliability only for voxels within the
+                % visual and fLOC ROI to save time 
+                
                 if visual.ROI(i,j,k) > 0 || floc.ROI(i,j,k) > 0
                     
-                    vox_data = squeeze(betas(i,j,k,:,:));
+                    vox_data  = squeeze(betas(i,j,k,:,:));
+                    even_data = nanmean(vox_data(1:2:end,:));
+                    odd_data  = nanmean(vox_data(2:2:end,:));
                     
-                    
-                    for ii_rep = 1:ii_reps
-                        
-                        vox_data_shuffle = vox_data;
-                        
-                        for c = 1 : cond
-                            
-                            tmp = vox_data(:,c);
-                            vox_data_shuffle(:,c) =  tmp(randperm(length(tmp)));
-                            
-                        end
-                        
-                        even_data = nanmean(vox_data_shuffle(1:2:end,:));
-                        odd_data =  nanmean(vox_data_shuffle(2:2:end,:));
-                        
-                        r = corr(even_data', odd_data');
-                        vox_perm(ii_rep) = r;
-                        
-                    end
-                    
-                    vox_reliability(i,j,k) = nanmean(vox_perm);
+                    vox_reliability(i,j,k) = corr(even_data', odd_data');
                     
                 end
             end
         end
     end
     
-    
-    
-    
+
+    % store reliablity for each model
     vox_reliabilities{m} = vox_reliability;
     
     
 end
 
+
+%% Compare visual voxel reliabilities between beta versions with V1 and FFA ROIs.
+figure(5);clf
+set(gcf,'Position',[491   709   898   297])
+
+% Show V1 and FFA ROIs
+
+slice_v1 = 10;
+slice_ffa = 3;
+
+for s = 1 : 5
+    
+    subplot(2,5,s)
+    underlay = data{1}(:,:,slice_v1,1);
+    overlay  = visual.ROI(:,:,slice_v1)==1;
+    underlay_im = cmaplookup(underlay,min(underlay(:)),max(underlay(:)),[],gray(256));
+    overlay_im = cmaplookup(overlay,-0.5,0.5,[],[0 0 1]);
+    mask = visual.ROI(:,:,slice_v1)==1;
+    
+    hold on
+    imagesc(imrotate(underlay_im,180));
+    imagesc(imrotate(overlay_im,180), 'AlphaData', imrotate(mask,180));
+    title(sprintf('V1 voxels, slice = %i',slice_v1))
+    slice_v1 = slice_v1 + 1;
+    axis image
+    axis off
+    
+    subplot(2,5,s+5)
+    underlay = data{1}(:,:,slice_ffa,1);
+    overlay  = floc.ROI(:,:,slice_ffa)==2;
+    underlay_im = cmaplookup(underlay,min(underlay(:)),max(underlay(:)),[],gray(256));
+    overlay_im = cmaplookup(overlay,-0.5,0.5,[],round([237 102 31]/255,2));
+    mask = floc.ROI(:,:,slice_ffa)==2;
+    
+    hold on
+    imagesc(imrotate(underlay_im,180));
+    imagesc(imrotate(overlay_im,180), 'AlphaData', imrotate(mask,180));
+    title(sprintf('FFA voxels, slice = %i',slice_ffa))
+    slice_ffa = slice_ffa + 1;
+    axis image
+    axis off
+    
+end
 %%
 
-%%
-%% Compare visual voxel reliabilities between beta versions.
-figure(5);clf
+figure(6)
 
 cmap = [0.2314    0.6039    0.6980
     0.8615    0.7890    0.2457
@@ -221,26 +281,63 @@ cmap = [0.2314    0.6039    0.6980
     0.9490    0.1020         0];
 
 % For each GLM type we calculate median reliability for voxels within the
-% visual ROI and plot it as a bar plot.
+% V1 and FFA and plot it as a bar plot.
 
-data = zeros(length(vox_reliabilities),2);
+mydata = zeros(length(vox_reliabilities),2);
 for m = 1 : 4
+    
     vox_reliability = vox_reliabilities{m};
+    mydata(m,:) = [nanmedian(vox_reliability(floc.ROI==2)) nanmedian(vox_reliability(visual.ROI==1))];
     
-    data(m,:) = [nanmedian(vox_reliability(floc.ROI==2)) nanmedian(vox_reliability(visual.ROI==1))]
-    
-    %     ccc(m)= nanmedian(vox_reliability(ROI==0))
 end
 
-bar(data)
+bar(mydata)
 ylabel('Median reliability')
 set(gca,'Fontsize',12)
 set(gca,'TickLabelInterpreter','none')
 xtickangle(0)
-% xticks([])
 legend({'FFA';'V1'},'Interpreter','None','Location','NorthWest')
-
-% ylim([0.1 0.2])
 set(gcf,'Position',[418   412   782   605])
 title('Median voxel split-half reliability of GLM models')
 xticklabels(model_names')
+
+% Here we should come up with explanation why FFA > V1
+
+%%
+
+% We now plot the improvement of reliability when comparing FITHRF_GLMDENOISE_RR
+% with ASSUME_HRF, higher positive values mean higher reliability 
+
+figure(7)
+set(gcf,'Position',[616   227   863   790])
+
+vox_improvement = vox_reliabilities{4} - vox_reliabilities{1};
+
+slice = 3;
+
+ROI = visual.ROI == 1 | floc.ROI == 2;
+
+for s = 1:15
+    
+    subplot(5,3,s) 
+    underlay = data{1}(:,:,slice,1);
+    overlay  = vox_improvement(:,:,slice);
+    underlay_im = cmaplookup(underlay,min(underlay(:)),max(underlay(:)),[],gray(256));
+    overlay_im = cmaplookup(overlay,-0.3,0.3,[],cmapsign2);
+    mask = ROI(:,:,slice)==1;
+    hold on
+    imagesc(imrotate(underlay_im,180));
+    imagesc(imrotate(overlay_im,180), 'AlphaData', imrotate(mask,180));
+    title(sprintf('slide idx %i',slice))
+    slice = slice + 1;
+    axis image
+    colormap(cmapsign2)
+    c = colorbar;
+    c.TickLabels = {'-0.3';'0';'0.3'};
+    xticks([])
+    yticks([])
+    
+end
+    
+sgtitle('change in V1 and FFA voxel reliability due to GLMsingle (r)','Interpreter','none')
+

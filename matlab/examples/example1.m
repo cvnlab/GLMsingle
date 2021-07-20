@@ -406,4 +406,4 @@ xlabel('plotting (FITHRF_GLMDENOISE_RR - ASSUMEHRF) reliabilities','Interpreter'
 xticks([])
 yticks([])
 set(gca,'Fontsize',16)
-set(gcf,'Position',[36 451 1417 566])
+set(gcf,'Position',[36 343 1116 674])
