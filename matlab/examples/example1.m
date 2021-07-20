@@ -218,12 +218,12 @@ if ~exist([outputdir '/GLMbaseline'],'dir')
     
     [ASSUME_HRF] = GLMestimatesingletrial(design,data,stimdur,tr,[outputdir '/GLMbaseline'],opt);
     models.ASSUME_HRF = ASSUME_HRF{2};
-
+    
 else
     
-     results = load([outputdir '/GLMbaseline/TYPEB_FITHRF.mat']);
-     models.ASSUME_HRF = results;
-
+    results = load([outputdir '/GLMbaseline/TYPEB_FITHRF.mat']);
+    models.ASSUME_HRF = results;
+    
 end
 
 % We assign outputs from GLMestimatesingletrial to "models" structure.
@@ -358,7 +358,7 @@ end
 set(gcf,'Position',[418   412   782   605])
 %% Compare visual voxel reliabilities between beta versions.
 figure(5);clf
-
+subplot(1,2,1);
 cmap = [0.2314    0.6039    0.6980
     0.8615    0.7890    0.2457
     0.8824    0.6863         0
@@ -378,3 +378,32 @@ xticks([])
 ylim([0.1 0.2])
 set(gcf,'Position',[418   412   782   605])
 title('Median voxel split-half reliability of GLM models')
+
+subplot(1,2,1);
+
+vox_reliability = vox_reliabilities{4} - vox_reliabilities{1};
+underlay = data{1}(:,:,:,1);
+ROI(ROI~=1) = NaN;
+overlay = vox_reliability;
+
+underlay_im = cmaplookup(underlay,min(underlay(:)),max(underlay(:)),[],gray(256));
+overlay_im = cmaplookup(overlay,-0.3,0.3,[],cmapsign2);
+
+mask = ROI==1;
+
+subplot(1,2,2);
+hold on
+imagesc(underlay_im);
+imagesc(overlay_im, 'AlphaData', mask);
+hold off
+axis image
+colormap(cmapsign2)
+c = colorbar;
+c.Ticks = [0 0.5 1];
+c.TickLabels = {'-0.3';'0';'0.3'};
+title('change in nsdgeneral voxel reliability due to GLMsingle (r)')
+xlabel('plotting (FITHRF_GLMDENOISE_RR - ASSUMEHRF) reliabilities','Interpreter','none');
+xticks([])
+yticks([])
+set(gca,'Fontsize',16)
+set(gcf,'Position',[36 451 1417 566])
