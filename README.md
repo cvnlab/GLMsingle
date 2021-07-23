@@ -9,6 +9,11 @@ GLMdenoise (http://github.com/kendrickkay/GLMdenoise).
 For additional information, please see the Wiki page of
 the GLMsingle repository (https://github.com/kendrickkay/GLMsingle/wiki).
 
+If you have questions or discussion points, please use the Discussions
+feature of this github repository, or alternatively, e-mail
+Kendrick (kay@umn.edu). If you find a bug, please let us know by
+raising a Github issue.
+
 ## MATLAB
 
 To use the GLMsingle toolbox, add it to your MATLAB path:
@@ -30,6 +35,10 @@ pip install .
 ```
 
 Code dependencies: see requirements.txt
+
+Notes:
+* Please note that GLMsingle is not (yet) compatible with Python 3.9 (due to an incompatibility between scikit-learn and Python 3.9). Please use Python 3.8 or earlier.
+* Currently, numpy has a 4GB limit for the pickle files it writes; thus, GLMsingle will crash if the file outputs exceed that size. One workaround is to turn off "disk saving" and instead get the outputs of GLMsingle in your workspace and save the outputs yourself to HDF5 format.
 
 ## Additional information
 
