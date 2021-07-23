@@ -6,7 +6,7 @@
    <!--
 This HTML was auto-generated from MATLAB code.
 To make changes, update the MATLAB code and republish this document.
-      --><title>example1</title><meta name="generator" content="MATLAB 9.7"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2021-07-20"><meta name="DC.source" content="example1.m"><style type="text/css">
+      --><title>example1</title><meta name="generator" content="MATLAB 9.4"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2021-07-23"><meta name="DC.source" content="example1.m"><style type="text/css">
 html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
 
 html { min-height:100%; margin-bottom:1px; }
@@ -66,7 +66,7 @@ table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px soli
 
 
 
-  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#1">Add dependencies and download the data.</a></li><li><a href="#2">Data overview.</a></li><li><a href="#6">Call GLMestimatesingletrial with default parameters.</a></li><li><a href="#7">Important outputs.</a></li><li><a href="#8">Plot a slice of brain with GLMsingle outputs.</a></li><li><a href="#9">Run a standard GLM.</a></li><li><a href="#11">Compare GLMs.</a></li><li><a href="#14">Calculate voxel split-half reliability.</a></li><li><a href="#15">Plot split-half reliability.</a></li><li><a href="#16">Compare visual voxel reliabilities between beta versions.</a></li></ul></div><h2 id="1">Add dependencies and download the data.</h2><pre class="codeinput"><span class="comment">% Add path to GLMsingle</span>
+  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#1">Add dependencies and download the data.</a></li><li><a href="#2">Data overview.</a></li><li><a href="#6">Call GLMestimatesingletrial with default parameters.</a></li><li><a href="#7">Plot a slice of brain with GLMsingle outputs.</a></li><li><a href="#8">Run a baseline GLM to compare with GLMsingle.</a></li><li><a href="#10">Organize GLM outputs to enable calculation of voxel reliability.</a></li><li><a href="#13">Compute median split-half reliability for each GLM version.</a></li><li><a href="#14">Compare visual voxel reliabilities between beta versions.</a></li></ul></div><h2 id="1">Add dependencies and download the data.</h2><pre class="codeinput"><span class="comment">% Add path to GLMsingle</span>
 addpath(<span class="string">'./../'</span>)
 addpath(genpath(<span class="string">'./../utilities'</span>))
 
@@ -230,14 +230,17 @@ opt = struct(<span class="string">'wantmemoryoutputs'</span>,[1 1 1 1]);
     models.FIT_HRF_GLMdenoise_RR = results;
 
 <span class="keyword">end</span>
-</pre><h2 id="7">Important outputs.</h2><pre class="codeinput"><span class="comment">% R2 -&gt; is model accuracy expressed in terms of R^2 (percentage).</span>
+
+<span class="comment">% Summary of important outputs:</span>
+
+<span class="comment">% R2 -&gt; is model accuracy expressed in terms of R^2 (percentage).</span>
 <span class="comment">% modelmd -&gt; is the full set of single-trial beta weights (X x Y x Z x</span>
 <span class="comment">% TRIALS). Beta weights are arranged in a chronological order)</span>
 <span class="comment">% HRFindex -&gt; is the 1-index of the best fit HRF. HRFs can be recovered</span>
 <span class="comment">% with getcanonicalHRFlibrary(stimdur,tr)</span>
 <span class="comment">% FRACvalue -&gt; is the fractional ridge regression regularization level</span>
 <span class="comment">% chosen for each voxel. Values closer to 1 mean less regularization.</span>
-</pre><h2 id="8">Plot a slice of brain with GLMsingle outputs.</h2><pre class="codeinput"><span class="comment">% We are going to plot several outputs from FIT_HRF_GLMdenoise_RR GLM.</span>
+</pre><h2 id="7">Plot a slice of brain with GLMsingle outputs.</h2><pre class="codeinput"><span class="comment">% We are going to plot several outputs from FIT_HRF_GLMdenoise_RR GLM:</span>
 
 slice = 1;
 val2plot = {<span class="string">'modelmd'</span>;<span class="string">'R2'</span>;<span class="string">'HRFindex'</span>;<span class="string">'FRACvalue'</span>};
@@ -249,7 +252,7 @@ figure(3);clf
     f=subplot(2,2,v);
     <span class="keyword">if</span> contains(<span class="string">'modelmd'</span>,val2plot{v})
         imagesc(nanmean(models.FIT_HRF_GLMdenoise_RR.(val2plot{v})(:,:,slice),4),[-5 5]); axis <span class="string">off</span> <span class="string">image</span>;
-        title(<span class="string">'BETA WEIGHT (averaged across conditions)'</span>)
+        title(<span class="string">'Average GLM betas (750 stimuli)'</span>)
     <span class="keyword">else</span>
         imagesc(models.FIT_HRF_GLMdenoise_RR.(val2plot{v})(:,:,slice)); axis <span class="string">off</span> <span class="string">image</span>;
         title(val2plot{v})
@@ -260,7 +263,7 @@ figure(3);clf
 <span class="keyword">end</span>
 
 set(gcf,<span class="string">'Position'</span>,[418   412   782   605])
-</pre><img vspace="5" hspace="5" src="example1_03.png" alt=""> <h2 id="9">Run a standard GLM.</h2><pre class="codeinput"><span class="comment">% Additionally, for comparison purposes we are going to run a standard GLM</span>
+</pre><img vspace="5" hspace="5" src="example1_03.png" alt=""> <h2 id="8">Run a baseline GLM to compare with GLMsingle.</h2><pre class="codeinput"><span class="comment">% Additionally, for comparison purposes we are going to run a standard GLM</span>
 <span class="comment">% without HRF fitting, GLMdenoise or ridge regression regularization. We</span>
 <span class="comment">% will change the default settings by using the "opt" structure.</span>
 opt.wantlibrary = 0; <span class="comment">% switch off HRF fitting</span>
@@ -294,7 +297,7 @@ disp(fieldnames(models))
     'FIT_HRF_GLMdenoise_RR'
     'ASSUME_HRF'
 
-</pre><h2 id="11">Compare GLMs.</h2><pre class="codeinput"><span class="comment">% To compare the results of different GLMs we are going to calculate the</span>
+</pre><h2 id="10">Organize GLM outputs to enable calculation of voxel reliability.</h2><pre class="codeinput"><span class="comment">% To compare the results of different GLMs we are going to calculate the</span>
 <span class="comment">% voxel-wise split-half reliablity for each model. Reliablity index</span>
 <span class="comment">% represents a correlation between beta weights for repeated presentations</span>
 <span class="comment">% of the same stimuli. In short, we are going to check how</span>
@@ -366,7 +369,7 @@ ans =
    486   621   124
 
 There are 136 repeated images in the experiment 
-</pre><h2 id="14">Calculate voxel split-half reliability.</h2><pre class="codeinput">model_names = fieldnames(models);
+</pre><h2 id="13">Compute median split-half reliability for each GLM version.</h2><pre class="codeinput">model_names = fieldnames(models);
 model_names = model_names([4 1 2 3]);
 <span class="comment">% We arrange models from least to most sophisticated (for visualization</span>
 <span class="comment">% purposes)</span>
@@ -380,41 +383,12 @@ vox_reliabilities = cell(1,length(models));
 
     betas = models.(model_names{m}).modelmd(:,:,:,repindices);  <span class="comment">% use indexing to pull out the trials we want</span>
     betas_reshaped = reshape(betas,size(betas,1),size(betas,2),size(betas,3),2,[]);  <span class="comment">% reshape to X x Y x Z x 2 x CONDITIONS</span>
+
+    <span class="comment">% compute reliabilities using an efficient (vectorized) utility function</span>
     vox_reliabilities{m} = calccorrelation(betas_reshaped(:,:,:,1,:),betas_reshaped(:,:,:,2,:),5);
 
 <span class="keyword">end</span>
-</pre><h2 id="15">Plot split-half reliability.</h2><pre class="codeinput"><span class="comment">% For each model we plot the results of reliablity as an overlay.</span>
-figure(4);clf
-<span class="keyword">for</span> m = 1 : length(model_names)
-
-    vox_reliability = vox_reliabilities{m};
-    underlay = data{1}(:,:,:,1);
-    ROI(ROI~=1) = NaN;
-    overlay = vox_reliability;
-
-    underlay_im = cmaplookup(underlay,min(underlay(:)),max(underlay(:)),[],gray(256));
-    overlay_im = cmaplookup(overlay,-0.5,0.5,[],hot(256));
-
-    mask = ROI==1;
-
-    subplot(2,2,m);
-    hold <span class="string">on</span>
-    imagesc(underlay_im);
-    imagesc(overlay_im, <span class="string">'AlphaData'</span>, mask);
-    hold <span class="string">off</span>
-
-    colormap <span class="string">hot</span>
-    axis <span class="string">image</span>  <span class="string">off</span>
-    c = colorbar;
-    c.Label.String = <span class="string">'Split-half reliability (r)'</span>;
-    c.Ticks = [0 0.5 1];
-    c.TickLabels = {<span class="string">'-0.5'</span>;<span class="string">'0'</span>;<span class="string">'0.5'</span>};
-    set(gca,<span class="string">'FontSize'</span>,15)
-    title(model_names{m},<span class="string">'Interpreter'</span>,<span class="string">'None'</span>)
-
-<span class="keyword">end</span>
-set(gcf,<span class="string">'Position'</span>,[418   412   782   605])
-</pre><img vspace="5" hspace="5" src="example1_04.png" alt=""> <h2 id="16">Compare visual voxel reliabilities between beta versions.</h2><pre class="codeinput">figure(5);clf
+</pre><h2 id="14">Compare visual voxel reliabilities between beta versions.</h2><pre class="codeinput">figure(5);clf
 subplot(1,2,1);
 cmap = [0.2314    0.6039    0.6980
     0.8615    0.7890    0.2457
@@ -438,6 +412,8 @@ title(<span class="string">'Median voxel split-half reliability of GLM models'</
 
 subplot(1,2,1);
 
+<span class="comment">% Comparison is the final output (FIT_HRF_GLMDENOISE_RR) vs. the baseline</span>
+<span class="comment">% GLM (ASSUME_HRF)</span>
 vox_reliability = vox_reliabilities{4} - vox_reliabilities{1};
 underlay = data{1}(:,:,:,1);
 ROI(ROI~=1) = NaN;
@@ -458,13 +434,14 @@ colormap(cmapsign2)
 c = colorbar;
 c.Ticks = [0 0.5 1];
 c.TickLabels = {<span class="string">'-0.3'</span>;<span class="string">'0'</span>;<span class="string">'0.3'</span>};
-title(<span class="string">'change in nsdgeneral voxel reliability due to GLMsingle (r)'</span>)
-xlabel(<span class="string">'plotting (FITHRF_GLMDENOISE_RR - ASSUMEHRF) reliabilities'</span>,<span class="string">'Interpreter'</span>,<span class="string">'none'</span>);
+title(<span class="string">'change in nsdgeneral voxel reliability** due to GLMsingle (r)'</span>)
+set(gca,<span class="string">'Fontsize'</span>,16)
+xlabel(<span class="string">'**plotting (FITHRF_GLMDENOISE_RR - ASSUMEHRF) reliabilities'</span>,<span class="string">'Interpreter'</span>,<span class="string">'none'</span>,<span class="string">'FontSize'</span>,12);
 xticks([])
 yticks([])
-set(gca,<span class="string">'Fontsize'</span>,16)
+
 set(gcf,<span class="string">'Position'</span>,[36 343 1116 674])
-</pre><img vspace="5" hspace="5" src="example1_05.png" alt=""> <p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2019b</a><br></p></div><!--
+</pre><img vspace="5" hspace="5" src="example1_04.png" alt=""> <p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2018a</a><br></p></div><!--
 ##### SOURCE BEGIN #####
 %% Add dependencies and download the data.
 
@@ -631,10 +608,7 @@ else
     
 end
 
-
-
-
-%% Important outputs.
+% Summary of important outputs:
 
 % R2 -> is model accuracy expressed in terms of R^2 (percentage).
 % modelmd -> is the full set of single-trial beta weights (X x Y x Z x
@@ -646,7 +620,7 @@ end
 
 %% Plot a slice of brain with GLMsingle outputs.
 
-% We are going to plot several outputs from FIT_HRF_GLMdenoise_RR GLM.
+% We are going to plot several outputs from FIT_HRF_GLMdenoise_RR GLM:
 
 slice = 1;
 val2plot = {'modelmd';'R2';'HRFindex';'FRACvalue'};
@@ -658,7 +632,7 @@ for v = 1 : length(val2plot)
     f=subplot(2,2,v);
     if contains('modelmd',val2plot{v})
         imagesc(nanmean(models.FIT_HRF_GLMdenoise_RR.(val2plot{v})(:,:,slice),4),[-5 5]); axis off image;
-        title('BETA WEIGHT (averaged across conditions)')
+        title('Average GLM betas (750 stimuli)')
     else
         imagesc(models.FIT_HRF_GLMdenoise_RR.(val2plot{v})(:,:,slice)); axis off image;
         title(val2plot{v})
@@ -669,7 +643,8 @@ for v = 1 : length(val2plot)
 end
 
 set(gcf,'Position',[418   412   782   605])
-%% Run a standard GLM.
+
+%% Run a baseline GLM to compare with GLMsingle.
 
 % Additionally, for comparison purposes we are going to run a standard GLM
 % without HRF fitting, GLMdenoise or ridge regression regularization. We
@@ -703,7 +678,7 @@ end
 % Now, "models" variable holds solutions for 4 GLM models
 
 disp(fieldnames(models))
-%% Compare GLMs.
+%% Organize GLM outputs to enable calculation of voxel reliability.
 
 % To compare the results of different GLMs we are going to calculate the
 % voxel-wise split-half reliablity for each model. Reliablity index
@@ -772,7 +747,7 @@ fprintf('There are %i repeated images in the experiment \n',length(repindices))
 % image. With 136 repeated images R value for each voxel will correspond
 % to correlation between two vectors with 136 beta weights each.
 
-%% Calculate voxel split-half reliability.
+%% Compute median split-half reliability for each GLM version.
 
 model_names = fieldnames(models);
 model_names = model_names([4 1 2 3]);
@@ -788,42 +763,12 @@ for m = 1 : length(model_names)
     
     betas = models.(model_names{m}).modelmd(:,:,:,repindices);  % use indexing to pull out the trials we want
     betas_reshaped = reshape(betas,size(betas,1),size(betas,2),size(betas,3),2,[]);  % reshape to X x Y x Z x 2 x CONDITIONS
+    
+    % compute reliabilities using an efficient (vectorized) utility function
     vox_reliabilities{m} = calccorrelation(betas_reshaped(:,:,:,1,:),betas_reshaped(:,:,:,2,:),5);
     
 end
-%% Plot split-half reliability.
 
-% For each model we plot the results of reliablity as an overlay.
-figure(4);clf
-for m = 1 : length(model_names)
-    
-    vox_reliability = vox_reliabilities{m};
-    underlay = data{1}(:,:,:,1);
-    ROI(ROI~=1) = NaN;
-    overlay = vox_reliability;
-    
-    underlay_im = cmaplookup(underlay,min(underlay(:)),max(underlay(:)),[],gray(256));
-    overlay_im = cmaplookup(overlay,-0.5,0.5,[],hot(256));
-    
-    mask = ROI==1;
-    
-    subplot(2,2,m);
-    hold on
-    imagesc(underlay_im);
-    imagesc(overlay_im, 'AlphaData', mask);
-    hold off
-    
-    colormap hot
-    axis image  off
-    c = colorbar;
-    c.Label.String = 'Split-half reliability (r)';
-    c.Ticks = [0 0.5 1];
-    c.TickLabels = {'-0.5';'0';'0.5'};
-    set(gca,'FontSize',15)
-    title(model_names{m},'Interpreter','None')
-    
-end
-set(gcf,'Position',[418   412   782   605])
 %% Compare visual voxel reliabilities between beta versions.
 figure(5);clf
 subplot(1,2,1);
@@ -849,6 +794,8 @@ title('Median voxel split-half reliability of GLM models')
 
 subplot(1,2,1);
 
+% Comparison is the final output (FIT_HRF_GLMDENOISE_RR) vs. the baseline
+% GLM (ASSUME_HRF)
 vox_reliability = vox_reliabilities{4} - vox_reliabilities{1};
 underlay = data{1}(:,:,:,1);
 ROI(ROI~=1) = NaN;
@@ -869,11 +816,12 @@ colormap(cmapsign2)
 c = colorbar;
 c.Ticks = [0 0.5 1];
 c.TickLabels = {'-0.3';'0';'0.3'};
-title('change in nsdgeneral voxel reliability due to GLMsingle (r)')
-xlabel('plotting (FITHRF_GLMDENOISE_RR - ASSUMEHRF) reliabilities','Interpreter','none');
+title('change in nsdgeneral voxel reliability** due to GLMsingle (r)')
+set(gca,'Fontsize',16)
+xlabel('**plotting (FITHRF_GLMDENOISE_RR - ASSUMEHRF) reliabilities','Interpreter','none','FontSize',12);
 xticks([])
 yticks([])
-set(gca,'Fontsize',16)
+
 set(gcf,'Position',[36 343 1116 674])
 
 ##### SOURCE END #####
