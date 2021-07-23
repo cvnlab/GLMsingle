@@ -163,10 +163,7 @@ else
     
 end
 
-
-
-
-%% Important outputs.
+% Summary of important outputs:
 
 % R2 -> is model accuracy expressed in terms of R^2 (percentage).
 % modelmd -> is the full set of single-trial beta weights (X x Y x Z x
@@ -178,7 +175,7 @@ end
 
 %% Plot a slice of brain with GLMsingle outputs.
 
-% We are going to plot several outputs from FIT_HRF_GLMdenoise_RR GLM.
+% We are going to plot several outputs from FIT_HRF_GLMdenoise_RR GLM:
 
 slice = 1;
 val2plot = {'modelmd';'R2';'HRFindex';'FRACvalue'};
@@ -190,7 +187,7 @@ for v = 1 : length(val2plot)
     f=subplot(2,2,v);
     if contains('modelmd',val2plot{v})
         imagesc(nanmean(models.FIT_HRF_GLMdenoise_RR.(val2plot{v})(:,:,slice),4),[-5 5]); axis off image;
-        title('BETA WEIGHT (averaged across conditions)')
+        title('Average GLM betas (750 stimuli)')
     else
         imagesc(models.FIT_HRF_GLMdenoise_RR.(val2plot{v})(:,:,slice)); axis off image;
         title(val2plot{v})
@@ -201,7 +198,8 @@ for v = 1 : length(val2plot)
 end
 
 set(gcf,'Position',[418   412   782   605])
-%% Run a standard GLM.
+
+%% Run a baseline GLM to compare with GLMsingle.
 
 % Additionally, for comparison purposes we are going to run a standard GLM
 % without HRF fitting, GLMdenoise or ridge regression regularization. We
@@ -235,7 +233,7 @@ end
 % Now, "models" variable holds solutions for 4 GLM models
 
 disp(fieldnames(models))
-%% Compare GLMs.
+%% Organize GLM outputs to enable calculation of voxel reliability.
 
 % To compare the results of different GLMs we are going to calculate the
 % voxel-wise split-half reliablity for each model. Reliablity index
@@ -304,7 +302,7 @@ fprintf('There are %i repeated images in the experiment \n',length(repindices))
 % image. With 136 repeated images R value for each voxel will correspond
 % to correlation between two vectors with 136 beta weights each.
 
-%% Calculate voxel split-half reliability.
+%% Compute median split-half reliability for each GLM version.
 
 model_names = fieldnames(models);
 model_names = model_names([4 1 2 3]);
@@ -320,42 +318,12 @@ for m = 1 : length(model_names)
     
     betas = models.(model_names{m}).modelmd(:,:,:,repindices);  % use indexing to pull out the trials we want
     betas_reshaped = reshape(betas,size(betas,1),size(betas,2),size(betas,3),2,[]);  % reshape to X x Y x Z x 2 x CONDITIONS
+    
+    % compute reliabilities using an efficient (vectorized) utility function
     vox_reliabilities{m} = calccorrelation(betas_reshaped(:,:,:,1,:),betas_reshaped(:,:,:,2,:),5);
     
 end
-%% Plot split-half reliability.
 
-% For each model we plot the results of reliablity as an overlay.
-figure(4);clf
-for m = 1 : length(model_names)
-    
-    vox_reliability = vox_reliabilities{m};
-    underlay = data{1}(:,:,:,1);
-    ROI(ROI~=1) = NaN;
-    overlay = vox_reliability;
-    
-    underlay_im = cmaplookup(underlay,min(underlay(:)),max(underlay(:)),[],gray(256));
-    overlay_im = cmaplookup(overlay,-0.5,0.5,[],hot(256));
-    
-    mask = ROI==1;
-    
-    subplot(2,2,m);
-    hold on
-    imagesc(underlay_im);
-    imagesc(overlay_im, 'AlphaData', mask);
-    hold off
-    
-    colormap hot
-    axis image  off
-    c = colorbar;
-    c.Label.String = 'Split-half reliability (r)';
-    c.Ticks = [0 0.5 1];
-    c.TickLabels = {'-0.5';'0';'0.5'};
-    set(gca,'FontSize',15)
-    title(model_names{m},'Interpreter','None')
-    
-end
-set(gcf,'Position',[418   412   782   605])
 %% Compare visual voxel reliabilities between beta versions.
 figure(5);clf
 subplot(1,2,1);
@@ -381,6 +349,8 @@ title('Median voxel split-half reliability of GLM models')
 
 subplot(1,2,1);
 
+% Comparison is the final output (FIT_HRF_GLMDENOISE_RR) vs. the baseline
+% GLM (ASSUME_HRF)
 vox_reliability = vox_reliabilities{4} - vox_reliabilities{1};
 underlay = data{1}(:,:,:,1);
 ROI(ROI~=1) = NaN;
@@ -401,9 +371,10 @@ colormap(cmapsign2)
 c = colorbar;
 c.Ticks = [0 0.5 1];
 c.TickLabels = {'-0.3';'0';'0.3'};
-title('change in nsdgeneral voxel reliability due to GLMsingle (r)')
-xlabel('plotting (FITHRF_GLMDENOISE_RR - ASSUMEHRF) reliabilities','Interpreter','none');
+title('change in nsdgeneral voxel reliability** due to GLMsingle (r)')
+set(gca,'Fontsize',16)
+xlabel('**plotting (FITHRF_GLMDENOISE_RR - ASSUMEHRF) reliabilities','Interpreter','none','FontSize',12);
 xticks([])
 yticks([])
-set(gca,'Fontsize',16)
+
 set(gcf,'Position',[36 343 1116 674])
