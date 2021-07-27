@@ -1,18 +1,23 @@
-%% Add dependencies and download the data.
+%% Add dependencies and download the data
 
+% We will assume that the current working directory
+% is the directory that contains this script.
 
 % Add path to GLMsingle
-addpath('./../')
-addpath(genpath('./../utilities'))
+addpath(genpath('../../matlab'));
 
-% You also need fracridge repository to run this code
-% https://github.com/nrdg/fracridge.git
-% addpath('fracridge')
+% You also need fracridge repository to run this code.
+% For example, you could do:
+%   git clone https://github.com/nrdg/fracridge.git
+% and then do:
+%   addpath('fracridge')
 
+% Start fresh
 clear
 clc
 close all
 
+% Name of directory to which outputs will be saved
 outputdir = 'example1outputs';
 
 % Download files to data directory
@@ -25,14 +30,15 @@ if ~exist('./data/nsdcoreexampledataset.mat','file')
     system('curl -L --output ./data/nsdcoreexampledataset.mat https://osf.io/k89b2/download')
 end
 load('./data/nsdcoreexampledataset.mat')
-% Data comes from subject1, NSD01 session from NSD dataset.
+% Data comes from the NSD dataset (subj01, nsd01 scan session).
 % https://www.biorxiv.org/content/10.1101/2021.02.22.432340v1.full.pdf
-%% Data overview.
+
+%% Data overview
 clc
 whos
 
 % data -> consists of several runs of 4D volume files (x,y,z,t)  where
-% (t)ime is the 4th dimention. In this example data consists of only a
+% (t)ime is the 4th dimention. In this example, data consists of only a
 % single slice and has been prepared with a TR = 1s
 
 % ROI -> manually defined region in the occipital cortex. It is a binary
@@ -60,16 +66,17 @@ end
 xticks(0:53:length(design{d}))
 set(gcf,'Position',[418   412   782   605])
 %%
-
 % design -> Each run has a corresponding design matrix where each column
 % describes a single condition (conditions are repeated across runs). Each
 % design matrix is binary with 1 specfing the time (TR) when the stimulus
 % is presented on the screen.
-
-% In this NSD scan session there were 583 distinct images shown and hence
-% there are 583 predictor columns/conditions. Notice that white rectangles
-% are pseudo randomized and they indicate when the presentaion of each
-% image occurs. Note that in some runs not all images are shown, if a
+%
+% In this NSD scan session, there are a total of 750 trials, in which a 
+% total of 583 distinct images are shown. (Thus, some images were presented
+% more than once.) In the design matrix shown, there are 583 predictor
+% columns/conditions, one per distinct image. Notice that white rectangles
+% are pseudo randomized and they indicate when the presentation of each
+% image occurs. Note that in some runs not all images are shown; if a
 % column does not have a white rectangle it means that this image is
 % shown in a different run.
 %%
@@ -85,25 +92,27 @@ set(gcf,'Position',[418   412   782   605])
 axis off
 c.Label.String = 'T2*w intensity';
 set(gca,'FontSize',15)
-%% Call GLMestimatesingletrial with default parameters.
 
-% Outputs and figures will be stored in a folder (you can specify it's name
-% as the 5th output to GLMestimatesingletrial. Model estimates can be also
-% saved to the results variable which is the only output of
-% GLMestimatesingletrial
+%% Call GLMestimatesingletrial with default parameters
 
-% Optional parameters below can be assigned to a strucutre i.e
+% Outputs and figures will be stored in a folder (you can specify its name
+% as the 5th output to GLMestimatesingletrial). Model estimates can be also
+% saved to the 'results' variable which is the only output of
+% GLMestimatesingletrial.
+
+% Optional parameters below can be assigned to a structure, i.e.,
 % opt = struct('wantlibrary',1,'wantglmdenoise',1); Options are the 6th
 % input to GLMestimatesingletrial.
 
-% DEFAULT OPTIONS:
+% There are many options that can be specified; here, we comment
+% on the main options that one might want to modify/set. Defaults
+% for the options are indicated below.
 
 % wantlibrary = 1 -> Fit HRF to each voxel
 % wantglmdenoise = 1 -> Use GLMdenoise
 % wantfracridge = 1  -> Use ridge regression to improve beta estimates
 % chunknum = 50000 -> is the number of voxels that we will process at the
-%   same time. For setups with lower memory deacrease this number.
-%
+%   same time. For setups with lower memory, you may need to decrease this number.
 
 % wantmemoryoutputs is a logical vector [A B C D] indicating which of the
 %     four model types to return in the output <results>. The user must be
@@ -133,9 +142,12 @@ set(gca,'FontSize',15)
 %     for the type-D model, and we instead blindly use the supplied
 %     fractional value for the type-D model.
 
-% For the purpose of this example we will keep all outputs in the memory.
+% For the purpose of this example, we will keep all outputs in the memory.
 opt = struct('wantmemoryoutputs',[1 1 1 1]);
 
+% This example saves output .mat files to the folder "example1outputs/GLMsingle". If these
+% outputs don't already exist, we will perform the time-consuming call to
+% GLMestimatesingletrial.m; otherwise, we will just load from disk.
 if ~exist([outputdir '/GLMsingle'],'dir')
     
     [results] = GLMestimatesingletrial(design,data,stimdur,tr,[outputdir '/GLMsingle'],opt);
@@ -147,10 +159,10 @@ if ~exist([outputdir '/GLMsingle'],'dir')
     % stimuli. We want to compare beta weights between conditions therefore we
     % are not going to store the ONOFF GLM results.
     
+    clear models;
     models.FIT_HRF = results{2};
     models.FIT_HRF_GLMdenoise = results{3};
     models.FIT_HRF_GLMdenoise_RR = results{4};
-    
     
 else
     
@@ -163,17 +175,23 @@ else
     
 end
 
-% Summary of important outputs:
+%% Summary of important outputs
 
+% The outputs of GLMestimatesingletrial.m are formally documented
+% in its header. Here, we highlight a few of the more important outputs:
+%
 % R2 -> is model accuracy expressed in terms of R^2 (percentage).
+%
 % modelmd -> is the full set of single-trial beta weights (X x Y x Z x
-% TRIALS). Beta weights are arranged in a chronological order)
+% TRIALS). Beta weights are arranged in chronological order.
+%
 % HRFindex -> is the 1-index of the best fit HRF. HRFs can be recovered
 % with getcanonicalHRFlibrary(stimdur,tr)
+%
 % FRACvalue -> is the fractional ridge regression regularization level
 % chosen for each voxel. Values closer to 1 mean less regularization.
 
-%% Plot a slice of brain with GLMsingle outputs.
+%% Plot a slice of brain with GLMsingle outputs
 
 % We are going to plot several outputs from FIT_HRF_GLMdenoise_RR GLM:
 
@@ -199,19 +217,19 @@ end
 
 set(gcf,'Position',[418   412   782   605])
 
-%% Run a baseline GLM to compare with GLMsingle.
+%% Run a baseline GLM to compare with GLMsingle
 
 % Additionally, for comparison purposes we are going to run a standard GLM
-% without HRF fitting, GLMdenoise or ridge regression regularization. We
+% without HRF fitting, GLMdenoise, or ridge regression regularization. We
 % will change the default settings by using the "opt" structure.
 opt.wantlibrary = 0; % switch off HRF fitting
 opt.wantglmdenoise = 0; % switch off GLMdenoise
 opt.wantfracridge = 0; % switch off ridge regression
 opt.wantfileoutputs = [0 1 0 0];
 opt.wantmemoryoutputs = [0 1 0 0];
-% By changing the 5th argument to NaN we are not creating an output folder
-% with the results and figures.
 
+% If these outputs don't already exist, we will perform the call to
+% GLMestimatesingletrial.m; otherwise, we will just load from disk.
 if ~exist([outputdir '/GLMbaseline'],'dir')
     
     [ASSUME_HRF] = GLMestimatesingletrial(design,data,stimdur,tr,[outputdir '/GLMbaseline'],opt);
@@ -219,6 +237,9 @@ if ~exist([outputdir '/GLMbaseline'],'dir')
     
 else
     
+    % Note that even though we are loading TYPEB_FITHRF betas, 
+    % HRF fitting has been turned off and this struct field will thus
+    % contain the outputs of a GLM fit using the canonical HRF.
     results = load([outputdir '/GLMbaseline/TYPEB_FITHRF.mat']);
     models.ASSUME_HRF = results;
     
@@ -233,22 +254,23 @@ end
 % Now, "models" variable holds solutions for 4 GLM models
 
 disp(fieldnames(models))
-%% Organize GLM outputs to enable calculation of voxel reliability.
+
+%% Organize GLM outputs to enable calculation of voxel reliability
 
 % To compare the results of different GLMs we are going to calculate the
-% voxel-wise split-half reliablity for each model. Reliablity index
-% represents a correlation between beta weights for repeated presentations
-% of the same stimuli. In short, we are going to check how
-% reliable/reproducible are single trial responses to repeated images
+% voxel-wise split-half reliablity for each model. Reliability values
+% reflect a correlation between beta weights for repeated presentations
+% of the same conditions. In short, we are going to check how
+% reliable/reproducible are the single trial responses to repeated conditions
 % estimated with each GLM type.
 
 % This NSD scan session has a large number of images that are just shown
 % once during the session, some images that are shown twice, and a few that
 % are shown three times. In the code below, we are attempting to locate the
 % indices in the beta weight GLMsingle outputs modelmd(x,y,z,trials) that
-% correspond to repated images. Here we only consider stimuli that have
-% been repeated once. For the purpose of the example we ignore the 3rd
-% repetition of the stimulus.
+% correspond to repeated images. Here we only consider stimuli that have
+% been presented at least twice. For the purpose of the example we ignore the
+% 3rd repetition of the stimulus.
 
 % consolidate design matrices
 designALL = cat(1,design{:});
@@ -278,6 +300,7 @@ corder(1:3)
 % we want to find images with least two repetitions and then prepare a useful
 % matrix of indices that refer to when these occur.
 repindices = [];  % 2 x images containing stimulus trial indices.
+
 % the first row refers to the first presentation;
 % the second row refers to the second presentation.
 for p=1:size(designALL,2)  % loop over every condition
@@ -297,12 +320,12 @@ repindices(:,1:3)
 fprintf('There are %i repeated images in the experiment \n',length(repindices))
 
 % Now, for each voxel we are going to correlate beta weights describing the
-% response to images presented for the first time  with beta weights
+% response to images presented for the first time with beta weights
 % describing the response from the repetition of the same
-% image. With 136 repeated images R value for each voxel will correspond
-% to correlation between two vectors with 136 beta weights each.
+% image. With 136 repeated images, the correlation for each voxel will 
+% reflect the relationship between two vectors with 136 beta weights each.
 
-%% Compute median split-half reliability for each GLM version.
+%% Compute median split-half reliability for each GLM version
 
 model_names = fieldnames(models);
 model_names = model_names([4 1 2 3]);
@@ -322,10 +345,13 @@ for m = 1 : length(model_names)
     % compute reliabilities using an efficient (vectorized) utility function
     vox_reliabilities{m} = calccorrelation(betas_reshaped(:,:,:,1,:),betas_reshaped(:,:,:,2,:),5);
     
+    % Note that calccorrelation.m is a utility function that computes correlations
+    % in a vectorized fashion (for optimal speed).
+    
 end
 
-%% Compare visual voxel reliabilities between beta versions.
-figure(5);clf
+%% Compare visual voxel reliabilities between beta versions
+figure(4);clf
 subplot(1,2,1);
 cmap = [0.2314    0.6039    0.6980
     0.8615    0.7890    0.2457
@@ -378,3 +404,16 @@ xticks([])
 yticks([])
 
 set(gcf,'Position',[36 343 1116 674])
+
+% Notice that there is systematic increase in reliability moving from the
+% first to the second to the third to the final fourth version of the GLM
+% results. These increases reflect, respectively, the addition of 
+% HRF fitting, the derivation and use of data-driven nuisance regressors,
+% and the use of ridge regression as a way to regularize the instability
+% of closely spaced experimental trials. Depending on one's experimental
+% goals, it is possible with setting of option flags to activate a subset
+% of these analysis features.
+%
+% Also, keep in mind that in the above figure, we are simply showing the 
+% median as a metric of the central tendency (you may want to peruse 
+% individual voxels in scatter plots, for example).
