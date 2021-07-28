@@ -408,7 +408,7 @@ colormap(cmapsign2)
 c = colorbar;
 c.Ticks = [0 0.5 1];
 c.TickLabels = {'-0.3';'0';'0.3'};
-title('change in nsdgeneral voxel reliability** due to GLMsingle (r)')
+title('change in nsdgeneral voxel reliability** due to GLMsingle (\Delta{\itr})')
 set(gca,'Fontsize',16)
 xlabel('**plotting (FITHRF_GLMDENOISE_RR - ASSUMEHRF) reliabilities','Interpreter','none','FontSize',12);
 xticks([])
