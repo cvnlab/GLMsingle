@@ -6,7 +6,7 @@
    <!--
 This HTML was auto-generated from MATLAB code.
 To make changes, update the MATLAB code and republish this document.
-      --><title>example1</title><meta name="generator" content="MATLAB 9.4"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2021-07-28"><meta name="DC.source" content="example1.m"><style type="text/css">
+      --><title>Example 1 Overview</title><meta name="generator" content="MATLAB 9.4"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2021-07-28"><meta name="DC.source" content="example1.m"><style type="text/css">
 html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
 
 html { min-height:100%; margin-bottom:1px; }
@@ -66,7 +66,7 @@ table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px soli
 
 
 
-  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#1">Add dependencies and download the data</a></li><li><a href="#2">Data overview</a></li><li><a href="#6">Call GLMestimatesingletrial with default parameters</a></li><li><a href="#7">Summary of important outputs</a></li><li><a href="#8">Plot a slice of brain with GLMsingle outputs</a></li><li><a href="#9">Run a baseline GLM to compare with GLMsingle</a></li><li><a href="#11">Organize GLM outputs to enable calculation of voxel reliability</a></li><li><a href="#14">Compute median split-half reliability for each GLM version</a></li><li><a href="#15">Compare visual voxel reliabilities between beta versions</a></li></ul></div><h2 id="1">Add dependencies and download the data</h2><pre class="codeinput"><span class="comment">% We will assume that the current working directory is the directory that</span>
+  </style></head><body><div class="content"><h1>Example 1 Overview</h1><!--introduction--><p>GLMsingle is new tool that provides efficient, scalable, and accurate single-trial fMRI response estimates.</p><p>The purpose of this Example 1 notebook is to guide the user through basic calls to GLMsingle, using a representative, small-scale test dataset (in this case, an example session from a rapid event-related visual fMRI dataset - the Natural Scenes Dataset core experiment).</p><p>The goal is to examine the effect of GLMsingle on the reliability of single-trial fMRI response estimates. By default, the tool implements a set of optimizations that improve upon generic GLM approaches by: (1) identifying an optimal hemodynamic response function (HRF) at each voxel, (2) deriving a set of useful GLM nuisance regressors via "GLMdenoise" and picking an optimal number to include in the final GLM, and (3) applying a custom amount of ridge regularization at each voxel using an efficient technique called "fracridge". The output of GLMsingle are GLM betas reflecting the estimated percent signal change in each voxel in response to each experimental stimulus or condition being modeled.</p><p>Beyond directly improving the reliability of neural responses to repeated stimuli, these optimized techniques for signal estimation can have a range of desirable downstream effects such as: improving cross-subject representational similarity within and between datasets; improving the single-image decodability of evoked neural patterns via MVPA; and, decreasing the correlation in spatial patterns observed at neighboring timepoints in analysis of fMRI GLM outputs. See our video presentation at V-VSS 2020 for a summary of these phenomena as observed in recent massive-scale fMRI datasets (the Natural Scenes Dataset and BOLD5000): https://www.youtube.com/watch?v=yb3Nn7Han8o</p><p>Example 1 contains a full walkthrough of the process of loading an example dataset and design matrix, estimating neural responses using GLMsingle, estimating the reliability of responses at each voxel, and comparing those achieved via GLMsingle to those achieved using a baseline GLM. After loading and visualizing formatted fMRI time-series and their corresponding design matrices, we will describe the default behavior of GLMsingle and show how to modify hyperparameters if the user desires. Throughout the notebook we will highlight important metrics and outputs using figures, print statements, and comments.</p><p>Users encountering bugs, unexpected outputs, or other issues regarding GLMsingle shouldn't hesitate to raise an issue on GitHub: https://github.com/kendrickkay/GLMsingle/issues</p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Add dependencies and download the data</a></li><li><a href="#2">Data overview</a></li><li><a href="#6">Call GLMestimatesingletrial with default parameters</a></li><li><a href="#7">Summary of important outputs</a></li><li><a href="#8">Plot a slice of brain with GLMsingle outputs</a></li><li><a href="#9">Run a baseline GLM to compare with GLMsingle</a></li><li><a href="#11">Organize GLM outputs to enable calculation of voxel reliability</a></li><li><a href="#14">Compute median split-half reliability for each GLM version</a></li><li><a href="#15">Compare visual voxel reliabilities between beta versions</a></li></ul></div><h2 id="1">Add dependencies and download the data</h2><pre class="codeinput"><span class="comment">% We will assume that the current working directory is the directory that</span>
 <span class="comment">% contains this script.</span>
 
 <span class="comment">% Add path to GLMsingle</span>
@@ -474,6 +474,52 @@ set(gcf,<span class="string">'Position'</span>,[36 343 1116 674])
 <span class="comment">% individual voxels in scatter plots, for example).</span>
 </pre><img vspace="5" hspace="5" src="example1_04.png" alt=""> <p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2018a</a><br></p></div><!--
 ##### SOURCE BEGIN #####
+%% Example 1 Overview
+%
+% GLMsingle is new tool that provides efficient, scalable, and accurate
+% single-trial fMRI response estimates.
+%
+% The purpose of this Example 1 notebook is to guide the user through basic
+% calls to GLMsingle, using a representative, small-scale test dataset (in
+% this case, an example session from a rapid event-related visual fMRI
+% dataset - the Natural Scenes Dataset core experiment).
+%
+% The goal is to examine the effect of GLMsingle on the reliability of
+% single-trial fMRI response estimates. By default, the tool implements a
+% set of optimizations that improve upon generic GLM approaches by: (1)
+% identifying an optimal hemodynamic response function (HRF) at each voxel,
+% (2) deriving a set of useful GLM nuisance regressors via "GLMdenoise" and
+% picking an optimal number to include in the final GLM, and (3) applying a
+% custom amount of ridge regularization at each voxel using an efficient
+% technique called "fracridge". The output of GLMsingle are GLM betas
+% reflecting the estimated percent signal change in each voxel in response
+% to each experimental stimulus or condition being modeled.
+%
+% Beyond directly improving the reliability of neural responses to repeated
+% stimuli, these optimized techniques for signal estimation can have a
+% range of desirable downstream effects such as: improving cross-subject
+% representational similarity within and between datasets; improving the
+% single-image decodability of evoked neural patterns via MVPA; and,
+% decreasing the correlation in spatial patterns observed at neighboring
+% timepoints in analysis of fMRI GLM outputs. See our video presentation at
+% V-VSS 2020 for a summary of these phenomena as observed in recent
+% massive-scale fMRI datasets (the Natural Scenes Dataset and BOLD5000):
+% https://www.youtube.com/watch?v=yb3Nn7Han8o
+%
+% Example 1 contains a full walkthrough of the process of loading an
+% example dataset and design matrix, estimating neural responses using
+% GLMsingle, estimating the reliability of responses at each voxel, and
+% comparing those achieved via GLMsingle to those achieved using a baseline
+% GLM. After loading and visualizing formatted fMRI time-series and their
+% corresponding design matrices, we will describe the default behavior of
+% GLMsingle and show how to modify hyperparameters if the user desires.
+% Throughout the notebook we will highlight important metrics and outputs
+% using figures, print statements, and comments.
+%
+% Users encountering bugs, unexpected outputs, or other issues regarding
+% GLMsingle shouldn't hesitate to raise an issue on GitHub:
+% https://github.com/kendrickkay/GLMsingle/issues
+
 %% Add dependencies and download the data
 
 % We will assume that the current working directory is the directory that
@@ -556,6 +602,7 @@ set(gcf,'Position',[418   412   782   605])
 % image occurs. Note that in some runs not all images are shown; if a
 % column does not have a white rectangle it means that this image is shown
 % in a different run.
+
 %%
 
 % Show an example slice of the first fMRI volume.

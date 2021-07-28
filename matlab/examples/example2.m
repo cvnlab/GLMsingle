@@ -1,3 +1,50 @@
+%% Example 2 Overview
+%
+% GLMsingle is new tool that provides efficient, scalable, and accurate
+% single-trial fMRI response estimates.
+%
+% The purpose of this Example 2 notebook is to guide the user through basic
+% calls to GLMsingle, using a representative, small-scale test dataset (in
+% this case, 4 runs from an fMRI localizer session containing a block
+% design, which was part of the Natural Scenes Dataset).
+%
+% The goal is to examine the effect of GLMsingle on the reliability of
+% fMRI response estimates to the different conditions used in the localizer set 
+% (e.g. faces, bodies, objects, scenes, words). By default, the tool implements a
+% set of optimizations that improve upon generic GLM approaches by: (1)
+% identifying an optimal hemodynamic response function (HRF) at each voxel,
+% (2) deriving a set of useful GLM nuisance regressors via "GLMdenoise" and
+% picking an optimal number to include in the final GLM, and (3) applying a
+% custom amount of ridge regularization at each voxel using an efficient
+% technique called "fracridge". The output of GLMsingle are GLM betas
+% reflecting the estimated percent signal change in each voxel in response
+% to each experimental stimulus or condition being modeled.
+%
+% Beyond directly improving the reliability of neural responses to repeated
+% conditions, these optimized techniques for signal estimation can have a
+% range of desirable downstream effects such as: improving cross-subject
+% representational similarity within and between datasets; improving the
+% single-image decodability of evoked neural patterns via MVPA; and,
+% decreasing the correlation in spatial patterns observed at neighboring
+% timepoints in analysis of fMRI GLM outputs. See our video presentation at
+% V-VSS 2020 for a summary of these phenomena as observed in recent
+% massive-scale fMRI datasets (the Natural Scenes Dataset and BOLD5000): 
+% https://www.youtube.com/watch?v=yb3Nn7Han8o
+%
+% Example 2 contains a full walkthrough of the process of loading an
+% example dataset and design matrix, estimating neural responses using
+% GLMsingle, estimating the reliability of responses at each voxel, and
+% comparing those achieved via GLMsingle to those achieved using a baseline
+% GLM. After loading and visualizing formatted fMRI time-series and their
+% corresponding design matrices, we will describe the default behavior of
+% GLMsingle and show how to modify hyperparameters if the user desires.
+% Throughout the notebook we will highlight important metrics and outputs
+% using figures, print statements, and comments.
+%
+% Users encountering bugs, unexpected outputs, or other issues regarding
+% GLMsingle shouldn't hesitate to raise an issue on GitHub:
+% https://github.com/kendrickkay/GLMsingle/issues
+
 %% Add dependencies and download the data
 
 % We will assume that the current working directory is the directory that
