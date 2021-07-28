@@ -328,7 +328,7 @@ find(corder==1)
 % split-half correlation for each voxel will thus reflect the relationship
 % between two vectors with 10 beta weights each.
 
-%% Compute median split-half reliability for each GLM version.
+%% Compute median split-half reliability for each GLM version
 
 % To calculate the split-half reliability we are going to average the odd
 % and even beta weights extracted from the same condition and calculate the
@@ -399,7 +399,7 @@ for m = 1 : length(model_names)
     
 end
 
-%% Compare visual voxel reliabilities between beta versions in V1 and FFA ROIs.
+%% Compare visual voxel reliabilities between beta versions in V1 and FFA ROIs
 
 figure(5);clf
 
