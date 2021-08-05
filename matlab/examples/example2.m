@@ -151,7 +151,7 @@ set(gca,'FontSize',15)
 %% Call GLMestimatesingletrial with default parameters
 
 % Outputs and figures will be stored in a folder (you can specify its name
-% as the 5th output to GLMestimatesingletrial). Model estimates can be also
+% as the 5th input to GLMestimatesingletrial). Model estimates can be also
 % saved to the 'results' variable which is the only output of
 % GLMestimatesingletrial.
 
