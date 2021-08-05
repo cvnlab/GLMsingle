@@ -44,7 +44,7 @@
 % GLMsingle shouldn't hesitate to raise an issue on GitHub:
 % https://github.com/kendrickkay/GLMsingle/issues
 
-%% Add dependencies and download the data
+%% Add dependencies and download the example dataset
 
 % We will assume that the current working directory is the directory that
 % contains this script.
@@ -93,8 +93,8 @@ whos
 
 fprintf('There are %d runs in total.\n',length(design));
 fprintf('The dimensions of the data for the first run are %s.\n',mat2str(size(data{1})));
-fprintf('The stimulus duration is %.6f seconds.\n',stimdur);
-fprintf('The sampling rate (TR) is %.6f seconds.\n',tr);
+fprintf('The stimulus duration is %.3f seconds.\n',stimdur);
+fprintf('The sampling rate (TR) is %.3f seconds.\n',tr);
 
 %%
 
@@ -125,7 +125,7 @@ set(gcf,'Position',[418   412   782   605])
 % are pseudo randomized and they indicate when the presentation of each
 % image occurs. Note that in some runs not all images are shown; if a
 % column does not have a white rectangle it means that this image is shown
-% in a different run.
+% in a different run within the session.
 
 %%
 
@@ -144,7 +144,7 @@ set(gca,'FontSize',15)
 %% Call GLMestimatesingletrial with default parameters
 
 % Outputs and figures will be stored in a folder (you can specify its name
-% as the 5th output to GLMestimatesingletrial). Model estimates can be also
+% as the 5th input to GLMestimatesingletrial). Model estimates can be also
 % saved to the 'results' variable which is the only output of
 % GLMestimatesingletrial.
 
@@ -156,12 +156,12 @@ set(gca,'FontSize',15)
 % main options that one might want to modify/set. Defaults for the options
 % are indicated below.
 
-% wantlibrary = 1 -> Fit HRF to each voxel wantglmdenoise = 1 -> Use
-% GLMdenoise wantfracridge = 1  -> Use ridge regression to improve beta
-% estimates chunknum = 50000 -> is the number of voxels that we will
-% process at the
-%   same time. For setups with lower memory, you may need to decrease this
-%   number.
+% wantlibrary = 1 -> Fit HRF to each voxel 
+% wantglmdenoise = 1 -> Use GLMdenoise 
+% wantfracridge = 1  -> Use ridge regression to improve beta estimates
+% chunknum = 50000 -> is the number of voxels that we will
+%     process at the same time. For setups with lower memory, you may need to 
+%     decrease this number.
 
 % wantmemoryoutputs is a logical vector [A B C D] indicating which of the
 %     four model types to return in the output <results>. The user must be
@@ -172,14 +172,14 @@ set(gca,'FontSize',15)
 
 % wantfileoutputs is a logical vector [A B C D] indicating which of the
 %     four model types to save to disk (assuming that they are computed). A
-%     = 0/1 for saving the results of the ONOFF model B = 0/1 for saving
-%     the results of the FITHRF model C = 0/1 for saving the results of the
-%     FITHRF_GLMdenoise model D = 0/1 for saving the results of the
-%     FITHRF_GLMdenoise_RR model Default: [1 1 1 1] which means save all
+%     = 0/1 for saving the results of the ONOFF model, B = 0/1 for saving
+%     the results of the FITHRF model, C = 0/1 for saving the results of the
+%     FITHRF_GLMdenoise model, D = 0/1 for saving the results of the
+%     FITHRF_GLMdenoise_RR model. Default: [1 1 1 1] which means save all
 %     computed results to disk.
 
 % numpcstotry (optional) is a non-negative integer indicating the maximum
-%     number of PCs to enter into the model. Default: 10.
+%     number of GLMdenoise PCs to enter into the model. Default: 10.
 
 % fracs (optional) is a vector of fractions that are greater than 0
 %     and less than or equal to 1. We automatically sort in descending
@@ -241,7 +241,7 @@ end
 % FRACvalue -> is the fractional ridge regression regularization level
 % chosen for each voxel. Values closer to 1 mean less regularization.
 
-%% Plot a slice of brain with GLMsingle outputs
+%% Plot a slice of brain showing GLMsingle outputs
 
 % We are going to plot several outputs from the FIT_HRF_GLMdenoise_RR GLM,
 % which contains the full set of GLMsingle optimizations.
@@ -255,14 +255,24 @@ cmaps = {cmapsign2;hot;jet;copper};
 figure(3);clf
 
 for v = 1 : length(val2plot)
+    
     f=subplot(2,2,v);
+    
     if contains('modelmd',val2plot{v})
+        % When plotting betas, for simplicity just average across all image
+        % presentations This will yield a summary of whether voxels tend to
+        % increase or decrease their activity in response to the
+        % experimental stimuli (similar to outputs from an ONOFF GLM)
         imagesc(nanmean(models.FIT_HRF_GLMdenoise_RR.(val2plot{v})(:,:,slice),4),[-5 5]); axis off image;
         title('Average GLM betas (750 stimuli)')
+   
     else
+        % Plot all other voxel-wise metrics as outputted from GLMsingle
         imagesc(models.FIT_HRF_GLMdenoise_RR.(val2plot{v})(:,:,slice)); axis off image;
         title(val2plot{v})
+        
     end
+    
     colormap(f,cmaps{v})
     colorbar
     set(gca,'FontSize',15)
@@ -307,7 +317,7 @@ end
 % Now, "models" variable holds solutions for 4 GLM models
 disp(fieldnames(models))
 
-%% Organize GLM outputs to enable calculation of voxel reliability
+%% Get indices of repeated conditions to use for reliability calculations
 
 % To compare the results of different GLMs we are going to calculate the
 % voxel-wise split-half reliablity for each model. Reliability values
@@ -339,7 +349,7 @@ end
 
 %%
 
-% let's take a look at the first few entries
+% Let's take a look at the first few entries
 corder(1:3)
 
 % Note that [375 497 8] means that the first stimulus trial involved
@@ -353,7 +363,7 @@ corder(1:3)
 % useful matrix of indices that refer to when these occur.
 repindices = [];  % 2 x images containing stimulus trial indices.
 
-% the first row refers to the first presentation; the second row refers to
+% The first row refers to the first presentation; the second row refers to
 % the second presentation.
 for p=1:size(designALL,2)  % loop over every condition
     temp = find(corder==p);
@@ -362,7 +372,7 @@ for p=1:size(designALL,2)  % loop over every condition
     end
 end
 
-% let's take a look at a few entries
+% Let's take a look at a few entries
 repindices(:,1:3)
 
 % Notice that the first condition is presented on the 217th stimulus trial
@@ -374,7 +384,7 @@ fprintf('There are %i repeated images in the experiment \n',length(repindices))
 % Now, for each voxel we are going to correlate beta weights describing the
 % response to images presented for the first time with beta weights
 % describing the response from the repetition of the same image. With 136
-% repeated images, the correlation for each voxel will reflect the
+% repeated conditions, the correlation for each voxel will reflect the
 % relationship between two vectors with 136 beta weights each.
 
 %% Compute median split-half reliability for each GLM version

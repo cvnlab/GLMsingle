@@ -100,8 +100,8 @@ whos
 
 fprintf('There are %d runs in total.\n',length(design));
 fprintf('The dimensions of the data for the first run are %s.\n',mat2str(size(data{1})));
-fprintf('The stimulus duration is %.6f seconds.\n',stimdur);
-fprintf('The sampling rate (TR) is %.6f seconds.\n',tr);
+fprintf('The stimulus duration is %.3f seconds.\n',stimdur);
+fprintf('The sampling rate (TR) is %.3f seconds.\n',tr);
 
 %%
 
@@ -122,7 +122,7 @@ end
 % describes a single condition (conditions are repeated across runs). Each
 % design matrix is binary with 1 specfing the time (TR) when the stimulus
 % is presented on the screen.
-
+% 
 % In each run of the NSD floc experiment there were images from 10
 % categories presented in blocks of duration 4 sec each. Each category in
 % the localizer set was presented for 6 blocks per run, and each block
@@ -540,11 +540,11 @@ set(gca,'FontSize',14)
 % experimental trials. Depending on one's experimental goals, it is
 % possible with setting of option flags to activate a subset of these
 % analysis features.
-%
+% 
 % Also, keep in mind that in the above figure, we are simply showing the
 % median as a metric of the central tendency (you may want to peruse
 % individual voxels in scatter plots, for example).
-
+% 
 % Note also that median reliability is consistently higher in the FFA ROI
 % than in the V1 ROI in this analysis of localizer data. Importantly, this
 % does not imply that V1 data are inherently noisy or unreliable across the
