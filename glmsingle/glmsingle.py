@@ -591,12 +591,18 @@ class GLM_single():
 
         onoffR2 = results0['R2']
         meanvol = results0['meanvol']
+        betasmd = results0['betasmd']
 
         # save to disk if desired
         if params['wantfileoutputs'][whmodel] == 1:
             file0 = os.path.join(outputdir, 'TYPEA_ONOFF.npy')
             print(f'\n*** Saving results to {file0}. ***\n')
-            np.save(file0, onoffR2, meanvol, xyz)
+            results_out = {
+                'onoffR2': onoffR2,
+                'meanvol': meanvol,
+                'betasmd': betasmd
+            }
+            np.save(file0, results_out)
 
         # figures
         if wantfig:
@@ -624,7 +630,8 @@ class GLM_single():
         if params['wantmemoryoutputs'][whmodel] == 1:
             results['typea'] = {
                 'onoffR2': onoffR2,
-                'meanvol': meanvol
+                'meanvol': meanvol,
+                'betasmd': betasmd
             }
 
         # DETERMINE THRESHOLDS
