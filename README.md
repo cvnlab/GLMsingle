@@ -1,5 +1,7 @@
 # GLMsingle
 
+![image](https://user-images.githubusercontent.com/35503086/130008510-c3d4a454-ff74-4c07-b19e-9e424b318706.png)
+
 GLMsingle is a toolbox for obtaining accurate single-trial estimates
 in fMRI time-series data. We provide both MATLAB and Python implementations. 
 
