@@ -56,4 +56,5 @@ If you use GLMsingle in your research, please cite the following paper:
 
 ## Change history
 
+* 2021/10/12 - Version 1.0 of GLMsingle is now released. A git tag has been added to the repo.
 * 2021/05/21 - The core code is complete, but is in "beta" and we are generating tutorial examples of usage. The initial 1.0 release should be forthcoming.
