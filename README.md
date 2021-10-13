@@ -26,8 +26,19 @@ To use the GLMsingle toolbox, add it to your MATLAB path:
 You will also need to download and add fracridge to your path.
 It is available here: https://github.com/nrdg/fracridge
 
-To try the toolbox on an example dataset, change to the GLMsingle directory 
-and then TBD...
+## Example scripts
+
+We provide a number of example scripts that demonstrate usage of GLMsingle. You can browse these example scripts here:
+
+(Python Example 1 - event-related design) https://htmlpreview.github.io/?https://github.com/kendrickkay/GLMsingle/blob/main/examples/example1.html
+
+(Python Example 2 - block design) https://htmlpreview.github.io/?https://github.com/kendrickkay/GLMsingle/blob/main/examples/example2.html
+
+(MATLAB Example 1 - event-related design) https://htmlpreview.github.io/?https://github.com/kendrickkay/GLMsingle/blob/main/matlab/examples/example1preview/example1.html
+
+(MATLAB Example 2 - block design) https://htmlpreview.github.io/?https://github.com/kendrickkay/GLMsingle/blob/main/matlab/examples/example2preview/example2.html
+
+If you would like to run these example scripts, the Python versions are available in `/GLMsingle/examples`, and the MATLAB versions are available in `/GLMsingle/matlab/examples`. Each notebook contains a full walkthrough of the process of loading an example dataset and design matrix, estimating neural responses using GLMsingle, estimating the reliability of responses at each voxel, and comparing those achieved via GLMsingle to those achieved using a baseline GLM.
 
 ## Python
 
