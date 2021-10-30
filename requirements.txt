@@ -14,3 +14,4 @@ joblib
 datalad
 imageio
 fracridge
+nibabel
