@@ -1,6 +1,6 @@
 # GLMsingle
 
-![image](https://user-images.githubusercontent.com/35503086/130008633-68ce6bb0-ca7f-4865-9d3a-c23ec2e2f0bc.png)
+![image](https://user-images.githubusercontent.com/35503086/141851358-1f18f55b-9941-415b-bc40-0479d02849e3.png)
 
 -------------------------------------------------------------------------------------------
 
