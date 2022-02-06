@@ -7,6 +7,9 @@
 GLMsingle is a toolbox for obtaining accurate single-trial estimates
 in fMRI time-series data. We provide both MATLAB and Python implementations. 
 
+**The GLMsingle preprint, which describes the technique in detail, 
+is available on bioRxiv (https://www.biorxiv.org/content/10.1101/2022.01.31.478431v1).**
+
 GLMsingle can be viewed as a wholesale replacement of its predecessor,
 GLMdenoise (http://github.com/kendrickkay/GLMdenoise).
 
@@ -63,7 +66,8 @@ repository: https://github.com/kendrickkay/GLMsingle/wiki
 Terms of use: This content is licensed under a BSD 3-Clause License.
 
 If you use GLMsingle in your research, please cite the following paper:
-* [Allen, E.J., St-Yves, G., Wu, Y., Breedlove, J.L., Dowdle, L.T., Caron, B., Pestilli, F., Charest, I., Hutchinson, J.B., Naselaris, T.\*, Kay, K.\* A massive 7T fMRI dataset to bridge cognitive and computational neuroscience. bioRxiv (2021).](https://www.biorxiv.org/content/10.1101/2021.02.22.432340v1)
+
+* [Prince, J.S., Charest, I., Kurzawski, J.W., Pyles, J.A., Tarr, M.J., Kay, K.N. GLMsingle: a toolbox for improving single-trial fMRI response estimates. bioRxiv (2022).](https://www.biorxiv.org/content/10.1101/2022.01.31.478431v1)
 
 ## Change history
 
