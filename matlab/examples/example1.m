@@ -46,36 +46,33 @@
 
 %% Add dependencies and download the example dataset
 
-% We will assume that the current working directory is the directory that
-% contains this script.
-
-% Add path to GLMsingle
-addpath(genpath('../../matlab'));
-
-% You also need fracridge repository to run this code. For example, you
-% could do:
-%   git clone https://github.com/nrdg/fracridge.git
-% and then do:
-%   addpath('fracridge')
-
 % Start fresh
 clear
 clc
 close all
 
+
+this_dir = fileparts(mfilename('fullfile'));
+
+% Add path to GLMsingle
+run(fullfile(this_dir, '..','..','setup.m'));
+
 % Name of directory to which outputs will be saved
-outputdir = 'example1outputs';
+outputdir = fullfile(this_dir, 'example1outputs');
 
 % Download files to data directory
-if ~exist('./data','dir')
+input_dir = fullfile(this_dir, 'data');
+if ~exist(input_dir, 'dir')
     mkdir('data')
 end
 
-if ~exist('./data/nsdcoreexampledataset.mat','file')
-    % download data with curl
-    system('curl -L --output ./data/nsdcoreexampledataset.mat https://osf.io/k89b2/download')
-end
-load('./data/nsdcoreexampledataset.mat')
+input_file = fullfile(input_dir, 'nsdcoreexampledataset.mat');
+URL = 'https://osf.io/k89b2/download';
+
+download_data(URL, input_file);
+
+load(input_file)
+
 % Data comes from the NSD dataset (subj01, nsd01 scan session).
 % https://www.biorxiv.org/content/10.1101/2021.02.22.432340v1.full.pdf
 
