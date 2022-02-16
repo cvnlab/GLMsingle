@@ -5,6 +5,9 @@
 # data folder
 data/
 
+# example output folders
+example*outputs
+
 # various output
 figures/
 report.html
