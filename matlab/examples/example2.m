@@ -52,10 +52,10 @@ clear
 clc
 close all
 
-this_dir = fileparts(mfilename('fullfile'));
+this_dir = fileparts(mfilename('fullpath'));
 
 % Add path to GLMsingle
-run(fullfile(this_dir, '..','..','setup.m'));
+run(fullfile(this_dir, '..', '..', 'setup.m'));
 
 % Name of directory to which outputs will be saved
 outputdir = fullfile(this_dir, 'example2outputs');
