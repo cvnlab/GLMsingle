@@ -200,7 +200,9 @@ opt = struct('wantmemoryoutputs',[1 1 1 1]);
 % "example2outputs/GLMsingle". If these outputs don't already exist, we
 % will perform the time-consuming call to GLMestimatesingletrial.m;
 % otherwise, we will just load from disk.
-if ~exist([outputdir '/GLMsingle'],'dir')
+if ~exist(fullfile(outputdir, 'GLMsingle', 'TYPEB_FITHRF.mat'),'file') || ...
+   ~exist(fullfile(outputdir, 'GLMsingle', 'TYPEC_FITHRF_GLMDENOISE.mat'),'file') || ...
+   ~exist(fullfile(outputdir, 'GLMsingle', 'TYPED_FITHRF_GLMDENOISE_RR.mat'),'file')
     
     [results] = GLMestimatesingletrial(design,data,stimdur,tr,[outputdir '/GLMsingle'],opt);
     
@@ -293,7 +295,7 @@ opt.wantmemoryoutputs = [0 1 0 0];
 
 % If these outputs don't already exist, we will perform the call to
 % GLMestimatesingletrial.m; otherwise, we will just load from disk.
-if ~exist([outputdir '/GLMbaseline'],'dir')
+if ~exist(fullfile(outputdir, 'GLMbaseline', 'TYPEB_FITHRF.mat'),'file')
     
     [ASSUME_HRF] = GLMestimatesingletrial(design,data,stimdur,tr,[outputdir '/GLMbaseline'],opt);
     models.ASSUME_HRF = ASSUME_HRF{2};
