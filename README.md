@@ -25,16 +25,13 @@ raising a Github issue.
 
 To install: 
 
+```bash
 git clone --recurse-submodules https://github.com/cvnlab/GLMsingle.git
-
-This should also clone [`fracridge`](https://github.com/nrdg/fracridge)
-
-To use the GLMsingle toolbox, add it and `fracridge` to your MATLAB path by running:
-
-```matlab
-run setup.m
 ```
 
+This will also clone [`fracridge`](https://github.com/nrdg/fracridge) as a submodule.
+
+To use the GLMsingle toolbox, add it and `fracridge` to your MATLAB path by running the `setup.m` script.
 
 ## Example scripts
 
