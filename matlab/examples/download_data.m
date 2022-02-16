@@ -10,7 +10,11 @@ function download_data(URL, input_file)
         try
           urlwrite(URL, input_file);
         catch
-          this_dir = fileparts(mfilename('fullfile'));
+          this_dir = fileparts(mfilename('fullfile'));          
+          if exist(fullfile(this_dir, 'download'), 'file')
+            % remove eventual previously incomplete downloads
+            delete(fullfile(this_dir, 'download'))
+          end
           system(sprintf('wget --verbose %s', URL)); 
           movefile(fullfile(this_dir, 'download'), input_file);
         end
