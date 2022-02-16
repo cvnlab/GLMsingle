@@ -48,8 +48,15 @@ If you would like to run these example scripts, the Python versions are availabl
 To install: 
 
 ```bash
-pip install -r requirements.txt
-pip install .
+pip install git+https://github.com/cvnlab/GLMsingle.git
+```
+
+Running the demos requires:
+
+- jupyter notebook or jupyter lab.
+
+```bash
+pip install jupyterlab
 ```
 
 Code dependencies: see requirements.txt
