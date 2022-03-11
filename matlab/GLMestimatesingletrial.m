@@ -1050,15 +1050,21 @@ for ttt=1:length(todo)
   if wantfig
     if whmodel==3
       if is3d
-        imwrite(uint8(255*makeimagestack(noisepool,[0 1])),gray(256),fullfile(outputdir{2},'noisepool.png'));
-        imwrite(uint8(255*makeimagestack(pcvoxels, [0 1])),gray(256),fullfile(outputdir{2},'pcvoxels.png'));
+        if ~isempty(noisepool)
+          imwrite(uint8(255*makeimagestack(noisepool,[0 1])),gray(256),fullfile(outputdir{2},'noisepool.png'));
+        end
+        if ~isempty(pcvoxels)
+          imwrite(uint8(255*makeimagestack(pcvoxels, [0 1])),gray(256),fullfile(outputdir{2},'pcvoxels.png'));
+        end
       end
-      figureprep;
-      plot(0:opt.numpcstotry,xvaltrend);
-      straightline(pcnum,'v','r-');
-      xlabel('Number of GLMdenoise regressors');
-      ylabel('Cross-validation performance (higher is better)');
-      figurewrite('xvaltrend',[],[],outputdir{2});
+      if ~isempty(xvaltrend)
+        figureprep;
+        plot(0:opt.numpcstotry,xvaltrend);
+        straightline(pcnum,'v','r-');
+        xlabel('Number of GLMdenoise regressors');
+        ylabel('Cross-validation performance (higher is better)');
+        figurewrite('xvaltrend',[],[],outputdir{2});
+      end
     end
     if whmodel==4 && is3d
       imwrite(uint8(255*makeimagestack(R2,[0 100]).^0.5),hot(256),fullfile(outputdir{2},'typeD_R2.png'));

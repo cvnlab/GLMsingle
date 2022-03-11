@@ -922,7 +922,7 @@ class GLM_single():
 
             # just create placeholders
             pcregressors = []
-            noisepool = []
+            noisepool = None
 
         else:
 
@@ -1406,40 +1406,43 @@ class GLM_single():
             # figures?
             if wantfig:
                 if whmodel == 2:
-                    plt.imshow(
-                        make_image_stack(noisepool.reshape(xyz)),
-                        vmin=0,
-                        vmax=1,
-                        cmap='gray'
-                    )
-                    ax = plt.gca()
-                    ax.axes.xaxis.set_ticklabels([])
-                    ax.axes.yaxis.set_ticklabels([])
-                    plt.colorbar()
-                    plt.savefig(os.path.join(outputdir, 'noisepool.png'))
-                    plt.close('all')
-                    plt.imshow(
-                        make_image_stack(pcvoxels.reshape(xyz)),
-                        vmin=0,
-                        vmax=1,
-                        cmap='gray'
-                    )
-                    ax = plt.gca()
-                    ax.axes.xaxis.set_ticklabels([])
-                    ax.axes.yaxis.set_ticklabels([])
-                    plt.colorbar()
-                    plt.savefig(os.path.join(outputdir, 'pcvoxels.png'))
-                    plt.close('all')
+                    if noisepool is not None:
+                        plt.imshow(
+                            make_image_stack(noisepool.reshape(xyz)),
+                            vmin=0,
+                            vmax=1,
+                            cmap='gray'
+                        )
+                        ax = plt.gca()
+                        ax.axes.xaxis.set_ticklabels([])
+                        ax.axes.yaxis.set_ticklabels([])
+                        plt.colorbar()
+                        plt.savefig(os.path.join(outputdir, 'noisepool.png'))
+                        plt.close('all')
 
-                    fig = plt.figure()
-                    ax = fig.add_subplot(1, 1, 1)
-                    ax.plot(range(params['n_pcs']+1), xvaltrend)
-                    ax.scatter(pcnum, xvaltrend[pcnum])
-                    ax.set(
-                        xlabel='# GLMdenoise regressors',
-                        ylabel='Cross-val performance (higher is better)')
-                    plt.savefig(os.path.join(outputdir, 'xvaltrend.png'))
-                    plt.close('all')
+                    if pcvoxels is not None:
+                        plt.imshow(
+                            make_image_stack(pcvoxels.reshape(xyz)),
+                            vmin=0,
+                            vmax=1,
+                            cmap='gray'
+                        )
+                        ax = plt.gca()
+                        ax.axes.xaxis.set_ticklabels([])
+                        ax.axes.yaxis.set_ticklabels([])
+                        plt.colorbar()
+                        plt.savefig(os.path.join(outputdir, 'pcvoxels.png'))
+                        plt.close('all')
+                    if xvaltrend is not None:
+                        fig = plt.figure()
+                        ax = fig.add_subplot(1, 1, 1)
+                        ax.plot(range(params['n_pcs']+1), xvaltrend)
+                        ax.scatter(pcnum, xvaltrend[pcnum])
+                        ax.set(
+                            xlabel='# GLMdenoise regressors',
+                            ylabel='Cross-val performance (higher is better)')
+                        plt.savefig(os.path.join(outputdir, 'xvaltrend.png'))
+                        plt.close('all')
 
                 if whmodel == 3:
                     plt.imshow(
