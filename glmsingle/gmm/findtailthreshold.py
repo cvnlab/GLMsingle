@@ -59,7 +59,7 @@ def findtailthreshold(v, figpath=None):
     rng = robustrange(v2.flatten())[0]
 
     # evaluate posterior
-    allvals = np.linspace(np.median(v2), rng[1], num=nprecision)
+    allvals = np.linspace(rng[0], rng[1], num=nprecision)
     checkit = gmfit.predict_proba(allvals.reshape(-1, 1))
 
     # figure out crossing
