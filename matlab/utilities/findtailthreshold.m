@@ -49,7 +49,7 @@ gmfit = fitgmdist(v(:),2,'Replicates',numreps);
 rng = robustrange(v(:));
 
 % evaluate posterior
-allvals = linspace(median(v),rng(2),nprecision);
+allvals = linspace(rng(1),rng(2),nprecision);
 checkit = zeros(length(allvals),2);
 for qq=1:length(allvals)
   checkit(qq,:) = posterior(gmfit,allvals(qq));
