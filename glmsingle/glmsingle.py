@@ -103,12 +103,12 @@ class GLM_single():
          computation, but should not be so large that you run out of RAM.
          Default: 50000.
 
-        <xvalscheme> (optional) is a cell vector of vectors of run indices,
+        <xvalscheme> (optional) is a list of lists or list of run indices,
          indicating the cross-validation scheme. For example, if we have 8
          runs, we could use [[1, 2], [3, 4], [5, 6], [7, 8]] which indicates
          to do 4 folds of cross-validation, first holding out the 1st and 2nd
          runs, then the 3rd and 4th runs, etc.
-         Default: {[1] [2] [3] ... [n]} where n is the number of runs.
+         Default: [[1], [2], [3], ... [n]] where n is the number of runs.
 
         <sessionindicator> (optional) is 1 x n (where n is the number of runs)
         with positive integers indicating the run groupings that are
@@ -118,34 +118,35 @@ class GLM_single():
         INTERNALLY: it is used merely to calculate the cross-validation
         performance and the associated hyperparameter selection; the outputs
         of this function do not reflect z-scoring, and the user may wish to
-        apply z-scoring. Default: 1*ones(1,n) which means to interpret allruns
-        as coming from the same session.
+        apply z-scoring. Default: np.ones((1,n)) which means to interpret
+        all runs as coming from the same session.
 
        *** I/O FLAGS ***
 
-        <wantfileoutputs> (optional) is a logical vector [A B C D] indicating
-         which of the four model types to save to disk (assuming that they
-         are computed).
+        <wantfileoutputs> (optional) is a logical vector [A, B, C, D]
+         indicating which of the four model types to save to disk (assuming
+         that they are computed).
          A = 0/1 for saving the results of the ONOFF model
          B = 0/1 for saving the results of the FITHRF model
          C = 0/1 for saving the results of the FITHRF_GLMDENOISE model
          D = 0/1 for saving the results of the FITHRF_GLMDENOISE_RR model
-         Default: [1 1 1 1] which means save all computed results to disk.
+         Default: [1, 1, 1, 1] which means save all computed results to disk.
 
-        <wantmemoryoutputs> (optional) is a logical vector [A B C D] indicating
-         which of the four model types to return in the output <results>. The
-         user must be careful with this, as large datasets can require a lot of
-         RAM. If you do not request the various model types, they will be
+        <wantmemoryoutputs> (optional) is a logical vector [A, B, C, D]
+         indicating which of the four model types to return in the output
+         <results>. The user must be careful with this, as large datasets
+         can require a lot of RAM.
+         If you do not request the various model types, they will be
          cleared from memory (but still potentially saved to disk).
-         Default: [0 0 0 1] which means return only the final type-D model.
+         Default: [0, 0, 0, 1] which means return only the final type-D model.
 
-        <wanthdf5> (optional) is an optional flag that allows saving files in 
-         hdf5 format. This is useful if your output file is about to he huge 
+        <wanthdf5> (optional) is an optional flag that allows saving files in
+         hdf5 format. This is useful if your output file is about to he huge
          (>4Gb). Default to false, which saves in a .npy format.
 
         *** GLM FLAGS ***
 
-        <extra_regressors> (optional) is time x regressors or a cell vector
+        <extra_regressors> (optional) is time x regressors or a list
          of elements that are each time x regressors. The dimensions of
          <extraregressors> should mirror that of <design> (i.e. same number of
          runs, same number of time points). The number of extra regressors
@@ -172,16 +173,16 @@ class GLM_single():
         <hrftoassume> (optional) is time x 1 with an assumed HRF that
          characterizes the evoked response to each trial. We automatically
          divide by the maximum value so that the peak is equal to 1. Default
-         is to generate a canonical HRF (see getcanonicalhrf.m).
+         is to generate a canonical HRF (see getcanonicalhrf in hrf/gethrf.py).
          Note that the HRF supplied in <hrftoassume> is used in only two
          instances:
          (1) it is used for the simple ONOFF type-A model, and (2) if the
              user sets <wantlibrary> to 0, it is also used for the type-B,
              type-C, and type-D models.
 
-        <hrflibrary> (optional) is time x H with H different HRFs to choose
-         from for the library-of-HRFs approach. We automatically normalize
-         each HRF to peak at 1.
+        <hrflibrary> (optional) is an np.array of shape time x H,
+         with H different HRFs to choose from for the library-of-HRFs approach.
+         We automatically normalize each HRF to peak at 1.
          Default is to generate a library of 20 HRFs (see
          getcanonicalhrflibrary).
          Note that if <wantlibrary> is 0, <hrflibrary> is clobbered with the
@@ -204,10 +205,10 @@ class GLM_single():
         <n_pcs> (optional) is a non-negative integer indicating the
          maximum number of PCs to enter into the model. Default: 10.
 
-        <brainthresh> (optional) is [A B] where A is a percentile for voxel
+        <brainthresh> (optional) is [A, B] where A is a percentile for voxel
          intensity values and B is a fraction to apply to the percentile. These
          parameters are used in the selection of the noise pool.
-         Default: [99 0.1].
+         Default: [99, 0.1].
 
         <brainR2> (optional) is an R^2 value (percentage). After fitting the
          type-A model, voxels whose R^2 is below this value are allowed to
@@ -246,12 +247,12 @@ class GLM_single():
 
        *** MODEL TYPE D (FITHRF_GLMDENOISE_RR) FLAGS ***
 
-        <fracs> (optional) is a vector of fractions that are greater than 0
-         and less than or equal to 1. We automatically sort in descending
-         order and ensure the fractions are unique. These fractions indicate
-         the regularization levels to evaluate using fractional ridge
+        <fracs> (optional) is a numpy vector of fractions that are greater
+         than 0 and less than or equal to 1. We automatically sort in
+         descending order and ensure the fractions are unique. These fractions
+         indicate the regularization levels to evaluate using fractional ridge
          regression (fracridge) and cross-validation.
-         Default: fliplr(.05:.05:1).
+         Default: np.linspace(1, 0.05, 20).
          A special case is when <fracs> is specified as a single scalar value.
          In this case, cross-validation is NOT performed for the type-D model,
          and we instead blindly usethe supplied fractional value for the type-D
@@ -269,7 +270,11 @@ class GLM_single():
 
         # Check if all opt arguments are allowed
         allowed = list(default_params.keys()) + [
-            'xvalscheme', 'sessionindicator', 'hrflibrary', 'hrftoassume', 'maxpolydeg'
+            'xvalscheme',
+            'sessionindicator',
+            'hrflibrary',
+            'hrftoassume',
+            'maxpolydeg'
         ]
         for key in params.keys():
             if key not in allowed:
@@ -369,19 +374,6 @@ class GLM_single():
         <scaleoffset> is the scale and offset applied to RR estimates to best
                     match the unregularized result
 
-        History:
-        [MATLAB]
-        - 2020/08/22 - Implement params.sessionindicator. Also, now the
-                        cross-validation units now reflect
-                        the "session-wise z-scoring" hyperparameter selection
-                        approach; thus, the cross-
-                        validation units have been CHANGED relative to prior
-                        analyses!
-        - 2020/05/14 - Version 1.0 released!
-                        (Tweak some documentation; output more results; fix a
-                        small bug (params.fracs(1)~=1).)
-        - 2020/05/12 - Add pcvoxels output.
-        - 2020/05/12 - Initial version. Beta version. Use with caution.
         """
 
         # DEAL WITH INPUTS
