@@ -61,8 +61,8 @@ def check_inputs(data, design):
     is3d = data[0].ndim > 2  # is this the X Y Z T case?
     if is3d:
         xyz = data[0].shape[:3]
-        n_times = data[0].shape[3]
         for p in range(len(data)):
+            n_times = data[p].shape[3]
             data[p] = np.reshape(
                 data[p],
                 [np.prod(xyz), n_times])
