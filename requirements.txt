@@ -15,3 +15,4 @@ datalad
 imageio
 fracridge
 nibabel
+h5py

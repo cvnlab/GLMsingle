@@ -1,6 +1,7 @@
 from __future__ import absolute_import, division, print_function
 import os
 import numpy as np
+import h5py
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import normalize
@@ -137,6 +138,10 @@ class GLM_single():
          RAM. If you do not request the various model types, they will be
          cleared from memory (but still potentially saved to disk).
          Default: [0 0 0 1] which means return only the final type-D model.
+
+        <wanthdf5> (optional) is an optional flag that allows saving files in 
+         hdf5 format. This is useful if your output file is about to he huge 
+         (>4Gb). Default to false, which saves in a .npy format.
 
         *** GLM FLAGS ***
 
@@ -405,6 +410,10 @@ class GLM_single():
         # inputs
         if 'xvalscheme' not in params:
             params['xvalscheme'] = np.arange(numruns)
+        
+        # additional check for the file format
+        if 'wanthdf5' not in params:
+            params['wanthdf5'] = 0
 
         if 'sessionindicator' not in params:
             params['sessionindicator'] = np.ones((1, numruns)).astype(int)
@@ -595,14 +604,24 @@ class GLM_single():
 
         # save to disk if desired
         if params['wantfileoutputs'][whmodel] == 1:
-            file0 = os.path.join(outputdir, 'TYPEA_ONOFF.npy')
+            if params['wanthdf5'] == 1:
+                file0 = os.path.join(outputdir, 'TYPEA_ONOFF.hdf5')
+            else:
+                file0 = os.path.join(outputdir, 'TYPEA_ONOFF.npy')
+
             print(f'\n*** Saving results to {file0}. ***\n')
             results_out = {
                 'onoffR2': onoffR2,
                 'meanvol': meanvol,
                 'betasmd': betasmd
             }
-            np.save(file0, results_out)
+            if params['wanthdf5'] == 1:
+                hf = h5py.File(file0, 'w')
+                for k, v in results_out.items():
+                    hf.create_dataset(k, data=v)
+                hf.close()
+            else:
+                np.save(file0, results_out)
 
         # figures
         if wantfig:
@@ -835,18 +854,19 @@ class GLM_single():
                             cnt = cnt + numtrialrun[rrr]
 
             # FIT TYPE-B MODEL (LSS) INTERLUDE END
-            
+
             # if user provided XYZ, reshape disk/memory output fields into XYZ
             if xyz:
-                results_out = {'FitHRFR2': np.reshape(FitHRFR2, [nx, ny, nz, nh]),
-                     'FitHRFR2run': np.reshape(FitHRFR2run, [nx, ny, nz, numruns, nh]),
-                     'HRFindex': np.reshape(HRFindex, [nx, ny, nz]),
-                     'HRFindexrun': np.reshape(HRFindexrun, [nx, ny, nz, numruns]),
-                     'R2': np.reshape(R2, [nx, ny, nz]),
-                     'R2run': np.reshape(R2run, [nx, ny, nz, numruns]),
-                     'betasmd': np.reshape(modelmd, [nx, ny, nz, numtrials]),
-                     'meanvol':  meanvol
-                     }
+                results_out = {
+                    'FitHRFR2': np.reshape(FitHRFR2, [nx, ny, nz, nh]),
+                    'FitHRFR2run': np.reshape(FitHRFR2run, [nx, ny, nz, numruns, nh]),
+                    'HRFindex': np.reshape(HRFindex, [nx, ny, nz]),
+                    'HRFindexrun': np.reshape(HRFindexrun, [nx, ny, nz, numruns]),
+                    'R2': np.reshape(R2, [nx, ny, nz]),
+                    'R2run': np.reshape(R2run, [nx, ny, nz, numruns]),
+                    'betasmd': np.reshape(modelmd, [nx, ny, nz, numtrials]),
+                    'meanvol':  meanvol
+                    }
             else:
                 results_out = {
                     'FitHRFR2': FitHRFR2,
@@ -861,12 +881,21 @@ class GLM_single():
 
             # save to disk if desired
             if params['wantfileoutputs'][whmodel] == 1:
-                file0 = os.path.join(outputdir, 'TYPEB_FITHRF.npy')
+
+                if params['wanthdf5'] == 1:
+                    file0 = os.path.join(outputdir, 'TYPEB_FITHRF.hdf5')
+                else:
+                    file0 = os.path.join(outputdir, 'TYPEB_FITHRF.npy')
+
                 print(f'\n*** Saving results to {file0}. ***\n')
-                np.save(
-                    file0,
-                    results_out
-                )
+
+                if params['wanthdf5'] == 1:
+                    hf = h5py.File(file0, 'w')
+                    for k, v in results_out.items():
+                        hf.create_dataset(k, data=v)
+                    hf.close()
+                else:
+                    np.save(file0, results_out)
 
             # figures?
             if wantfig:
@@ -1056,7 +1085,10 @@ class GLM_single():
                     ix2 = np.flatnonzero(params['pcR2cutoffmask'] == 1)
 
                 np.testing.assert_equal(
-                    len(ix2) > 0, True, err_msg='no voxels are in pcR2cutoffmask')
+                    len(ix2) > 0,
+                    True,
+                    err_msg='no voxels are in pcR2cutoffmask'
+                )
 
                 ix3 = np.argsort(onoffR2[ix2])[::-1]
                 num = np.min([100, len(ix2)])
@@ -1294,7 +1326,7 @@ class GLM_single():
 
             # deal with dimensions
             modelmd = (modelmd / np.abs(meanvol)[:, np.newaxis]) * 100
-            
+
             if xyz:
                 modelmd = np.reshape(modelmd, [nx, ny, nz, numtrials])
                 R2 = np.reshape(R2, [nx, ny, nz])
@@ -1307,8 +1339,17 @@ class GLM_single():
 
             # save to disk if desired
             if whmodel == 2:
-                file0 = os.path.join(
-                    outputdir, 'TYPEC_FITHRF_GLMDENOISE.npy')
+                if params['wanthdf5'] == 1:
+                    file0 = os.path.join(
+                        outputdir,
+                        'TYPEC_FITHRF_GLMDENOISE.hdf5'
+                    )
+                else:
+                    file0 = os.path.join(
+                        outputdir,
+                        'TYPEC_FITHRF_GLMDENOISE.npy'
+                    )
+
                 outdict = {
                     'HRFindex': HRFindex,
                     'HRFindexrun': HRFindexrun,
@@ -1324,8 +1365,17 @@ class GLM_single():
                     'meanvol':  meanvol
                     }
             elif whmodel == 3:
-                file0 = os.path.join(
-                    outputdir, 'TYPED_FITHRF_GLMDENOISE_RR.npy')
+                if params['wanthdf5'] == 1:
+                    file0 = os.path.join(
+                        outputdir,
+                        'TYPED_FITHRF_GLMDENOISE_RR.hdf5'
+                    )
+                else:
+                    file0 = os.path.join(
+                        outputdir,
+                        'TYPED_FITHRF_GLMDENOISE_RR.npy'
+                    )
+
                 outdict = {
                     'HRFindex': HRFindex,
                     'HRFindexrun': HRFindexrun,
@@ -1345,8 +1395,16 @@ class GLM_single():
                     }
 
             if params['wantfileoutputs'][whmodel] == 1:
+
                 print(f'\n*** Saving results to {file0}. ***\n')
-                np.save(file0, outdict)
+
+                if params['wanthdf5'] == 1:
+                    hf = h5py.File(file0, 'w')
+                    for k, v in outdict.items():
+                        hf.create_dataset(k, data=v)
+                    hf.close()
+                else:
+                    np.save(file0, outdict)
 
             # figures?
             if wantfig:
