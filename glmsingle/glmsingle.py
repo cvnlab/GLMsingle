@@ -1468,6 +1468,7 @@ class GLM_single():
                     ax.axes.yaxis.set_ticklabels([])
                     plt.colorbar()
                     plt.savefig(os.path.join(outputdir, 'FRACvalue.png'))
+                    plt.close('all')
 
             # preserve in memory if desired
             if params['wantmemoryoutputs'][whmodel] == 1:
