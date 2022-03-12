@@ -12,11 +12,10 @@ def findtailthreshold(v, figpath=None):
      <v> is a vector of values
      <wantfig> (optional) is whether to plot a diagnostic figure. Default: 1.
 
-     Fit a Gaussian Mixture Model (with n=2)
-     to the data and find the point that is greater than
-     the median and at which the posterior probability
-     is equal (50/50) across the two Gaussians.
-     This serves as a nice "tail threshold".
+     Fit a Gaussian Mixture Model (with n=2) to the data and 
+     find the point at which the posterior probability is 
+     equal (50/50) across the two Gaussians. This serves
+     as a nice "tail threshold".
 
      To save on computational load, we take a random subset of
      size 1000000 if there are more than that number of values.
@@ -38,7 +37,7 @@ def findtailthreshold(v, figpath=None):
     numreps = 3  # number of restarts for the GMM
     maxsz = 1000000  # maximum number of values to consider
     nprecision = 500
-    # linearly spaced values between median and upper robust range
+    # linearly spaced values between lower and upper robust range
 
     # inputs
     if figpath is None:
