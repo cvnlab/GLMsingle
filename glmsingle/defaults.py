@@ -17,6 +17,7 @@ default_params = {
     'chunklen': 50000,
     'wantfileoutputs': [1, 1, 1, 1],
     'wantmemoryoutputs': [1, 1, 1, 1],
+    'wanthdf5': 0,
     'wantparametric': 0,
     'wantpercentbold': 1,
     'wantlss': 0,

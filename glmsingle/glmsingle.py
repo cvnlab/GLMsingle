@@ -1,6 +1,7 @@
 from __future__ import absolute_import, division, print_function
 import os
 import numpy as np
+import h5py
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import normalize
@@ -18,7 +19,6 @@ from glmsingle.ssq.calcbadness import calcbadness
 from glmsingle.utils.chunking import chunking
 from glmsingle.utils.make_image_stack import make_image_stack
 from glmsingle.utils.alt_round import alt_round
-
 
 __all__ = ["GLM_single"]
 dir0 = os.path.dirname(os.path.realpath(__file__))
@@ -102,45 +102,55 @@ class GLM_single():
          computation, but should not be so large that you run out of RAM.
          Default: 50000.
 
-        <xvalscheme> (optional) is a cell vector of vectors of run indices,
+        <xvalscheme> (optional) is a list of lists or list of run indices,
          indicating the cross-validation scheme. For example, if we have 8
          runs, we could use [[1, 2], [3, 4], [5, 6], [7, 8]] which indicates
          to do 4 folds of cross-validation, first holding out the 1st and 2nd
          runs, then the 3rd and 4th runs, etc.
-         Default: {[1] [2] [3] ... [n]} where n is the number of runs.
+         Default: [[1], [2], [3], ... [n]] where n is the number of runs.
 
-        <sessionindicator> (optional) is 1 x n (where n is the number of runs)
-        with positive integers indicating the run groupings that are
-        interpreted as "sessions". The purpose of this input is to allow for
-        session-wise z-scoring of single-trial beta weights for the purposes
-        of hyperparameter evaluation. Note that the z-scoring has effect only
-        INTERNALLY: it is used merely to calculate the cross-validation
-        performance and the associated hyperparameter selection; the outputs
-        of this function do not reflect z-scoring, and the user may wish to
-        apply z-scoring. Default: 1*ones(1,n) which means to interpret allruns
-        as coming from the same session.
+       <sessionindicator> (optional) is 1 x n (where n is the number of runs)
+       with positive integers indicating the run groupings that are
+       interpreted as "sessions". The purpose of this input is to allow for
+       session-wise z-scoring of single-trial beta weights for the purposes of
+       hyperparameter evaluation.
+       For example, if you are analyzing data aggregated from multiple scan
+       sessions, you may want beta weights to be z-scored per voxel within
+       each session in order to compensate for any potential gross changes in
+       betas across scan sessions.
+       Note that the z-scoring has effect only INTERNALLY: it is used merely to
+       calculate the cross-validation performance and the associated
+       hyperparameter selection; the outputs of this function do not reflect
+       z-scoring, and the user may wish to post-hoc apply z-scoring.
+       Default: np.ones((1,n)) which means to interpret
+       all runs as coming from the same session.
 
        *** I/O FLAGS ***
 
-        <wantfileoutputs> (optional) is a logical vector [A B C D] indicating
-         which of the four model types to save to disk (assuming that they
-         are computed).
+        <wantfileoutputs> (optional) is a logical vector [A, B, C, D]
+         indicating which of the four model types to save to disk (assuming
+         that they are computed).
          A = 0/1 for saving the results of the ONOFF model
          B = 0/1 for saving the results of the FITHRF model
          C = 0/1 for saving the results of the FITHRF_GLMDENOISE model
          D = 0/1 for saving the results of the FITHRF_GLMDENOISE_RR model
-         Default: [1 1 1 1] which means save all computed results to disk.
+         Default: [1, 1, 1, 1] which means save all computed results to disk.
 
-        <wantmemoryoutputs> (optional) is a logical vector [A B C D] indicating
-         which of the four model types to return in the output <results>. The
-         user must be careful with this, as large datasets can require a lot of
-         RAM. If you do not request the various model types, they will be
+        <wantmemoryoutputs> (optional) is a logical vector [A, B, C, D]
+         indicating which of the four model types to return in the output
+         <results>. The user must be careful with this, as large datasets
+         can require a lot of RAM.
+         If you do not request the various model types, they will be
          cleared from memory (but still potentially saved to disk).
-         Default: [0 0 0 1] which means return only the final type-D model.
+         Default: [0, 0, 0, 1] which means return only the final type-D model.
+
+        <wanthdf5> (optional) is an optional flag that allows saving files in
+         hdf5 format. This is useful if your output file is about to he huge
+         (>4Gb). Default to false, which saves in a .npy format.
 
         *** GLM FLAGS ***
 
-        <extra_regressors> (optional) is time x regressors or a cell vector
+        <extra_regressors> (optional) is time x regressors or a list
          of elements that are each time x regressors. The dimensions of
          <extraregressors> should mirror that of <design> (i.e. same number of
          runs, same number of time points). The number of extra regressors
@@ -167,16 +177,16 @@ class GLM_single():
         <hrftoassume> (optional) is time x 1 with an assumed HRF that
          characterizes the evoked response to each trial. We automatically
          divide by the maximum value so that the peak is equal to 1. Default
-         is to generate a canonical HRF (see getcanonicalhrf.m).
+         is to generate a canonical HRF (see getcanonicalhrf in hrf/gethrf.py).
          Note that the HRF supplied in <hrftoassume> is used in only two
          instances:
          (1) it is used for the simple ONOFF type-A model, and (2) if the
              user sets <wantlibrary> to 0, it is also used for the type-B,
              type-C, and type-D models.
 
-        <hrflibrary> (optional) is time x H with H different HRFs to choose
-         from for the library-of-HRFs approach. We automatically normalize
-         each HRF to peak at 1.
+        <hrflibrary> (optional) is an np.array of shape time x H,
+         with H different HRFs to choose from for the library-of-HRFs approach.
+         We automatically normalize each HRF to peak at 1.
          Default is to generate a library of 20 HRFs (see
          getcanonicalhrflibrary).
          Note that if <wantlibrary> is 0, <hrflibrary> is clobbered with the
@@ -199,10 +209,10 @@ class GLM_single():
         <n_pcs> (optional) is a non-negative integer indicating the
          maximum number of PCs to enter into the model. Default: 10.
 
-        <brainthresh> (optional) is [A B] where A is a percentile for voxel
+        <brainthresh> (optional) is [A, B] where A is a percentile for voxel
          intensity values and B is a fraction to apply to the percentile. These
          parameters are used in the selection of the noise pool.
-         Default: [99 0.1].
+         Default: [99, 0.1].
 
         <brainR2> (optional) is an R^2 value (percentage). After fitting the
          type-A model, voxels whose R^2 is below this value are allowed to
@@ -241,12 +251,12 @@ class GLM_single():
 
        *** MODEL TYPE D (FITHRF_GLMDENOISE_RR) FLAGS ***
 
-        <fracs> (optional) is a vector of fractions that are greater than 0
-         and less than or equal to 1. We automatically sort in descending
-         order and ensure the fractions are unique. These fractions indicate
-         the regularization levels to evaluate using fractional ridge
+        <fracs> (optional) is a numpy vector of fractions that are greater
+         than 0 and less than or equal to 1. We automatically sort in
+         descending order and ensure the fractions are unique. These fractions
+         indicate the regularization levels to evaluate using fractional ridge
          regression (fracridge) and cross-validation.
-         Default: fliplr(.05:.05:1).
+         Default: np.linspace(1, 0.05, 20).
          A special case is when <fracs> is specified as a single scalar value.
          In this case, cross-validation is NOT performed for the type-D model,
          and we instead blindly usethe supplied fractional value for the type-D
@@ -264,7 +274,11 @@ class GLM_single():
 
         # Check if all opt arguments are allowed
         allowed = list(default_params.keys()) + [
-            'xvalscheme', 'sessionindicator', 'hrflibrary', 'hrftoassume', 'maxpolydeg'
+            'xvalscheme',
+            'sessionindicator',
+            'hrflibrary',
+            'hrftoassume',
+            'maxpolydeg'
         ]
         for key in params.keys():
             if key not in allowed:
@@ -275,7 +289,7 @@ class GLM_single():
 
         self.params = params
 
-    def fit(self, design, data, stimdur, tr, outputdir=None):
+    def fit(self, design, data, stimdur, tr, outputdir=None, figuredir=None):
         """
         Arguments:
         __________
@@ -311,12 +325,20 @@ class GLM_single():
          a new time point every 1 s. Note that <tr> applies to both <design>
          and <data>.
 
-        <outputdir> (optional) is a directory to which files will be written.
+        <outputdir> (optional) is a directory to which data will be written.
          (If the directory does not exist, we create it; if the directory
          already exists, we delete its contents so we can start fresh.) If you
          set <outputdir> to None, we will not create a directory and no files
          will be written.
          Default is 'GLMestimatesingletrialoutputs' (created in the current
+         working directory).
+
+        <figuredir> (optional) is a directory to which figures will be written.
+         (If the directory does not exist, we create it; if the directory
+         already exists, we delete its contents so we can start fresh.) If you
+         set <figuredir> to None, we will not create a directory and no files
+         will be written.
+         Default is 'GLMestimatesingletrialfigures' (created in the current
          working directory).
 
 
@@ -364,19 +386,6 @@ class GLM_single():
         <scaleoffset> is the scale and offset applied to RR estimates to best
                     match the unregularized result
 
-        History:
-        [MATLAB]
-        - 2020/08/22 - Implement params.sessionindicator. Also, now the
-                        cross-validation units now reflect
-                        the "session-wise z-scoring" hyperparameter selection
-                        approach; thus, the cross-
-                        validation units have been CHANGED relative to prior
-                        analyses!
-        - 2020/05/14 - Version 1.0 released!
-                        (Tweak some documentation; output more results; fix a
-                        small bug (params.fracs(1)~=1).)
-        - 2020/05/12 - Add pcvoxels output.
-        - 2020/05/12 - Initial version. Beta version. Use with caution.
         """
 
         # DEAL WITH INPUTS
@@ -388,7 +397,7 @@ class GLM_single():
         # xyz can either be a tuple of dimensions x y z
         # or a boolean indicating that data was 2D
         data, design, xyz = check_inputs(data, design)
-        
+
         # keep class bound data and design
         self.data = data
         self.design = design
@@ -405,6 +414,10 @@ class GLM_single():
         # inputs
         if 'xvalscheme' not in params:
             params['xvalscheme'] = np.arange(numruns)
+
+        # additional check for the file format
+        if 'wanthdf5' not in params:
+            params['wanthdf5'] = 0
 
         if 'sessionindicator' not in params:
             params['sessionindicator'] = np.ones((1, numruns)).astype(int)
@@ -449,7 +462,7 @@ class GLM_single():
             True,
             err_msg='fracs must be less than or equal to 1')
 
-        if xyz and outputdir is not None:
+        if xyz and figuredir is not None:
             wantfig = 1  # if outputdir is not None, we want figures
         else:
             wantfig = 0
@@ -466,6 +479,18 @@ class GLM_single():
         else:
             os.makedirs(outputdir)
 
+        # deal with figure directory
+        if figuredir is None:
+            cwd = os.getcwd()
+            figuredir = os.path.join(cwd, 'GLMestimatesingletrialfigures')
+
+        if os.path.exists(figuredir):
+            import shutil
+            shutil.rmtree(figuredir)
+            os.makedirs(figuredir)
+        else:
+            os.makedirs(figuredir)
+
         if np.any(params['wantfileoutputs']):
             errm = 'specify an <outputdir> in order to get file outputs'
             np.testing.assert_equal(
@@ -475,7 +500,7 @@ class GLM_single():
 
         # deal with special library stuff
         if params['wantlibrary'] == 0:
-            params['hrflibrary'] = params['hrftoassume'].reshape(-1,1)
+            params['hrflibrary'] = params['hrftoassume'].reshape(-1, 1)
 
         # calc
         # if the data was passed as 3d, unpack xyz
@@ -595,50 +620,77 @@ class GLM_single():
 
         # save to disk if desired
         if params['wantfileoutputs'][whmodel] == 1:
-            file0 = os.path.join(outputdir, 'TYPEA_ONOFF.npy')
+            if params['wanthdf5'] == 1:
+                file0 = os.path.join(outputdir, 'TYPEA_ONOFF.hdf5')
+            else:
+                file0 = os.path.join(outputdir, 'TYPEA_ONOFF.npy')
+
             print(f'\n*** Saving results to {file0}. ***\n')
-            results_out = {
-                'onoffR2': onoffR2,
-                'meanvol': meanvol,
-                'betasmd': betasmd
-            }
-            np.save(file0, results_out)
+            # if user provided XYZ, reshape disk/memory output fields into XYZ
+            if xyz:
+                results_out = {
+                    'onoffR2': np.reshape(onoffR2, [nx, ny, nz]),
+                    'meanvol': np.reshape(meanvol, [nx, ny, nz]),
+                    'betasmd': np.reshape(betasmd, [nx, ny, nz])
+                    }
+            else:
+                results_out = {
+                    'onoffR2': onoffR2,
+                    'meanvol': meanvol,
+                    'betasmd': betasmd
+                }
+            if params['wanthdf5'] == 1:
+                hf = h5py.File(file0, 'w')
+                for k, v in results_out.items():
+                    hf.create_dataset(k, data=v)
+                hf.close()
+            else:
+                np.save(file0, results_out)
 
         # figures
         if wantfig:
-            plt.imshow(
-                make_image_stack(onoffR2.reshape(xyz)),
-                vmin=0,
-                vmax=100,
-                cmap='hot'
-            )
-            ax = plt.gca()
-            ax.axes.xaxis.set_ticklabels([])
-            ax.axes.yaxis.set_ticklabels([])
-            plt.colorbar()
-            plt.savefig(os.path.join(outputdir, 'onoffR2.png'))
-            plt.close('all')
-            plt.imshow(make_image_stack(meanvol.reshape(xyz)), cmap='gray')
-            ax = plt.gca()
-            ax.axes.xaxis.set_ticklabels([])
-            ax.axes.yaxis.set_ticklabels([])
-            plt.colorbar()
-            plt.savefig(os.path.join(outputdir, 'meanvol.png'))
-            plt.close('all')
+            if xyz:
+                # only plot this if data was provided as a volume.
+                plt.imshow(
+                    make_image_stack(onoffR2.reshape(xyz)),
+                    vmin=0,
+                    vmax=100,
+                    cmap='hot'
+                )
+                ax = plt.gca()
+                ax.axes.xaxis.set_ticklabels([])
+                ax.axes.yaxis.set_ticklabels([])
+                plt.colorbar()
+                plt.savefig(os.path.join(figuredir, 'onoffR2.png'))
+                plt.close('all')
+                plt.imshow(make_image_stack(meanvol.reshape(xyz)), cmap='gray')
+                ax = plt.gca()
+                ax.axes.xaxis.set_ticklabels([])
+                ax.axes.yaxis.set_ticklabels([])
+                plt.colorbar()
+                plt.savefig(os.path.join(figuredir, 'meanvol.png'))
+                plt.close('all')
 
         # preserve in memory if desired, and then clean up
         if params['wantmemoryoutputs'][whmodel] == 1:
-            results['typea'] = {
-                'onoffR2': onoffR2,
-                'meanvol': meanvol,
-                'betasmd': betasmd
-            }
+            if xyz:
+                results['typea'] = {
+                    'onoffR2': onoffR2.reshape(xyz),
+                    'meanvol': meanvol.reshape(xyz),
+                    'betasmd': betasmd.reshape(xyz)
+                }
+            else:
+                results['typea'] = {
+                    'onoffR2': onoffR2,
+                    'meanvol': meanvol,
+                    'betasmd': betasmd
+                }                
 
         # DETERMINE THRESHOLDS
         if wantfig:
             thresh = findtailthreshold(
                 onoffR2.flatten(),
-                os.path.join(outputdir, 'onoffR2hist.png'))[0]
+                os.path.join(figuredir, 'onoffR2hist.png'))[0]
         else:
             thresh = findtailthreshold(onoffR2.flatten())[0]
 
@@ -835,18 +887,19 @@ class GLM_single():
                             cnt = cnt + numtrialrun[rrr]
 
             # FIT TYPE-B MODEL (LSS) INTERLUDE END
-            
+
             # if user provided XYZ, reshape disk/memory output fields into XYZ
             if xyz:
-                results_out = {'FitHRFR2': np.reshape(FitHRFR2, [nx, ny, nz, nh]),
-                     'FitHRFR2run': np.reshape(FitHRFR2run, [nx, ny, nz, numruns, nh]),
-                     'HRFindex': np.reshape(HRFindex, [nx, ny, nz]),
-                     'HRFindexrun': np.reshape(HRFindexrun, [nx, ny, nz, numruns]),
-                     'R2': np.reshape(R2, [nx, ny, nz]),
-                     'R2run': np.reshape(R2run, [nx, ny, nz, numruns]),
-                     'betasmd': np.reshape(modelmd, [nx, ny, nz, numtrials]),
-                     'meanvol':  meanvol
-                     }
+                results_out = {
+                    'FitHRFR2': np.reshape(FitHRFR2, [nx, ny, nz, nh]),
+                    'FitHRFR2run': np.reshape(FitHRFR2run, [nx, ny, nz, numruns, nh]),
+                    'HRFindex': np.reshape(HRFindex, [nx, ny, nz]),
+                    'HRFindexrun': np.reshape(HRFindexrun, [nx, ny, nz, numruns]),
+                    'R2': np.reshape(R2, [nx, ny, nz]),
+                    'R2run': np.reshape(R2run, [nx, ny, nz, numruns]),
+                    'betasmd': np.reshape(modelmd, [nx, ny, nz, numtrials]),
+                    'meanvol':  np.reshape(meanvol, [nx, ny, nz])
+                    }
             else:
                 results_out = {
                     'FitHRFR2': FitHRFR2,
@@ -861,12 +914,21 @@ class GLM_single():
 
             # save to disk if desired
             if params['wantfileoutputs'][whmodel] == 1:
-                file0 = os.path.join(outputdir, 'TYPEB_FITHRF.npy')
+
+                if params['wanthdf5'] == 1:
+                    file0 = os.path.join(outputdir, 'TYPEB_FITHRF.hdf5')
+                else:
+                    file0 = os.path.join(outputdir, 'TYPEB_FITHRF.npy')
+
                 print(f'\n*** Saving results to {file0}. ***\n')
-                np.save(
-                    file0,
-                    results_out
-                )
+
+                if params['wanthdf5'] == 1:
+                    hf = h5py.File(file0, 'w')
+                    for k, v in results_out.items():
+                        hf.create_dataset(k, data=v)
+                    hf.close()
+                else:
+                    np.save(file0, results_out)
 
             # figures?
             if wantfig:
@@ -881,7 +943,7 @@ class GLM_single():
                 ax.axes.xaxis.set_ticklabels([])
                 ax.axes.yaxis.set_ticklabels([])
                 plt.colorbar()
-                plt.savefig(os.path.join(outputdir, 'HRFindex.png'))
+                plt.savefig(os.path.join(figuredir, 'HRFindex.png'))
                 plt.close('all')
 
             # preserve in memory if desired, and then clean up
@@ -896,7 +958,7 @@ class GLM_single():
 
             # just create placeholders
             pcregressors = []
-            noisepool = []
+            noisepool = None
 
         else:
 
@@ -1056,7 +1118,10 @@ class GLM_single():
                     ix2 = np.flatnonzero(params['pcR2cutoffmask'] == 1)
 
                 np.testing.assert_equal(
-                    len(ix2) > 0, True, err_msg='no voxels are in pcR2cutoffmask')
+                    len(ix2) > 0,
+                    True,
+                    err_msg='no voxels are in pcR2cutoffmask'
+                )
 
                 ix3 = np.argsort(onoffR2[ix2])[::-1]
                 num = np.min([100, len(ix2)])
@@ -1164,7 +1229,6 @@ class GLM_single():
                 print('*** FITTING TYPE-D MODEL (GLMDENOISE_RR) ***\n')
 
             for z in tqdm(np.arange(len(chunks)), desc='chunks'):
-
                 this_chunk = chunks[z]
                 n_inchunk = len(this_chunk)
 
@@ -1294,7 +1358,7 @@ class GLM_single():
 
             # deal with dimensions
             modelmd = (modelmd / np.abs(meanvol)[:, np.newaxis]) * 100
-            
+
             if xyz:
                 modelmd = np.reshape(modelmd, [nx, ny, nz, numtrials])
                 R2 = np.reshape(R2, [nx, ny, nz])
@@ -1307,25 +1371,58 @@ class GLM_single():
 
             # save to disk if desired
             if whmodel == 2:
-                file0 = os.path.join(
-                    outputdir, 'TYPEC_FITHRF_GLMDENOISE.npy')
-                outdict = {
-                    'HRFindex': HRFindex,
-                    'HRFindexrun': HRFindexrun,
-                    'glmbadness': glmbadness,
-                    'pcvoxels': pcvoxels,
-                    'pcnum': pcnum,
-                    'xvaltrend': xvaltrend,
-                    'noisepool': noisepool,
-                    'pcregressors': pcregressors,
-                    'betasmd': modelmd,
-                    'R2': R2,
-                    'R2run': R2run,
-                    'meanvol':  meanvol
-                    }
+                if params['wanthdf5'] == 1:
+                    file0 = os.path.join(
+                        outputdir,
+                        'TYPEC_FITHRF_GLMDENOISE.hdf5'
+                    )
+                else:
+                    file0 = os.path.join(
+                        outputdir,
+                        'TYPEC_FITHRF_GLMDENOISE.npy'
+                    )
+                if xyz:
+                    outdict = {
+                        'HRFindex': HRFindex.reshape(xyz),
+                        'HRFindexrun': HRFindexrun,
+                        'glmbadness': glmbadness,
+                        'pcvoxels': pcvoxels,
+                        'pcnum': pcnum,
+                        'xvaltrend': xvaltrend,
+                        'noisepool': noisepool.reshape(xyz),
+                        'pcregressors': pcregressors,
+                        'betasmd': modelmd,
+                        'R2': R2,
+                        'R2run': R2run,
+                        'meanvol':  meanvol.reshape(xyz)
+                        }
+                else:
+                    outdict = {
+                        'HRFindex': HRFindex,
+                        'HRFindexrun': HRFindexrun,
+                        'glmbadness': glmbadness,
+                        'pcvoxels': pcvoxels,
+                        'pcnum': pcnum,
+                        'xvaltrend': xvaltrend,
+                        'noisepool': noisepool,
+                        'pcregressors': pcregressors,
+                        'betasmd': modelmd,
+                        'R2': R2,
+                        'R2run': R2run,
+                        'meanvol':  meanvol
+                        }
             elif whmodel == 3:
-                file0 = os.path.join(
-                    outputdir, 'TYPED_FITHRF_GLMDENOISE_RR.npy')
+                if params['wanthdf5'] == 1:
+                    file0 = os.path.join(
+                        outputdir,
+                        'TYPED_FITHRF_GLMDENOISE_RR.hdf5'
+                    )
+                else:
+                    file0 = os.path.join(
+                        outputdir,
+                        'TYPED_FITHRF_GLMDENOISE_RR.npy'
+                    )
+
                 outdict = {
                     'HRFindex': HRFindex,
                     'HRFindexrun': HRFindexrun,
@@ -1345,46 +1442,57 @@ class GLM_single():
                     }
 
             if params['wantfileoutputs'][whmodel] == 1:
+
                 print(f'\n*** Saving results to {file0}. ***\n')
-                np.save(file0, outdict)
+
+                if params['wanthdf5'] == 1:
+                    hf = h5py.File(file0, 'w')
+                    for k, v in outdict.items():
+                        hf.create_dataset(k, data=v)
+                    hf.close()
+                else:
+                    np.save(file0, outdict)
 
             # figures?
             if wantfig:
                 if whmodel == 2:
-                    plt.imshow(
-                        make_image_stack(noisepool.reshape(xyz)),
-                        vmin=0,
-                        vmax=1,
-                        cmap='gray'
-                    )
-                    ax = plt.gca()
-                    ax.axes.xaxis.set_ticklabels([])
-                    ax.axes.yaxis.set_ticklabels([])
-                    plt.colorbar()
-                    plt.savefig(os.path.join(outputdir, 'noisepool.png'))
-                    plt.close('all')
-                    plt.imshow(
-                        make_image_stack(pcvoxels.reshape(xyz)),
-                        vmin=0,
-                        vmax=1,
-                        cmap='gray'
-                    )
-                    ax = plt.gca()
-                    ax.axes.xaxis.set_ticklabels([])
-                    ax.axes.yaxis.set_ticklabels([])
-                    plt.colorbar()
-                    plt.savefig(os.path.join(outputdir, 'pcvoxels.png'))
-                    plt.close('all')
+                    if noisepool is not None:
+                        plt.imshow(
+                            make_image_stack(noisepool.reshape(xyz)),
+                            vmin=0,
+                            vmax=1,
+                            cmap='gray'
+                        )
+                        ax = plt.gca()
+                        ax.axes.xaxis.set_ticklabels([])
+                        ax.axes.yaxis.set_ticklabels([])
+                        plt.colorbar()
+                        plt.savefig(os.path.join(figuredir, 'noisepool.png'))
+                        plt.close('all')
 
-                    fig = plt.figure()
-                    ax = fig.add_subplot(1, 1, 1)
-                    ax.plot(range(params['n_pcs']+1), xvaltrend)
-                    ax.scatter(pcnum, xvaltrend[pcnum])
-                    ax.set(
-                        xlabel='# GLMdenoise regressors',
-                        ylabel='Cross-val performance (higher is better)')
-                    plt.savefig(os.path.join(outputdir, 'xvaltrend.png'))
-                    plt.close('all')
+                    if pcvoxels is not None:
+                        plt.imshow(
+                            make_image_stack(pcvoxels.reshape(xyz)),
+                            vmin=0,
+                            vmax=1,
+                            cmap='gray'
+                        )
+                        ax = plt.gca()
+                        ax.axes.xaxis.set_ticklabels([])
+                        ax.axes.yaxis.set_ticklabels([])
+                        plt.colorbar()
+                        plt.savefig(os.path.join(figuredir, 'pcvoxels.png'))
+                        plt.close('all')
+                    if xvaltrend is not None:
+                        fig = plt.figure()
+                        ax = fig.add_subplot(1, 1, 1)
+                        ax.plot(range(params['n_pcs']+1), xvaltrend)
+                        ax.scatter(pcnum, xvaltrend[pcnum])
+                        ax.set(
+                            xlabel='# GLMdenoise regressors',
+                            ylabel='Cross-val performance (higher is better)')
+                        plt.savefig(os.path.join(figuredir, 'xvaltrend.png'))
+                        plt.close('all')
 
                 if whmodel == 3:
                     plt.imshow(
@@ -1397,7 +1505,7 @@ class GLM_single():
                     ax.axes.xaxis.set_ticklabels([])
                     ax.axes.yaxis.set_ticklabels([])
                     plt.colorbar()
-                    plt.savefig(os.path.join(outputdir, 'typeD_R2.png'))
+                    plt.savefig(os.path.join(figuredir, 'typeD_R2.png'))
                     plt.close('all')
                     plt.imshow(
                         make_image_stack(FRACvalue.reshape(xyz)),
@@ -1409,7 +1517,8 @@ class GLM_single():
                     ax.axes.xaxis.set_ticklabels([])
                     ax.axes.yaxis.set_ticklabels([])
                     plt.colorbar()
-                    plt.savefig(os.path.join(outputdir, 'FRACvalue.png'))
+                    plt.savefig(os.path.join(figuredir, 'FRACvalue.png'))
+                    plt.close('all')
 
             # preserve in memory if desired
             if params['wantmemoryoutputs'][whmodel] == 1:

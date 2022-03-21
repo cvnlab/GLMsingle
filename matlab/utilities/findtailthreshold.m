@@ -5,11 +5,10 @@ function [f,mns,sds,gmfit] = findtailthreshold(v,wantfig)
 % <v> is a vector of values
 % <wantfig> (optional) is whether to plot a diagnostic figure. Default: 1.
 %
-% Fit a Gaussian Mixture Model (with n=2)
-% to the data and find the point that is greater than
-% the median and at which the posterior probability
-% is equal (50/50) across the two Gaussians.
-% This serves as a nice "tail threshold".
+% Fit a Gaussian Mixture Model (with n=2) to the data and 
+% find the point at which the posterior probability is 
+% equal (50/50) across the two Gaussians. This serves
+% as a nice "tail threshold".
 %
 % To save on computational load, we take a random subset of
 % size 1000000 if there are more than that number of values.
@@ -28,7 +27,7 @@ function [f,mns,sds,gmfit] = findtailthreshold(v,wantfig)
 % internal constants
 numreps = 3;      % number of restarts for the GMM
 maxsz = 1000000;  % maximum number of values to consider
-nprecision = 500; % linearly spaced values between median and upper robust range
+nprecision = 500; % linearly spaced values between lower and upper robust range
 
 % inputs
 if ~exist('wantfig','var') || isempty(wantfig)
@@ -49,7 +48,7 @@ gmfit = fitgmdist(v(:),2,'Replicates',numreps);
 rng = robustrange(v(:));
 
 % evaluate posterior
-allvals = linspace(median(v),rng(2),nprecision);
+allvals = linspace(rng(1),rng(2),nprecision);
 checkit = zeros(length(allvals),2);
 for qq=1:length(allvals)
   checkit(qq,:) = posterior(gmfit,allvals(qq));

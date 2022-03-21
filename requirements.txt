@@ -4,3 +4,5 @@ sklearn
 matplotlib
 tqdm
 fracridge
+nibabel
+h5py
