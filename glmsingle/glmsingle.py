@@ -20,7 +20,6 @@ from glmsingle.utils.chunking import chunking
 from glmsingle.utils.make_image_stack import make_image_stack
 from glmsingle.utils.alt_round import alt_round
 
-
 __all__ = ["GLM_single"]
 dir0 = os.path.dirname(os.path.realpath(__file__))
 
@@ -390,7 +389,7 @@ class GLM_single():
         # xyz can either be a tuple of dimensions x y z
         # or a boolean indicating that data was 2D
         data, design, xyz = check_inputs(data, design)
-        
+
         # keep class bound data and design
         self.data = data
         self.design = design
@@ -407,7 +406,7 @@ class GLM_single():
         # inputs
         if 'xvalscheme' not in params:
             params['xvalscheme'] = np.arange(numruns)
-        
+
         # additional check for the file format
         if 'wanthdf5' not in params:
             params['wanthdf5'] = 0
@@ -607,11 +606,19 @@ class GLM_single():
                 file0 = os.path.join(outputdir, 'TYPEA_ONOFF.npy')
 
             print(f'\n*** Saving results to {file0}. ***\n')
-            results_out = {
-                'onoffR2': onoffR2,
-                'meanvol': meanvol,
-                'betasmd': betasmd
-            }
+            # if user provided XYZ, reshape disk/memory output fields into XYZ
+            if xyz:
+                results_out = {
+                    'onoffR2': np.reshape(onoffR2, [nx, ny, nz]),
+                    'meanvol': np.reshape(meanvol, [nx, ny, nz]),
+                    'betasmd': np.reshape(betasmd, [nx, ny, nz])
+                    }
+            else:
+                results_out = {
+                    'onoffR2': onoffR2,
+                    'meanvol': meanvol,
+                    'betasmd': betasmd
+                }
             if params['wanthdf5'] == 1:
                 hf = h5py.File(file0, 'w')
                 for k, v in results_out.items():
@@ -622,33 +629,42 @@ class GLM_single():
 
         # figures
         if wantfig:
-            plt.imshow(
-                make_image_stack(onoffR2.reshape(xyz)),
-                vmin=0,
-                vmax=100,
-                cmap='hot'
-            )
-            ax = plt.gca()
-            ax.axes.xaxis.set_ticklabels([])
-            ax.axes.yaxis.set_ticklabels([])
-            plt.colorbar()
-            plt.savefig(os.path.join(outputdir, 'onoffR2.png'))
-            plt.close('all')
-            plt.imshow(make_image_stack(meanvol.reshape(xyz)), cmap='gray')
-            ax = plt.gca()
-            ax.axes.xaxis.set_ticklabels([])
-            ax.axes.yaxis.set_ticklabels([])
-            plt.colorbar()
-            plt.savefig(os.path.join(outputdir, 'meanvol.png'))
-            plt.close('all')
+            if xyz:
+                # only plot this if data was provided as a volume.
+                plt.imshow(
+                    make_image_stack(onoffR2.reshape(xyz)),
+                    vmin=0,
+                    vmax=100,
+                    cmap='hot'
+                )
+                ax = plt.gca()
+                ax.axes.xaxis.set_ticklabels([])
+                ax.axes.yaxis.set_ticklabels([])
+                plt.colorbar()
+                plt.savefig(os.path.join(outputdir, 'onoffR2.png'))
+                plt.close('all')
+                plt.imshow(make_image_stack(meanvol.reshape(xyz)), cmap='gray')
+                ax = plt.gca()
+                ax.axes.xaxis.set_ticklabels([])
+                ax.axes.yaxis.set_ticklabels([])
+                plt.colorbar()
+                plt.savefig(os.path.join(outputdir, 'meanvol.png'))
+                plt.close('all')
 
         # preserve in memory if desired, and then clean up
         if params['wantmemoryoutputs'][whmodel] == 1:
-            results['typea'] = {
-                'onoffR2': onoffR2,
-                'meanvol': meanvol,
-                'betasmd': betasmd
-            }
+            if xyz:
+                results['typea'] = {
+                    'onoffR2': onoffR2.reshape(xyz),
+                    'meanvol': meanvol.reshape(xyz),
+                    'betasmd': betasmd.reshape(xyz)
+                }
+            else:
+                results['typea'] = {
+                    'onoffR2': onoffR2,
+                    'meanvol': meanvol,
+                    'betasmd': betasmd
+                }                
 
         # DETERMINE THRESHOLDS
         if wantfig:
@@ -862,7 +878,7 @@ class GLM_single():
                     'R2': np.reshape(R2, [nx, ny, nz]),
                     'R2run': np.reshape(R2run, [nx, ny, nz, numruns]),
                     'betasmd': np.reshape(modelmd, [nx, ny, nz, numtrials]),
-                    'meanvol':  meanvol
+                    'meanvol':  np.reshape(meanvol, [nx, ny, nz])
                     }
             else:
                 results_out = {
@@ -1193,7 +1209,6 @@ class GLM_single():
                 print('*** FITTING TYPE-D MODEL (GLMDENOISE_RR) ***\n')
 
             for z in tqdm(np.arange(len(chunks)), desc='chunks'):
-
                 this_chunk = chunks[z]
                 n_inchunk = len(this_chunk)
 
@@ -1346,21 +1361,36 @@ class GLM_single():
                         outputdir,
                         'TYPEC_FITHRF_GLMDENOISE.npy'
                     )
-
-                outdict = {
-                    'HRFindex': HRFindex,
-                    'HRFindexrun': HRFindexrun,
-                    'glmbadness': glmbadness,
-                    'pcvoxels': pcvoxels,
-                    'pcnum': pcnum,
-                    'xvaltrend': xvaltrend,
-                    'noisepool': noisepool,
-                    'pcregressors': pcregressors,
-                    'betasmd': modelmd,
-                    'R2': R2,
-                    'R2run': R2run,
-                    'meanvol':  meanvol
-                    }
+                if xyz:
+                    outdict = {
+                        'HRFindex': HRFindex.reshape(xyz),
+                        'HRFindexrun': HRFindexrun,
+                        'glmbadness': glmbadness,
+                        'pcvoxels': pcvoxels,
+                        'pcnum': pcnum,
+                        'xvaltrend': xvaltrend,
+                        'noisepool': noisepool.reshape(xyz),
+                        'pcregressors': pcregressors,
+                        'betasmd': modelmd,
+                        'R2': R2,
+                        'R2run': R2run,
+                        'meanvol':  meanvol.reshape(xyz)
+                        }
+                else:
+                    outdict = {
+                        'HRFindex': HRFindex,
+                        'HRFindexrun': HRFindexrun,
+                        'glmbadness': glmbadness,
+                        'pcvoxels': pcvoxels,
+                        'pcnum': pcnum,
+                        'xvaltrend': xvaltrend,
+                        'noisepool': noisepool,
+                        'pcregressors': pcregressors,
+                        'betasmd': modelmd,
+                        'R2': R2,
+                        'R2run': R2run,
+                        'meanvol':  meanvol
+                        }
             elif whmodel == 3:
                 if params['wanthdf5'] == 1:
                     file0 = os.path.join(

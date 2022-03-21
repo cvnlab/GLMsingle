@@ -725,14 +725,17 @@ def glm_estimatemodel(design, data, stimdur, tr, hrfmodel, hrfknobs,
                 results['hrfknobsse'] = (temp[2, :] - temp[0, :])/2
 
             # deal with {2}
-            if results['betas'].ndim == 2:
+            if results['betas'].ndim == 2 or results['betas'].ndim == 1:
+                if results['betas'].ndim == 1:
+                    results['betas'] = results['betas'].reshape(1, -1)
                 # XYZ by n_conditions
                 results['betasmd'] = results['betas'].astype(np.float32)
                 results['betasse'] = np.zeros(
                     results['betas'].shape).astype(np.float32)
             else:
                 # XYZ by boot by n_conditions
-                results['betasmd'] = np.median(results['betas'], 1).astype(np.float32)
+                results['betasmd'] = np.median(
+                    results['betas'], 1).astype(np.float32)
                 temp = np.percentile(results['betas'], [16, 50, 84], 1)
                 results['betasse'] = (temp[2, :, :] - temp[0, :, :])/2
 
