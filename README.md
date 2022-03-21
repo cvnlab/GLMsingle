@@ -23,11 +23,15 @@ raising a Github issue.
 
 ## MATLAB
 
-To use the GLMsingle toolbox, add it to your MATLAB path:
-  addpath(genpath('GLMsingle/matlab'));
+To install: 
 
-You will also need to download and add fracridge to your path.
-It is available here: https://github.com/nrdg/fracridge
+```bash
+git clone --recurse-submodules https://github.com/cvnlab/GLMsingle.git
+```
+
+This will also clone [`fracridge`](https://github.com/nrdg/fracridge) as a submodule.
+
+To use the GLMsingle toolbox, add it and `fracridge` to your MATLAB path by running the `setup.m` script.
 
 ## Example scripts
 
