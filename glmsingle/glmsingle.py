@@ -289,7 +289,7 @@ class GLM_single():
 
         self.params = params
 
-    def fit(self, design, data, stimdur, tr, outputdir=None):
+    def fit(self, design, data, stimdur, tr, outputdir=None, figuredir=None):
         """
         Arguments:
         __________
@@ -325,12 +325,20 @@ class GLM_single():
          a new time point every 1 s. Note that <tr> applies to both <design>
          and <data>.
 
-        <outputdir> (optional) is a directory to which files will be written.
+        <outputdir> (optional) is a directory to which data will be written.
          (If the directory does not exist, we create it; if the directory
          already exists, we delete its contents so we can start fresh.) If you
          set <outputdir> to None, we will not create a directory and no files
          will be written.
          Default is 'GLMestimatesingletrialoutputs' (created in the current
+         working directory).
+
+        <figuredir> (optional) is a directory to which figures will be written.
+         (If the directory does not exist, we create it; if the directory
+         already exists, we delete its contents so we can start fresh.) If you
+         set <figuredir> to None, we will not create a directory and no files
+         will be written.
+         Default is 'GLMestimatesingletrialfigures' (created in the current
          working directory).
 
 
@@ -454,7 +462,7 @@ class GLM_single():
             True,
             err_msg='fracs must be less than or equal to 1')
 
-        if xyz and outputdir is not None:
+        if xyz and figuredir is not None:
             wantfig = 1  # if outputdir is not None, we want figures
         else:
             wantfig = 0
@@ -471,6 +479,18 @@ class GLM_single():
         else:
             os.makedirs(outputdir)
 
+        # deal with figure directory
+        if figuredir is None:
+            cwd = os.getcwd()
+            figuredir = os.path.join(cwd, 'GLMestimatesingletrialfigures')
+
+        if os.path.exists(figuredir):
+            import shutil
+            shutil.rmtree(figuredir)
+            os.makedirs(figuredir)
+        else:
+            os.makedirs(figuredir)
+
         if np.any(params['wantfileoutputs']):
             errm = 'specify an <outputdir> in order to get file outputs'
             np.testing.assert_equal(
@@ -480,7 +500,7 @@ class GLM_single():
 
         # deal with special library stuff
         if params['wantlibrary'] == 0:
-            params['hrflibrary'] = params['hrftoassume'].reshape(-1,1)
+            params['hrflibrary'] = params['hrftoassume'].reshape(-1, 1)
 
         # calc
         # if the data was passed as 3d, unpack xyz
@@ -641,14 +661,14 @@ class GLM_single():
                 ax.axes.xaxis.set_ticklabels([])
                 ax.axes.yaxis.set_ticklabels([])
                 plt.colorbar()
-                plt.savefig(os.path.join(outputdir, 'onoffR2.png'))
+                plt.savefig(os.path.join(figuredir, 'onoffR2.png'))
                 plt.close('all')
                 plt.imshow(make_image_stack(meanvol.reshape(xyz)), cmap='gray')
                 ax = plt.gca()
                 ax.axes.xaxis.set_ticklabels([])
                 ax.axes.yaxis.set_ticklabels([])
                 plt.colorbar()
-                plt.savefig(os.path.join(outputdir, 'meanvol.png'))
+                plt.savefig(os.path.join(figuredir, 'meanvol.png'))
                 plt.close('all')
 
         # preserve in memory if desired, and then clean up
@@ -670,7 +690,7 @@ class GLM_single():
         if wantfig:
             thresh = findtailthreshold(
                 onoffR2.flatten(),
-                os.path.join(outputdir, 'onoffR2hist.png'))[0]
+                os.path.join(figuredir, 'onoffR2hist.png'))[0]
         else:
             thresh = findtailthreshold(onoffR2.flatten())[0]
 
@@ -923,7 +943,7 @@ class GLM_single():
                 ax.axes.xaxis.set_ticklabels([])
                 ax.axes.yaxis.set_ticklabels([])
                 plt.colorbar()
-                plt.savefig(os.path.join(outputdir, 'HRFindex.png'))
+                plt.savefig(os.path.join(figuredir, 'HRFindex.png'))
                 plt.close('all')
 
             # preserve in memory if desired, and then clean up
@@ -1447,7 +1467,7 @@ class GLM_single():
                         ax.axes.xaxis.set_ticklabels([])
                         ax.axes.yaxis.set_ticklabels([])
                         plt.colorbar()
-                        plt.savefig(os.path.join(outputdir, 'noisepool.png'))
+                        plt.savefig(os.path.join(figuredir, 'noisepool.png'))
                         plt.close('all')
 
                     if pcvoxels is not None:
@@ -1461,7 +1481,7 @@ class GLM_single():
                         ax.axes.xaxis.set_ticklabels([])
                         ax.axes.yaxis.set_ticklabels([])
                         plt.colorbar()
-                        plt.savefig(os.path.join(outputdir, 'pcvoxels.png'))
+                        plt.savefig(os.path.join(figuredir, 'pcvoxels.png'))
                         plt.close('all')
                     if xvaltrend is not None:
                         fig = plt.figure()
@@ -1471,7 +1491,7 @@ class GLM_single():
                         ax.set(
                             xlabel='# GLMdenoise regressors',
                             ylabel='Cross-val performance (higher is better)')
-                        plt.savefig(os.path.join(outputdir, 'xvaltrend.png'))
+                        plt.savefig(os.path.join(figuredir, 'xvaltrend.png'))
                         plt.close('all')
 
                 if whmodel == 3:
@@ -1485,7 +1505,7 @@ class GLM_single():
                     ax.axes.xaxis.set_ticklabels([])
                     ax.axes.yaxis.set_ticklabels([])
                     plt.colorbar()
-                    plt.savefig(os.path.join(outputdir, 'typeD_R2.png'))
+                    plt.savefig(os.path.join(figuredir, 'typeD_R2.png'))
                     plt.close('all')
                     plt.imshow(
                         make_image_stack(FRACvalue.reshape(xyz)),
@@ -1497,7 +1517,7 @@ class GLM_single():
                     ax.axes.xaxis.set_ticklabels([])
                     ax.axes.yaxis.set_ticklabels([])
                     plt.colorbar()
-                    plt.savefig(os.path.join(outputdir, 'FRACvalue.png'))
+                    plt.savefig(os.path.join(figuredir, 'FRACvalue.png'))
                     plt.close('all')
 
             # preserve in memory if desired
