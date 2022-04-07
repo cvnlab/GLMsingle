@@ -1,4 +1,5 @@
 [![MATLAB test](https://github.com/cvnlab/GLMsingle/actions/workflows/run_tests_matlab.yml/badge.svg)](https://github.com/cvnlab/GLMsingle/actions/workflows/run_tests_matlab.yml)
+[![MATLAB demos](https://github.com/cvnlab/GLMsingle/actions/workflows/run_demos_matlab.yml/badge.svg)](https://github.com/cvnlab/GLMsingle/actions/workflows/run_demos_matlab.yml)
 
 # GLMsingle
 

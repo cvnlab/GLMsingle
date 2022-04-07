@@ -1,4 +1,4 @@
-name: run matlab demos
+name: MATLAB demos
 
 # Uses the cron schedule for github actions
 #
