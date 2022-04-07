@@ -11,7 +11,7 @@ end
 
 function test_glmsingleunit_smoke()
 
-  [data, output_dir] = set_up();
+  [data, expected, output_dir] = set_up_test();
 
   % GIVEN
   design = data.design(1:3);
@@ -25,26 +25,40 @@ function test_glmsingleunit_smoke()
                                    tr, ...
                                    output_dir, ...
                                    struct('wantmemoryoutputs', [1 1 1 1]));
+                                 
+                                   
+  assertEqual(results{2}.HRFindex, expected{2}.HRFindex);
+  assertEqual(results{3}.HRFindex, expected{3}.HRFindex);
+  assertEqual(results{4}.HRFindex, expected{4}.HRFindex);
 
   clean_up();
 
 end
 
-function [data, output_dir] = set_up()
+function [data, expected, output_dir] = set_up_test()
 
   test_dir = fileparts(mfilename('fullpath'));
 
   data_dir = fullfile(test_dir, 'data');
   data_file = fullfile(data_dir, 'nsdcoreexampledataset.mat');
-
-  output_dir = fullfile(test_dir, 'outputs', 'matlab');
-
   data = load(data_file);
 
+  expected_dir = fullfile(test_dir, 'expected', 'matlab');
+  load(fullfile(expected_dir, 'TYPEB_FITHRF.mat'))
+  expected{2}.HRFindex = HRFindex;
+  load(fullfile(expected_dir, 'TYPEC_FITHRF_GLMDENOISE.mat'))
+  expected{3}.HRFindex = HRFindex;
+  load(fullfile(expected_dir, 'TYPED_FITHRF_GLMDENOISE_RR.mat'))
+  expected{4}.HRFindex = HRFindex;
+
+  output_dir = fullfile(test_dir, 'outputs', 'matlab');
+  
   run(fullfile(test_dir, '..', 'setup.m'));
 
 end
 
 function clean_up()
+  
+  % ununsed for now
 
 end
