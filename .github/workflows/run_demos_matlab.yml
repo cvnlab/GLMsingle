@@ -1,0 +1,31 @@
+name: run matlab demos
+
+on:
+  push:
+    branches: ["*"]
+  pull_request:
+    branches: ["*"]
+
+jobs:
+  demos:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Install MATLAB
+        uses: matlab-actions/setup-matlab@v1.0.1
+        with:
+          # MATLAB release to set up R2020a
+          release: R2020a
+
+      - name: Shallow clone GLMsingle
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+          fetch-depth: 0
+
+      - name: Run commands
+        uses: matlab-actions/run-command@v1.0.1
+        with:
+          command:
+            cd(fullfile(getenv('GITHUB_WORKSPACE'), '.github', 'workflows'));
+            run run_demos;
