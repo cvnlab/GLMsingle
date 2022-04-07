@@ -1,0 +1,56 @@
+name: tests and coverage with matlab
+
+on:
+  push:
+    branches: ["*"]
+  pull_request:
+    branches: ["*"]
+
+jobs:
+  tests:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Install MATLAB
+        uses: matlab-actions/setup-matlab@v1.0.1
+        with:
+          # MATLAB release to set up R2020a
+          release: R2020a
+
+      - name: Shallow clone GLMsingle
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+          fetch-depth: 0
+
+      - name: Install Moxunit and MOcov
+        run: |
+          git clone https://github.com/MOxUnit/MOxUnit.git --depth 1
+          git clone https://github.com/MOcov/MOcov.git --depth 1
+
+      - name: Prepare data
+        run: make tests/data/nsdcoreexampledataset.mat
+
+      - name: Run commands
+        uses: matlab-actions/run-command@v1.0.1
+        with:
+          command: cd(fullfile(getenv('GITHUB_WORKSPACE'), '.github', 'workflows')); run tests_matlab;
+
+      - name: Run tests
+        run: |
+          cat test_report.log | grep 0
+          bash <(curl -s https://codecov.io/bash)
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v1
+        with:
+          name: coverage_file
+          path: coverage.xml
+
+      - name: Code coverage
+        uses: codecov/codecov-action@v1
+        with:
+          file: coverage.xml # optional
+          flags: matlab # optional
+          name: codecov-umbrella # optional
+          fail_ci_if_error: true # optional (default = false)
