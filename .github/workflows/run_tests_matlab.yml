@@ -1,4 +1,4 @@
-name: tests and coverage with MATLAB
+name: MATLAB tests
 
 # Installs
 # - MATLAB github action
