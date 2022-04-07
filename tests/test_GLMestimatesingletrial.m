@@ -35,6 +35,8 @@ function test_GLMestimatesingletrial_system()
   assertEqual(results{3}.HRFindex, expected{3}.HRFindex);
   assertEqual(results{4}.HRFindex, expected{4}.HRFindex);
 
+  assertElementsAlmostEqual(results{4}.R2, expected{4}.HRFindex1, 'absolute', 1e-1);
+
   clean_up();
 
 end
@@ -54,6 +56,7 @@ function [data, expected, output_dir] = set_up_test()
   expected{3}.HRFindex = HRFindex;
   load(fullfile(expected_dir, 'TYPED_FITHRF_GLMDENOISE_RR.mat'));
   expected{4}.HRFindex = HRFindex;
+  expected{4}.R2 = R2;
 
   output_dir = fullfile(test_dir, 'outputs', 'matlab');
 
