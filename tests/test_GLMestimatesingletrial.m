@@ -29,8 +29,7 @@ function test_GLMestimatesingletrial_system()
                                    tr, ...
                                    output_dir, ...
                                    struct('wantmemoryoutputs', [1 1 1 1]));
-                                 
-       
+
   % THEN
   assertEqual(results{2}.HRFindex, expected{2}.HRFindex);
   assertEqual(results{3}.HRFindex, expected{3}.HRFindex);
@@ -49,21 +48,21 @@ function [data, expected, output_dir] = set_up_test()
   data = load(data_file);
 
   expected_dir = fullfile(test_dir, 'expected', 'matlab');
-  load(fullfile(expected_dir, 'TYPEB_FITHRF.mat'))
+  load(fullfile(expected_dir, 'TYPEB_FITHRF.mat'));
   expected{2}.HRFindex = HRFindex;
-  load(fullfile(expected_dir, 'TYPEC_FITHRF_GLMDENOISE.mat'))
+  load(fullfile(expected_dir, 'TYPEC_FITHRF_GLMDENOISE.mat'));
   expected{3}.HRFindex = HRFindex;
-  load(fullfile(expected_dir, 'TYPED_FITHRF_GLMDENOISE_RR.mat'))
+  load(fullfile(expected_dir, 'TYPED_FITHRF_GLMDENOISE_RR.mat'));
   expected{4}.HRFindex = HRFindex;
 
   output_dir = fullfile(test_dir, 'outputs', 'matlab');
-  
+
   run(fullfile(test_dir, '..', 'setup.m'));
 
 end
 
 function clean_up()
-  
+
   % ununsed for now
 
 end
