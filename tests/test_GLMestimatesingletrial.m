@@ -35,7 +35,7 @@ function test_GLMestimatesingletrial_system()
   assertEqual(results{3}.HRFindex, expected{3}.HRFindex);
   assertEqual(results{4}.HRFindex, expected{4}.HRFindex);
 
-  assertElementsAlmostEqual(results{4}.R2, expected{4}.HRFindex1, 'absolute', 1e-1);
+  assertElementsAlmostEqual(results{4}.R2, expected{4}.R2, 'absolute', 1e-1);
 
   clean_up();
 
