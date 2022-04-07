@@ -1,4 +1,4 @@
-function test_suite = test_glmsingleunit %#ok<*STOUT>
+function test_suite = test_GLMestimatesingletrial %#ok<*STOUT>
 
   try % assignment of 'localfunctions' is necessary in Matlab >= 2016
     test_functions = localfunctions(); %#ok<*NASGU>
@@ -9,7 +9,10 @@ function test_suite = test_glmsingleunit %#ok<*STOUT>
 
 end
 
-function test_glmsingleunit_smoke()
+function test_GLMestimatesingletrial_system()
+
+  % "end-to-end" test of GLMestimatesingletrial
+  % only checks the HRF index of 400 voxels
 
   [data, expected, output_dir] = set_up_test();
 
@@ -19,6 +22,7 @@ function test_glmsingleunit_smoke()
   tr = data.tr;
   data = cellfun(@(x) x(51:70, 8:27, 1, :), data.data(1:3), 'UniformOutput', 0);
 
+  % WHEN
   results = GLMestimatesingletrial(design, ...
                                    data, ...
                                    stimdur, ...
@@ -26,7 +30,8 @@ function test_glmsingleunit_smoke()
                                    output_dir, ...
                                    struct('wantmemoryoutputs', [1 1 1 1]));
                                  
-                                   
+       
+  % THEN
   assertEqual(results{2}.HRFindex, expected{2}.HRFindex);
   assertEqual(results{3}.HRFindex, expected{3}.HRFindex);
   assertEqual(results{4}.HRFindex, expected{4}.HRFindex);
