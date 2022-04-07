@@ -41,12 +41,6 @@ jobs:
           cat test_report.log | grep 0
           bash <(curl -s https://codecov.io/bash)
 
-      - name: Upload coverage
-        uses: actions/upload-artifact@v1
-        with:
-          name: coverage_file
-          path: coverage.xml
-
       - name: Code coverage
         uses: codecov/codecov-action@v1
         with:
