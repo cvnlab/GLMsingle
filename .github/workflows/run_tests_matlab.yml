@@ -1,40 +1,51 @@
-name: tests and coverage with matlab
+name: tests and coverage with MATLAB
+
+# Installs
+# - MATLAB github action
+# - MOXunit
+# - MOcov
+# Get test data
+# cd into .github/workflows
+# run .github/workflows/tests_matlab.m
+# If tests pass, uploads coverage to codecov
 
 on:
   push:
+    # TODO only run on master branch on push 
     branches: ["*"]
   pull_request:
     branches: ["*"]
 
 jobs:
   tests:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     steps:
       - name: Install MATLAB
         uses: matlab-actions/setup-matlab@v1.0.1
         with:
-          # MATLAB release to set up R2020a
           release: R2020a
 
       - name: Shallow clone GLMsingle
         uses: actions/checkout@v3
         with:
           submodules: true
-          fetch-depth: 0
+          fetch-depth: 0 # 0 means we only get the last commit, not the whole git history
 
       - name: Install Moxunit and MOcov
         run: |
           git clone https://github.com/MOxUnit/MOxUnit.git --depth 1
           git clone https://github.com/MOcov/MOcov.git --depth 1
 
-      - name: Prepare data
+      - name: Download data
         run: make tests/data/nsdcoreexampledataset.mat
 
       - name: Run commands
         uses: matlab-actions/run-command@v1.0.1
         with:
-          command: cd(fullfile(getenv('GITHUB_WORKSPACE'), '.github', 'workflows')); run tests_matlab;
+          command:
+            cd(fullfile(getenv('GITHUB_WORKSPACE'), '.github', 'workflows'));
+            run tests_matlab;
 
       - name: Run tests
         run: |
