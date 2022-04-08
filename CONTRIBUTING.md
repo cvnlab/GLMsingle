@@ -26,10 +26,10 @@ Information for anyone who would like to contribute to this repository.
 ├── .git
 ├── .github
 │   └── workflows         # Github continuous integration set up
-├── examples
+├── examples              # Python demos
 │   ├── data
 │   ├── example1outputs
-│   ├── example2outputs
+│   └── example2outputs
 ├── glmsingle             # Python implementation
 │   ├── cod
 │   ├── design
@@ -39,11 +39,13 @@ Information for anyone who would like to contribute to this repository.
 │   ├── ssq
 │   └── utils
 ├── matlab                # Matlab implementation
-│   ├── examples
-│   ├── fracridge
+│   ├── examples          # Matlab demos
+│   ├── fracridge         # Fracridge submodule
 │   └── utilities
 └── tests                 # Python and Matlab tests
-    └── data
+    ├── data              # Data used as inputs for the tests
+    └── expected          # Expected results of the tests
+│       └── matlab
 
 ```
 
@@ -151,6 +153,9 @@ MATLAB and python tests), type:
 ```bash
 make tests/data/nsdcoreexampledataset.mat
 ```
+
+Only some specfici results are checked by the system tests: those can be found
+in `tests/expected/matlab`
 
 To run **all** the tests and get code coverage, you can
 
