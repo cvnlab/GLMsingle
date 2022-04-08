@@ -2,6 +2,24 @@
 
 Information for anyone who would like to contribute to this repository.
 
+- [CONTRIBUTING](#contributing)
+  - [Repository map](#repository-map)
+  - [Generic](#generic)
+    - [Makefile](#makefile)
+    - [pre-commit](#pre-commit)
+  - [Matlab](#matlab)
+    - [Style guide](#style-guide)
+    - [Tests](#tests)
+      - [Adding new tests](#adding-new-tests)
+    - [Continuous integration](#continuous-integration)
+      - [Tests](#tests-1)
+      - [Demos](#demos)
+  - [Python](#python)
+    - [Style guide](#style-guide-1)
+    - [Tests](#tests-2)
+      - [Demos](#demos-1)
+    - [Continuous integration](#continuous-integration-1)
+
 ## Repository map
 
 ```bash
@@ -35,8 +53,11 @@ Information for anyone who would like to contribute to this repository.
 
 A `Makefile` is used to help set / and automate some things.
 
-In a terminal type `make help` to see what are the different "recipes" you can
-run with this `Makefile`.
+In a terminal type `make help` to see what some of the different "recipes" you
+can run with this `Makefile`.
+
+See
+[here for a short intro on using `Makefiles`](https://the-turing-way.netlify.app/reproducible-research/make.html)
 
 ### pre-commit
 
@@ -111,7 +132,10 @@ make lint/miss_hit
 
 ### Tests
 
-Running the tests require to have the following toolboes in your MATLAB path:
+For an introduction to testing see
+[here](https://the-turing-way.netlify.app/reproducible-research/make.html).
+
+Running the tests require to have the following toolboxes in your MATLAB path:
 
 - the [MOxUnit testing framework](https://github.com/MOxUnit/MOxUnit) to run the
   tests
@@ -181,6 +205,8 @@ end
 
 ### Continuous integration
 
+We use Github to run several workflows for continuous integration.
+
 #### Tests
 
 The matlab tests are run by the workflow:
@@ -191,7 +217,7 @@ and then then calls `.github/workflows/run_tests_ci.m` to run the tests via
 Those tests should be run with every push on the `master` branch and on pull
 request that target the `master` branch.
 
-### Demos
+#### Demos
 
 The demos in the `matlab/examples` folder are run automatically in Github CI at
 regular intervals.
