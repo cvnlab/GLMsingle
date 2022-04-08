@@ -40,6 +40,31 @@ run with this `Makefile`.
 
 ### pre-commit
 
+You can use the [`pre-commit` python package](https://pre-commit.com/) in this
+repo to make sure you only commit properly formatted files (for example `.yml`
+files).
+
+1. Install `pre-commit`
+
+```bash
+$ pip3 install pre-commit
+```
+
+It is also included in `requirements_dev.txt`, so it will installed by running:
+
+```bash
+$ pip3 install -r requirements_dev.txt
+```
+
+The `.pre-commit-config.yml` file defines the checks to run when committing
+files.
+
+1. Run the following command to install the `pre-commit` "hooks"
+
+```bash
+$ pre-commit install
+```
+
 ## Matlab
 
 ### Style guide
@@ -60,7 +85,7 @@ Install `miss_hit`:
 $ pip3 install miss_hit
 ```
 
-It is also included in `requirements_dev.txt`, so it will by running:
+It is also included in `requirements_dev.txt`, so it will installed by running:
 
 ```bash
 $ pip3 install -r requirements_dev.txt
