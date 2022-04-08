@@ -1,5 +1,3 @@
-error('this is a test')
-
 %% Example 2 Overview
 %
 % GLMsingle is new tool that provides efficient, scalable, and accurate

@@ -20,9 +20,6 @@ name: MATLAB demos
 on:
   schedule:
     - cron: "0 0 1,15 * *"
-  push:
-    # TODO only run on master branch on push 
-    branches: ["*"]
 
 jobs:
   demos:
