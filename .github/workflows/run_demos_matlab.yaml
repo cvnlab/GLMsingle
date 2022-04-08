@@ -51,3 +51,7 @@ jobs:
           command:
               cd(fullfile(getenv('GITHUB_WORKSPACE'), '.github', 'workflows'));
               run run_demos_ci;
+
+      - name: Check logs
+        run: |
+          cat test_report.log | grep 0
