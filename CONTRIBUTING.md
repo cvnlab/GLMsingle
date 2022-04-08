@@ -44,6 +44,46 @@ run with this `Makefile`.
 
 ### Style guide
 
+The [`miss_hit` python package](https://misshit.org/) is used to help ensure a
+consistent coding style for some of the MATLAB code.
+
+`miss_hit` can check code style, do a certain amount of automatic code
+reformating and prevent the code complexity from getting out of hand by running
+static code analysis (Static analysis can is a way to measure and track software
+quality metrics without additional code like tests).
+
+`miss_hit` is quite configurable via the use of `miss_hit.cfg` files.
+
+Install `miss_hit`:
+
+```bash
+$ pip3 install miss_hit
+```
+
+It is also included in `requirements_dev.txt`, so it will by running:
+
+```bash
+$ pip3 install -r requirements_dev.txt
+```
+
+Style-check your program:
+
+```bash
+$ mh_style --fix path_to_folder_or_m_file
+```
+
+Make sure your code does not get too complex:
+
+```bash
+$ mh_metric --ci
+```
+
+You can rule several of those checks by simply typing
+
+```bash
+make lint/miss_hit
+```
+
 ### Tests
 
 Running the tests require to have the following toolboes in your MATLAB path:
