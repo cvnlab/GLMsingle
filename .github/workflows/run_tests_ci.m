@@ -7,5 +7,5 @@ addpath(fullfile(root_dir, 'MOcov', 'MOcov'));
 cd(fullfile(root_dir, 'MOxUnit', 'MOxUnit'));
 run moxunit_set_path();
 
-cd(root_dir)
+cd(root_dir);
 run run_tests();

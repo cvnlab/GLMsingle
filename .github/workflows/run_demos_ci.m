@@ -8,7 +8,7 @@ cd(fullfile(root_dir, 'MOxUnit', 'MOxUnit'));
 run moxunit_set_path();
 
 % add glm single to path
-cd(root_dir)
+cd(root_dir);
 setup();
 
 this_folder = fileparts(mfilename('fullpath'));

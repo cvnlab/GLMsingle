@@ -64,6 +64,7 @@ tests/data/nsdcoreexampledataset.mat: ## install test data
 
 lint/miss_hit: ## lint and checks matlab code
 	mh_style --fix tests && mh_metric --ci tests && mh_lint tests
+	mh_style --fix .github/workflows && mh_metric --ci .github/workflows && mh_lint .github/workflows
 
 test-matlab: tests/data/nsdcoreexampledataset.mat ## run tests with MATLAB
 	$(MATLAB) $(MATLAB_ARG) -r "run_tests; exit()"
