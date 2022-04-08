@@ -25,4 +25,4 @@ Some basic sanity checks can be run on those data with
 - like making sure that the there is nothing "strange" in the range of R2 values
   tested.
 
-![histogram_R2](./histogram_R2.tif)
+![histogram_R2](./histogram_R2.png)

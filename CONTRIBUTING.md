@@ -154,8 +154,9 @@ MATLAB and python tests), type:
 make tests/data/nsdcoreexampledataset.mat
 ```
 
-Only some specfici results are checked by the system tests: those can be found
-in `tests/expected/matlab`
+Only some specific results are checked by the system tests: those can be found
+in `tests/expected/matlab`. See this [README](./tests/expected/matlab/README.md)
+for more information.
 
 To run **all** the tests and get code coverage, you can
 

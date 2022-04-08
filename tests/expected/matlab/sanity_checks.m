@@ -12,7 +12,7 @@ assert(any(isinf(R2(:))) == 0);
 
 figure('name', 'histogram R2')
 hist(R2(:), 100);
-print('histogram_R2.tif', '-depsc','-tiff');
+print('histogram_R2.png', '-dpng');
 
 figure('name', 'R2')
 imagesc(R2, [0 100])
