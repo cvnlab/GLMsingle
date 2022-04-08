@@ -18,13 +18,20 @@ on:
 
 jobs:
   tests:
-    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        matlab-version: ["R2020a", "R2021a"]
+      fail-fast: false  # Don't cancel all jobs if one fails
+
+    runs-on: ${{ matrix.os }}
 
     steps:
-      - name: Install MATLAB
+      - name: Install MATLAB ${{ matrix.matlab-version }}
         uses: matlab-actions/setup-matlab@v1.0.1
         with:
-          release: R2020a
+          release: ${{ matrix.matlab-version }}
 
       - name: Shallow clone GLMsingle
         uses: actions/checkout@v3
