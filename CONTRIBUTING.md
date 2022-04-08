@@ -71,7 +71,10 @@ To run **all** the tests and get code coverage, you can
 make test-matlab
 ```
 
-2. run the `run_tests.m` in MATLAB
+1. run `moxunit_runtests` in MATLAB to run all `test_*.m` files in in the
+   present working directory.
+
+1. run the `run_tests.m` in MATLAB
 
 You can also run all the tests contained in a specific `test_*.m` file directly,
 by running that file only.
@@ -111,9 +114,29 @@ end
 
 ```
 
-#### Demos
-
 ### Continuous integration
+
+#### Tests
+
+The matlab tests are run by the workflow:
+`.github/workflows/run_tests_matlab.yaml`. It sets up MATLAB, Moxunit and Mocov
+and then then calls `.github/workflows/run_tests_ci.m` to run the tests via
+`run_tests.m`.
+
+Those tests should be run with every push on the `master` branch and on pull
+request that target the `master` branch.
+
+### Demos
+
+The demos in the `matlab/examples` folder are run automatically in Github CI at
+regular intervals.
+
+The matlab demos are run by the workflow:
+`.github/workflows/run_demos_matlab.yaml`. The demos are run by calling
+`.github/workflows/run_demos_ci.m` and also each demo is run via a MoxUnit test
+(see `.github/workflows/test_demos.m`) to make sure that if the first one
+crashes, then the second one will still be run (easier than setting up parallel
+jobs in CI).
 
 ## Python
 
