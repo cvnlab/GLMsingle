@@ -20,6 +20,9 @@ name: MATLAB demos
 on:
   schedule:
     - cron: "0 0 1,15 * *"
+  push:
+    # TODO only run on master branch on push 
+    branches: ["*"]
 
 jobs:
   demos:
@@ -29,18 +32,22 @@ jobs:
       - name: Install MATLAB
         uses: matlab-actions/setup-matlab@v1.0.1
         with:
-          # MATLAB release to set up R2020a
           release: R2020a
 
       - name: Shallow clone GLMsingle
         uses: actions/checkout@v3
         with:
           submodules: true
-          fetch-depth: 0
+          fetch-depth: 0 # 0 means we only get the last commit, not the whole git history
+
+      - name: Install Moxunit and MOcov
+        run: |
+          git clone https://github.com/MOxUnit/MOxUnit.git --depth 1
+          git clone https://github.com/MOcov/MOcov.git --depth 1
 
       - name: Run commands
         uses: matlab-actions/run-command@v1.0.1
         with:
           command:
-            cd(fullfile(getenv('GITHUB_WORKSPACE'), '.github', 'workflows'));
-            run run_demos;
+              cd(fullfile(getenv('GITHUB_WORKSPACE'), '.github', 'workflows'));
+              run run_demos_ci;

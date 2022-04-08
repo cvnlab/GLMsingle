@@ -1,5 +1,7 @@
 function run_tests()
 
+  % run tests with code coverage
+
   tic;
 
   cd(fileparts(mfilename('fullpath')));
