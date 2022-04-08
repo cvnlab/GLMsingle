@@ -21,8 +21,8 @@ jobs:
 
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        matlab-version: ["R2020a", "R2021a"]
+        os: [ubuntu-latest] # "macos-latest" or "windows-latest" don't work (yet?)
+        matlab-version: ["R2020a"] # add more versions if needed: "R2021a"
       fail-fast: false  # Don't cancel all jobs if one fails
 
     runs-on: ${{ matrix.os }}
