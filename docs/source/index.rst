@@ -10,7 +10,8 @@ Welcome to GLMsingle's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-
+   matlab
+   python
 
 Indices and tables
 ==================
