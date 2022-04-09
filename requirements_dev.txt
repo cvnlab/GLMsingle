@@ -9,3 +9,7 @@ pytest
 black
 nbmake
 pytest-cov
+
+# Documentation
+sphinx
+sphinxcontrib-matlabdomain
