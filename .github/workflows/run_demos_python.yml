@@ -21,9 +21,6 @@ on:
   schedule:
     - cron: "0 0 1,15 * *"
 
-  push:
-    branches: ["*"]
-
 jobs:
   demos:
     continue-on-error: true
