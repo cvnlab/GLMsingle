@@ -12,7 +12,7 @@ name: MATLAB tests
 on:
   push:
     # TODO only run on master branch on push 
-    branches: ["*"]
+    branches: ["main"]
   pull_request:
     branches: ["*"]
 
