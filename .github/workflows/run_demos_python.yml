@@ -56,5 +56,5 @@ jobs:
           python -c "import sys; print(sys.version)"
           pip list
 
-      - name: Run tests and generate coverage report
+      - name: Run notebooks
         run: pytest --nbmake --nbmake-timeout=3000 "./examples"
