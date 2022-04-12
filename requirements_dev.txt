@@ -1,3 +1,6 @@
+# Base requirements
+-r requirements.txt
+
 # Matlab dev
 miss_hit 
 

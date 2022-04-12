@@ -10,7 +10,7 @@ with open('README.md', encoding='utf-8') as readmefile:
 
 setup(
     name='GLMsingle',
-    version='0.0.1',
+    version='1.0.0',
     description='Python GLMsingle',
     url='https://github.com/kendrickkay/GLMsingle',
     long_description=long_description,
@@ -29,5 +29,5 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=requires,
-    python_requires='>=3.6'
+    python_requires='>=3.6, <3.10'
 )
