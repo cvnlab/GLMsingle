@@ -1,3 +1,8 @@
+
+
+[![Python tests](https://github.com/cvnlab/GLMsingle/actions/workflows/run_tests_python.yml/badge.svg)](https://github.com/cvnlab/GLMsingle/actions/workflows/run_tests_python.yml)
+[![Python demos](https://github.com/cvnlab/GLMsingle/actions/workflows/run_demos_python.yml/badge.svg)](https://github.com/cvnlab/GLMsingle/actions/workflows/run_demos_python.yml)
+[![Python-coverage](https://codecov.io/gh/Remi-Gau/GLMsingle/branch/main/graph/badge.svg?token=H75TAAUVSW)](https://codecov.io/gh/Remi-Gau/GLMsingle)
 # GLMsingle
 
 ![image](https://user-images.githubusercontent.com/35503086/151108958-24479034-c7f7-4734-b903-9046ba6a78ac.png)
