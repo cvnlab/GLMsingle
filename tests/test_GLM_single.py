@@ -30,6 +30,7 @@ expected["typed"]["HRFindex"] = tmp
 tmp = np.load(join(expected_dir, "TYPED_FITHRF_R2.npy"), allow_pickle=True)
 expected["typed"]["R2"] = tmp
 
+
 def test_GLM_single_system():
 
     X = sio.loadmat(data_file)
@@ -58,11 +59,14 @@ def test_GLM_single_system():
 
     tmp = np.load(join(output_dir, "python", "TYPEB_FITHRF.npy"), allow_pickle=True)
     results["typeb"]["HRFindex"] = tmp.item(0)["HRFindex"]
-    tmp = np.load(join(output_dir, "python", "TYPEC_FITHRF_GLMDENOISE.npy"), allow_pickle=True)
+    tmp = np.load(
+        join(output_dir, "python", "TYPEC_FITHRF_GLMDENOISE.npy"), allow_pickle=True
+    )
     results["typec"]["HRFindex"] = tmp.item(0)["HRFindex"]
-    tmp = np.load(join(output_dir, "python", "TYPED_FITHRF_GLMDENOISE_RR.npy"), allow_pickle=True)
+    tmp = np.load(
+        join(output_dir, "python", "TYPED_FITHRF_GLMDENOISE_RR.npy"), allow_pickle=True
+    )
     results["typed"]["HRFindex"] = tmp.item(0)["HRFindex"]
-
 
     assert (results["typeb"]["HRFindex"] == expected["typeb"]["HRFindex"]).all
     assert (results["typec"]["HRFindex"] == expected["typec"]["HRFindex"]).all
