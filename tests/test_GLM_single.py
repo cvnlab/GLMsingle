@@ -12,7 +12,7 @@ data_file = join(data_dir, "nsdcoreexampledataset.mat")
 output_dir = join(test_dir, "outputs")
 
 
-def test_smoke_test():
+def test_GLM_single_system():
 
     X = sio.loadmat(data_file)
 

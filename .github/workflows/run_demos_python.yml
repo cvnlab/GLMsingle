@@ -57,4 +57,4 @@ jobs:
           pip list
 
       - name: Run tests and generate coverage report
-        run: pytest  --nbmake --nbmake-timeout=3000 "./examples"
+        run: pytest --nbmake --nbmake-timeout=3000 "./examples"

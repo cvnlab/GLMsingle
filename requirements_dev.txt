@@ -5,10 +5,9 @@
 miss_hit 
 
 # Python dev
-flake8
-tox
-coverage
-pytest
 black
-nbmake
+flake8
+pytest
 pytest-cov
+nbmake
+tox

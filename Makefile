@@ -97,17 +97,15 @@ lint/black: ## check style with black
 	black tests
 
 test-python: tests/data/nsdcoreexampledataset.mat ## run tests quickly with the default Python
-	pytest 
+	pytest -vv
 
 test-notebooks:
-	pytest  --nbmake --nbmake-timeout=3000 "./examples"
+	pytest -vv --nbmake --nbmake-timeout=3000 "./examples"
 test-all: ## run tests on every Python version with tox
 	tox
 
 coverage-python: ## check code coverage quickly with the default Python
-	coverage run --source glmsingle -m pytest
-	coverage report -m
-	coverage html
+	pytest -vv --cov glmsingle --cov-report html:htmlcov 
 	$(BROWSER) htmlcov/index.html
 
 install: clean ## install the package to the active Python's site-packages
