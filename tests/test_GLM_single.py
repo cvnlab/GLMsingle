@@ -71,3 +71,4 @@ def test_GLM_single_system():
     assert (results["typeb"]["HRFindex"] == expected["typeb"]["HRFindex"]).all
     assert (results["typec"]["HRFindex"] == expected["typec"]["HRFindex"]).all
     assert (results["typed"]["HRFindex"] == expected["typed"]["HRFindex"]).all
+    assert (results["typed"]["R2"] == expected["typed"]["R2"]).all
