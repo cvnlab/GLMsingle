@@ -67,6 +67,7 @@ def test_GLM_single_system():
         join(output_dir, "python", "TYPED_FITHRF_GLMDENOISE_RR.npy"), allow_pickle=True
     )
     results["typed"]["HRFindex"] = tmp.item(0)["HRFindex"]
+    results["typed"]["R2"] = tmp.item(0)["R2"]
 
     assert (results["typeb"]["HRFindex"] == expected["typeb"]["HRFindex"]).all
     assert (results["typec"]["HRFindex"] == expected["typec"]["HRFindex"]).all
