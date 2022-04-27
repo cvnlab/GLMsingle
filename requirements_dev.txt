@@ -1,0 +1,13 @@
+# Base requirements
+-r requirements.txt
+
+# Matlab dev
+miss_hit 
+
+# Python dev
+black
+flake8
+pytest
+pytest-cov
+nbmake
+tox

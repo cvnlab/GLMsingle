@@ -1,0 +1,57 @@
+name: Python demos
+
+# Uses the cron schedule for github actions
+#
+#   will run at 00H00 run on the 1 and 15 of every month
+#
+# https://docs.github.com/en/free-pro-team@latest/actions/reference/events-that-trigger-workflows#scheduled-events
+#
+#         ┌───────────── minute (0 - 59)
+#         │ ┌───────────── hour (0 - 23)
+#         │ │ ┌───────────── day of the month (1 - 31)
+#         │ │ │    ┌───────────── month (1 - 12 or JAN-DEC): * means all
+#         │ │ │    │ ┌───────────── day of the week (0 - 6 or SUN-SAT): * means all
+#         │ │ │    │ │
+#         │ │ │    │ │
+#         │ │ │    │ │
+# 
+# - cron "0 0 1,15 * *"
+
+on:
+  schedule:
+    - cron: "0 0 1,15 * *"
+
+jobs:
+  demos:
+    continue-on-error: true
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.9"]
+
+    steps:
+      - name: Shallow clone GLMsingle
+        uses: actions/checkout@v3
+        with:
+          submodules: "recursive"
+          fetch-depth: 0
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools
+          pip install .
+          pip install -r requirements_dev.txt
+
+      - name: Display Python version and packages
+        run: |
+          python -c "import sys; print(sys.version)"
+          pip list
+
+      - name: Run notebooks
+        run: pytest --nbmake --nbmake-timeout=3000 "./examples"
