@@ -1,123 +1,145 @@
 function results = GLMestimatesingletrial(design,data,stimdur,tr,outputdir,opt)
-
-% function results = GLMestimatesingletrial(design,data,stimdur,tr,outputdir,opt)
+%
+% USAGE::
+%
+%   results = GLMestimatesingletrial(design,data,stimdur,tr,outputdir,opt)
 %
 % <design> is the experimental design. There are two possible cases:
+%
 %   1. A where A is a matrix with dimensions time x conditions.
 %      Each column should be zeros except for ones indicating condition onsets.
 %   2. {A1 A2 A3 ... An} where each of the A's are like the previous case.
 %      The different A's correspond to different runs, and different runs
 %      can have different numbers of time points. However, all A's must have
 %      the same number of conditions.
-%   Note that we ultimately compute single-trial response estimates (one estimate for 
-%   each condition onset), and these will be provided in chronological order. However,
-%   by specifying that a given condition occurs more than one time over the course
-%   of the experiment, this information can and will be used for cross-validation purposes.
+%
+% Note that we ultimately compute single-trial response estimates (one estimate for 
+% each condition onset), and these will be provided in chronological order. However,
+% by specifying that a given condition occurs more than one time over the course
+% of the experiment, this information can and will be used for cross-validation purposes.
+%
 % <data> is the time-series data with dimensions X x Y x Z x time or a cell vector of 
-%   elements that are each X x Y x Z x time. XYZ can be collapsed such that the data 
-%   are given as a 2D matrix (units x time), which is useful for surface-format data.
-%   The dimensions of <data> should mirror that of <design>. For example, <design> and 
-%   <data> should have the same number of runs, the same number of time points, etc.
-%   <data> should not contain any NaNs. We automatically convert <data> to single 
-%   format if not already in single format.
+% elements that are each X x Y x Z x time. XYZ can be collapsed such that the data 
+% are given as a 2D matrix (units x time), which is useful for surface-format data.
+% The dimensions of <data> should mirror that of <design>. For example, <design> and 
+% <data> should have the same number of runs, the same number of time points, etc.
+% <data> should not contain any NaNs. We automatically convert <data> to single 
+% format if not already in single format.
+%
 % <stimdur> is the duration of a trial in seconds. For example, 3.5 means that you 
-%   expect the neural activity from a given trial to last for 3.5 s.
+% expect the neural activity from a given trial to last for 3.5 s.
+%
 % <tr> is the sampling rate in seconds. For example, 1 means that we get a new
-%   time point every 1 s. Note that <tr> applies to both <design> and <data>.
+% time point every 1 s. Note that <tr> applies to both <design> and <data>.
+%
 % <outputdir> (optional) is a directory to which files will be written. (If the
-%   directory does not exist, we create it; if the directory already exists,
-%   we delete its contents so we can start fresh.) If you set <outputdir>
-%   to NaN, we will not create a directory and no files will be written.
-%   If you provide {outputdir figuredir}, we will save the large output files
-%   to <outputdir> and the small figure files to <figuredir> (either or both can be NaN).
-%   Default is 'GLMestimatesingletrialoutputs' (created in the current working directory).
+% directory does not exist, we create it; if the directory already exists,
+% we delete its contents so we can start fresh.) If you set <outputdir>
+% to NaN, we will not create a directory and no files will be written.
+% If you provide {outputdir figuredir}, we will save the large output files
+% to <outputdir> and the small figure files to <figuredir> (either or both can be NaN).
+% Default is 'GLMestimatesingletrialoutputs' (created in the current working directory).
+%
 % <opt> (optional) is a struct with the following optional fields:
 %
 %   *** MAJOR, HIGH-LEVEL FLAGS ***
 %
-%   <wantlibrary> (optional) is
-%     0 means use an assumed HRF
-%     1 means determine the best HRF for each voxel using the library-of-HRFs approach
-%     Default: 1.
+%   <wantlibrary> (optional) is:
+%
+%     - 0 means use an assumed HRF
+%     - 1 means determine the best HRF for each voxel using the library-of-HRFs approach
+%     - Default: 1.
+%
 %   <wantglmdenoise> (optional) is
-%     0 means do not perform GLMdenoise
-%     1 means perform GLMdenoise
-%     Default: 1.
+%
+%     - 0 means do not perform GLMdenoise
+%     - 1 means perform GLMdenoise
+%     - Default: 1.
+%
 %   <wantfracridge> (optional) is
-%     0 means do not perform ridge regression
-%     1 means perform ridge regression
-%     Default: 1.
+%
+%     - 0 means do not perform ridge regression
+%     - 1 means perform ridge regression
+%     - Default: 1.
+%
 %   <chunknum> (optional) is the number of voxels that we will process at the same time.
-%     This number should be large in order to speed computation, but should not be so
-%     large that you run out of RAM. Default: 50000.
+%   This number should be large in order to speed computation, but should not be so
+%   large that you run out of RAM. Default: 50000.
+%
 %   <xvalscheme> (optional) is a cell vector of vectors of run indices, indicating the
-%     cross-validation scheme. For example, if we have 8 runs, we could use
-%     {[1 2] [3 4] [5 6] [7 8]} which indicates to do 4 folds of cross-validation, 
-%     first holding out the 1st and 2nd runs, then the 3rd and 4th runs, etc.
-%     Default: {[1] [2] [3] ... [n]} where n is the number of runs.
+%   cross-validation scheme. For example, if we have 8 runs, we could use
+%   {[1 2] [3 4] [5 6] [7 8]} which indicates to do 4 folds of cross-validation, 
+%   first holding out the 1st and 2nd runs, then the 3rd and 4th runs, etc.
+%   Default: {[1] [2] [3] ... [n]} where n is the number of runs.
+%
 %   <sessionindicator> (optional) is 1 x n (where n is the number of runs) with
-%     positive integers indicating the run groupings that are interpreted as
-%     "sessions". The purpose of this input is to allow for session-wise z-scoring
-%     of single-trial beta weights for the purposes of hyperparameter evaluation. 
-%     For example, if you are analyzing data aggregated from multiple scan sessions,
-%     you may want beta weights to be z-scored per voxel within each session in order
-%     to compensate for any potential gross changes in betas across scan sessions.
-%     Note that the z-scoring has effect only INTERNALLY: it is used merely to 
-%     calculate the cross-validation performance and the associated hyperparameter
-%     selection; the outputs of this function do not reflect z-scoring, and the user
-%     may wish to post-hoc apply z-scoring. Default: 1*ones(1,n) which means to interpret
-%     all runs as coming from the same session.
+%   positive integers indicating the run groupings that are interpreted as
+%   "sessions". The purpose of this input is to allow for session-wise z-scoring
+%   of single-trial beta weights for the purposes of hyperparameter evaluation. 
+%   For example, if you are analyzing data aggregated from multiple scan sessions,
+%   you may want beta weights to be z-scored per voxel within each session in order
+%   to compensate for any potential gross changes in betas across scan sessions.
+%   Note that the z-scoring has effect only INTERNALLY: it is used merely to 
+%   calculate the cross-validation performance and the associated hyperparameter
+%   selection; the outputs of this function do not reflect z-scoring, and the user
+%   may wish to post-hoc apply z-scoring. Default: 1*ones(1,n) which means to interpret
+%   all runs as coming from the same session.
 %
 %   *** I/O FLAGS ***
 %
 %   <wantfileoutputs> (optional) is a logical vector [A B C D] indicating which of the
-%     four model types to save to disk (assuming that they are computed).
-%     A = 0/1 for saving the results of the ONOFF model
-%     B = 0/1 for saving the results of the FITHRF model
-%     C = 0/1 for saving the results of the FITHRF_GLMDENOISE model
-%     D = 0/1 for saving the results of the FITHRF_GLMDENOISE_RR model
-%     Default: [1 1 1 1] which means save all computed results to disk.
+%   four model types to save to disk (assuming that they are computed).
+%
+%     - A = 0/1 for saving the results of the ONOFF model
+%     - B = 0/1 for saving the results of the FITHRF model
+%     - C = 0/1 for saving the results of the FITHRF_GLMDENOISE model
+%     - D = 0/1 for saving the results of the FITHRF_GLMDENOISE_RR model
+%     - Default: [1 1 1 1] which means save all computed results to disk.
+%
 %   <wantmemoryoutputs> (optional) is a logical vector [A B C D] indicating which of the
-%     four model types to return in the output <results>. The user must be careful with this,
-%     as large datasets can require a lot of RAM. If you do not request the various model types,
-%     they will be cleared from memory (but still potentially saved to disk).
-%     Default: [0 0 0 1] which means return only the final type-D model.
+%   four model types to return in the output <results>. The user must be careful with this,
+%   as large datasets can require a lot of RAM. If you do not request the various model types,
+%   they will be cleared from memory (but still potentially saved to disk).
+%   Default: [0 0 0 1] which means return only the final type-D model.
 %
 %   *** GLM FLAGS ***
 %
 %   <extraregressors> (optional) is time x regressors or a cell vector
-%     of elements that are each time x regressors. The dimensions of 
-%     <extraregressors> should mirror that of <design> (i.e. same number of 
-%     runs, same number of time points). The number of extra regressors 
-%     does not have to be the same across runs, and each run can have zero 
-%     or more extra regressors. If [] or not supplied, we do 
-%     not use extra regressors in the model.
+%   of elements that are each time x regressors. The dimensions of 
+%   <extraregressors> should mirror that of <design> (i.e. same number of 
+%   runs, same number of time points). The number of extra regressors 
+%   does not have to be the same across runs, and each run can have zero 
+%   or more extra regressors. If [] or not supplied, we do 
+%   not use extra regressors in the model.
+%
 %   <maxpolydeg> (optional) is a non-negative integer with the maximum 
-%     polynomial degree to use for polynomial nuisance functions, which
-%     are used to capture low-frequency noise fluctuations in each run.
-%     Can be a vector with length equal to the number of runs (this
-%     allows you to specify different degrees for different runs).  
-%     Default is to use round(L/2) for each run where L is the 
-%     duration in minutes of a given run.
+%   polynomial degree to use for polynomial nuisance functions, which
+%   are used to capture low-frequency noise fluctuations in each run.
+%   Can be a vector with length equal to the number of runs (this
+%   allows you to specify different degrees for different runs).  
+%   Default is to use round(L/2) for each run where L is the 
+%   duration in minutes of a given run.
+%
 %   <wantpercentbold> (optional) is whether to convert amplitude estimates
-%     to percent BOLD change. This is done as the very last step, and is
-%     accomplished by dividing by the absolute value of 'meanvol' and 
-%     multiplying by 100. (The absolute value prevents negative values in
-%     'meanvol' from flipping the sign.) Default: 1.
+%   to percent BOLD change. This is done as the very last step, and is
+%   accomplished by dividing by the absolute value of 'meanvol' and 
+%   multiplying by 100. (The absolute value prevents negative values in
+%   'meanvol' from flipping the sign.) Default: 1.
 %
 %   *** HRF FLAGS ***
 % 
 %   <hrftoassume> (optional) is time x 1 with an assumed HRF that characterizes the evoked
-%     response to each trial. We automatically divide by the maximum value so that the 
-%     peak is equal to 1. Default is to generate a canonical HRF (see getcanonicalhrf.m). 
-%     Note that the HRF supplied in <hrftoassume> is used in only two instances: 
-%     (1) it is used for the simple ONOFF type-A model, and (2) if the user sets 
-%     <wantlibrary> to 0, it is also used for the type-B, type-C, and type-D models.
+%   response to each trial. We automatically divide by the maximum value so that the 
+%   peak is equal to 1. Default is to generate a canonical HRF (see getcanonicalhrf.m). 
+%   Note that the HRF supplied in <hrftoassume> is used in only two instances: 
+%   (1) it is used for the simple ONOFF type-A model, and (2) if the user sets 
+%   <wantlibrary> to 0, it is also used for the type-B, type-C, and type-D models.
+%
 %   <hrflibrary> (optional) is time x H with H different HRFs to choose from for the
-%     library-of-HRFs approach. We automatically normalize each HRF to peak at 1. 
-%     Default is to generate a library of 20 HRFs (see getcanonicalhrflibrary.m). 
-%     Note that if <wantlibrary> is 0, <hrflibrary> is clobbered with the contents
-%     of <hrftoassume>, which in effect causes a single assumed HRF to be used.
+%   library-of-HRFs approach. We automatically normalize each HRF to peak at 1. 
+%   Default is to generate a library of 20 HRFs (see getcanonicalhrflibrary.m). 
+%   Note that if <wantlibrary> is 0, <hrflibrary> is clobbered with the contents
+%   of <hrftoassume>, which in effect causes a single assumed HRF to be used.
 %
 %   *** MODEL TYPE A (ONOFF) FLAGS ***
 %
@@ -126,58 +148,66 @@ function results = GLMestimatesingletrial(design,data,stimdur,tr,outputdir,opt)
 %   *** MODEL TYPE B (FITHRF) FLAGS ***
 %   
 %   <wantlss> (optional) is 0/1 indicating whether "least-squares-separate" estimates
-%     are desired. If 1, then the type-B model will be estimated using the least-squares-
-%     separate method (as opposed to ordinary least squares). Default: 0.
+%   are desired. If 1, then the type-B model will be estimated using the least-squares-
+%   separate method (as opposed to ordinary least squares). Default: 0.
 %
 %   *** MODEL TYPE C (FITHRF_GLMDENOISE) FLAGS ***
 % 
 %   <numpcstotry> (optional) is a non-negative integer indicating the maximum
-%     number of PCs to enter into the model. Default: 10.
+%   number of PCs to enter into the model. Default: 10.
+%
 %   <brainthresh> (optional) is [A B] where A is a percentile for voxel intensity 
-%     values and B is a fraction to apply to the percentile. These parameters
-%     are used in the selection of the noise pool. Default: [99 0.1].
+%   values and B is a fraction to apply to the percentile. These parameters
+%   are used in the selection of the noise pool. Default: [99 0.1].
+%
 %   <brainR2> (optional) is an R^2 value (percentage). After fitting the type-A model,
-%     voxels whose R^2 is below this value are allowed to enter the noise pool.
-%     Default is [] which means to automatically determine a good value.
+%   voxels whose R^2 is below this value are allowed to enter the noise pool.
+%   Default is [] which means to automatically determine a good value.
+%
 %   <brainexclude> (optional) is X x Y x Z (or XYZ x 1) with 1s indicating voxels to 
-%     specifically exclude when selecting the noise pool. 0 means all voxels can be 
-%     potentially chosen. Default: 0.
+%   specifically exclude when selecting the noise pool. 0 means all voxels can be 
+%   potentially chosen. Default: 0.
+%
 %   <pcR2cutoff> (optional) is an R^2 value (percentage). To decide the number
-%     of PCs to include, we examine a subset of the available voxels. Specifically, 
-%     we examine voxels whose type-A model R^2 is above <pcR2cutoff>. Default is []
-%     which means to automatically determine a good value.
+%   of PCs to include, we examine a subset of the available voxels. Specifically, 
+%   we examine voxels whose type-A model R^2 is above <pcR2cutoff>. Default is []
+%   which means to automatically determine a good value.
+%
 %   <pcR2cutoffmask> (optional) is X x Y x Z (or XYZ x 1) with 1s indicating all possible
-%     voxels to consider when selecting the subset of voxels. 1 means all voxels 
-%     can be potentially selected. Default: 1.
+%   voxels to consider when selecting the subset of voxels. 1 means all voxels 
+%   can be potentially selected. Default: 1.
+%
 %   <pcstop> (optional) is
-%     A: a number greater than or equal to 1 indicating when to stop adding PCs 
-%        into the model. For example, 1.05 means that if the cross-validation 
-%        performance with the current number of PCs is within 5% of the maximum 
-%        observed, then use that number of PCs. (Performance is measured 
-%        relative to the case of 0 PCs.) When <pcstop> is 1, the selection 
-%        strategy reduces to simply choosing the PC number that achieves
-%        the maximum. The advantage of stopping early is to achieve a selection
-%        strategy that is robust to noise and shallow performance curves and 
-%        that avoids overfitting.
-%    -B: where B is the number of PCs to use for the final model. B can be any 
-%        integer between 0 and opt.numpcstotry. Note that if -B case is used, 
-%        cross-validation is NOT performed for the type-C model, and instead we
-%        blindly use B PCs.
-%     Default: 1.05.
+%
+%     - A: a number greater than or equal to 1 indicating when to stop adding PCs 
+%       into the model. For example, 1.05 means that if the cross-validation 
+%       performance with the current number of PCs is within 5% of the maximum 
+%       observed, then use that number of PCs. (Performance is measured 
+%       relative to the case of 0 PCs.) When <pcstop> is 1, the selection 
+%       strategy reduces to simply choosing the PC number that achieves
+%       the maximum. The advantage of stopping early is to achieve a selection
+%       strategy that is robust to noise and shallow performance curves and 
+%       that avoids overfitting.
+%     - B: where B is the number of PCs to use for the final model. B can be any 
+%       integer between 0 and opt.numpcstotry. Note that if -B case is used, 
+%       cross-validation is NOT performed for the type-C model, and instead we
+%       blindly use B PCs.
+%     - Default: 1.05.
 %
 %   *** MODEL TYPE D (FITHRF_GLMDENOISE_RR) FLAGS ***
 %
 %   <fracs> (optional) is a vector of fractions that are greater than 0
-%     and less than or equal to 1. We automatically sort in descending order and 
-%     ensure the fractions are unique. These fractions indicate the regularization
-%     levels to evaluate using fractional ridge regression (fracridge) and
-%     cross-validation. Default: fliplr(.05:.05:1). A special case is when <fracs>
-%     is specified as a single scalar value. In this case, cross-validation 
-%     is NOT performed for the type-D model, and we instead blindly use
-%     the supplied fractional value for the type-D model.
+%   and less than or equal to 1. We automatically sort in descending order and 
+%   ensure the fractions are unique. These fractions indicate the regularization
+%   levels to evaluate using fractional ridge regression (fracridge) and
+%   cross-validation. Default: fliplr(.05:.05:1). A special case is when <fracs>
+%   is specified as a single scalar value. In this case, cross-validation 
+%   is NOT performed for the type-D model, and we instead blindly use
+%   the supplied fractional value for the type-D model.
+%
 %   <wantautoscale> (optional) is whether to automatically scale and offset
-%     the model estimates from the type-D model to best match the unregularized
-%     estimates. Default: 1.
+%   the model estimates from the type-D model to best match the unregularized
+%   estimates. Default: 1.
 %
 % This function computes up to four model outputs (called type-A (ONOFF), 
 % type-B (FITHRF), type-C (FITHRF_GLMDENOISE), and type-D (FITHRF_GLMDENOISE_RR)),
@@ -187,24 +217,30 @@ function results = GLMestimatesingletrial(design,data,stimdur,tr,outputdir,opt)
 % There are a variety of cases that you can achieve. Here are some examples:
 %
 % - wantlibrary=1, wantglmdenoise=1, wantfracridge=1 [Default]
-%     A = simple ONOFF model
-%     B = single-trial estimates using a tailored HRF for every voxel
-%     C = like B but with GLMdenoise regressors added into the model
-%     D = like C but with ridge regression regularization (tailored to each voxel)
+%
+%     - A = simple ONOFF model
+%     - B = single-trial estimates using a tailored HRF for every voxel
+%     - C = like B but with GLMdenoise regressors added into the model
+%     - D = like C but with ridge regression regularization (tailored to each voxel)
 %
 % - wantlibrary=0
+%
 %     A fixed assumed HRF is used in all model types.
 %
 % - wantglmdenoise=0, wantfracridge=0
+%
 %     Model types C and D are not computed.
 %
 % - wantglmdenoise=0, wantfracridge=1
+%
 %     Model type C is not computed; model type D is computed using 0 GLMdenoise regressors.
 %
 % - wantglmdenoise=1, wantfracridge=0
+%
 %     Model type C is computed; model type D is not computed.
 %
 % - wantlss=1
+%
 %     Model type B is computed, but using least-squares-separate instead of OLS.
 %     Other model types, if computed, use OLS.
 %
@@ -218,30 +254,48 @@ function results = GLMestimatesingletrial(design,data,stimdur,tr,outputdir,opt)
 % a single scalar opt.fracs. In other words, you can perform wantfracridge 
 % without any cross-validation, but you need to provide opt.fracs as a scalar.
 %
-% OUTPUTS:
+% *** OUTPUTS: ***
 %
 % There are various outputs for each of the four model types:
 %
 % <modelmd> is either
-%   (1) the HRF (time x 1) and ON-OFF beta weights (X x Y x Z)
-%   (2) the full set of single-trial beta weights (X x Y x Z x TRIALS)
+%
+%   1. the HRF (time x 1) and ON-OFF beta weights (X x Y x Z)
+%   2. the full set of single-trial beta weights (X x Y x Z x TRIALS)
+%
 % <R2> is model accuracy expressed in terms of R^2 (percentage).
+%
 % <R2run> is R2 separated by run
+%
 % <meanvol> is the mean of all volumes
+%
 % <FitHRFR2> is the R2 for each of the different HRFs in the library
+%
 % <FitHRFR2run> is separated by run
+%
 % <HRFindex> is the 1-index of the best HRF
+%
 % <HRFindexrun> is HRFindex separated by run
+%
 % <noisepool> indicates voxels selected for the noise pool
+%
 % <pcregressors> indicates the full set of candidate GLMdenoise regressors that were found
+%
 % <glmbadness> is the cross-validation results for GLMdenoise
+%
 % <pcvoxels> is the set of voxels used to summarize GLMdenoise cross-validation results
+%
 % <xvaltrend> is the summary GLMdenoise cross-validation result on which pcnum selection is done
+%
 % <pcnum> is the number of PCs that were selected for the final model
+%
 % <FRACvalue> is the fractional ridge regression regularization level chosen for each voxel
+%
 % <rrbadness> is the cross-validation results for the ridge regression
+%
 % <scaleoffset> is the scale and offset applied to RR estimates to best match the unregularized result
 %
+
 % History (keep in line with Python version):
 % - 2021/06/03 - add the option for use to specify two directories for <outputdir>
 % - 2020/08/22 - Implement opt.sessionindicator. Also, now the cross-validation units now reflect
