@@ -7,11 +7,12 @@ Welcome to GLMsingle's documentation!
 =====================================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Contents:
 
    matlab
    python
+   wiki
 
 Indices and tables
 ==================
