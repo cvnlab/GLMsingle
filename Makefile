@@ -118,7 +118,7 @@ install: clean ## install the package to the active Python's site-packages
 ################################################################################
 # 	DOCKER
 
-.PHONY: Dockerfile 
+.PHONY: Dockerfile glmsingle.def
 Dockerfile:
 	docker run --rm repronim/neurodocker:0.7.0 generate docker \
 		--base python:3.9.12-slim-buster \
@@ -143,3 +143,18 @@ docker_run: docker_build
 		--volume $$PWD/tmp:/home/neuro/tmp \
 		glmsingle:latest \
 			jupyter-lab --no-browser --ip 0.0.0.0
+
+glmsingle.def:
+	docker run --rm repronim/neurodocker:0.7.0 generate singularity \
+		--base python:3.9.12-slim-buster \
+		--pkg-manager apt \
+		--install "build-essential" \
+		--copy glmsingle setup.py MANIFEST.in README.md requirements.txt /home/glmsingle/ \
+		--workdir /glmsingle \
+		--run "pip install ." \
+		--user neuro \
+		--workdir /home/neuro \
+		--copy examples /home/neuro/examples > glmsingle.def
+
+singularity_build: glmsingle.def
+	sudo singularity build glmsingle.sif glmsingle.def
