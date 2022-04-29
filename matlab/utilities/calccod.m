@@ -1,29 +1,37 @@
 function f = calccod(x,y,dim,wantgain,wantmeansub,wantsafe)
-
-% function f = calccod(x,y,dim,wantgain,wantmeansub,wantsafe)
+%
+% USAGE::
+% 
+%   f = calccod(x,y,dim,wantgain,wantmeansub,wantsafe)
 %
 % <x>,<y> are matrices with the same dimensions
+%
 % <dim> (optional) is the dimension of interest.
-%   default to 2 if <x> is a (horizontal) vector and to 1 if not.
-%   special case is 0 which means to calculate globally.
+% default to 2 if <x> is a (horizontal) vector and to 1 if not.
+% special case is 0 which means to calculate globally.
+%
 % <wantgain> (optional) is
-%   0 means normal
-%   1 means allow a gain to be applied to each case of <x>
+%
+%   - 0 means normal
+%   - 1 means allow a gain to be applied to each case of <x>
 %     to minimize the squared error with respect to <y>.
 %     in this case, there cannot be any NaNs in <x> or <y>.
-%   2 is like 1 except that gains are restricted to be non-negative.
+%   - 2 is like 1 except that gains are restricted to be non-negative.
 %     so, if the gain that minimizes the squared error is negative,
 %     we simply set the gain to be applied to be 0.
-%   default: 0.
+%     default: 0.
+%
 % <wantmeansub> (optional) is
-%   0 means do not subtract any mean.  this makes it such that
+%
+%   - 0 means do not subtract any mean.  this makes it such that
 %     the variance quantification is relative to 0.
-%   1 means subtract the mean of each case of <y> from both
+%   - 1 means subtract the mean of each case of <y> from both
 %     <x> and <y> before performing the calculation.  this makes
 %     it such that the variance quantification
 %     is relative to the mean of each case of <y>.
 %     note that <wantgain> occurs before <wantmeansub>.
-%   default: 1.
+%     default: 1.
+%
 % <wantsafe> (optional) is whether to protect against NaNs. Default: 1.
 %
 % calculate the coefficient of determination (R^2) indicating
@@ -45,18 +53,23 @@ function f = calccod(x,y,dim,wantgain,wantmeansub,wantsafe)
 % if there are no valid data points (i.e. all data points are
 % ignored because of NaNs), we return NaN for that case.
 %
-% note some weird cases:
-%   calccod([],[]) is []
+% Note some weird cases: 
+% 
+% calccod([],[]) is []
 %
+% Example::
+%
+%   x = randn(1,100);
+%   calccod(x,x+0.1*randn(1,100))
+%
+
+
 % history:
 % 2013/08/18 - fix pernicious case where <x> is all zeros and <wantgain> is 1 or 2.
 % 2010/11/28 - add <wantgain>==2 case
 % 2010/11/23 - changed the output range to percentages.  thus, the range is (-Inf,100].
 %              also, we removed the <wantr> input since it was dumb.
-%
-% example:
-% x = randn(1,100);
-% calccod(x,x+0.1*randn(1,100))
+
 
 % input
 if ~exist('dim','var') || isempty(dim)

@@ -1,0 +1,20 @@
+# Base requirements
+-r requirements.txt
+
+# Matlab dev
+miss_hit 
+
+# Python dev
+flake8
+tox
+coverage
+pytest
+black
+nbmake
+pytest-cov
+
+# Documentation
+sphinx
+sphinxcontrib-matlabdomain
+sphinx_rtd_theme
+myst-parser
