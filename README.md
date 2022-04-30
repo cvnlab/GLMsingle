@@ -10,16 +10,15 @@ in fMRI time-series data. We provide both MATLAB and Python implementations.
 **The GLMsingle preprint, which describes the technique in detail, 
 is available on bioRxiv (https://www.biorxiv.org/content/10.1101/2022.01.31.478431v1).**
 
+For additional documentation and FAQ on GLMsingle,
+please see: **https://glmsingle.readthedocs.io**
+
 GLMsingle can be viewed as a wholesale replacement of its predecessor,
 GLMdenoise (http://github.com/kendrickkay/GLMdenoise).
 
-For additional information, please see the Wiki page of
-the GLMsingle repository (https://github.com/kendrickkay/GLMsingle/wiki).
-
 If you have questions or discussion points, please use the Discussions
-feature of this github repository, or alternatively, e-mail
-Kendrick (kay@umn.edu). If you find a bug, please let us know by
-raising a Github issue.
+feature of this github repository. If you find a bug, 
+please let us know by raising a github Issue.
 
 ## MATLAB
 
@@ -69,9 +68,6 @@ We provide a number of example scripts that demonstrate usage of GLMsingle. You 
 If you would like to run these example scripts, the Python versions are available in `/GLMsingle/examples`, and the MATLAB versions are available in `/GLMsingle/matlab/examples`. Each notebook contains a full walkthrough of the process of loading an example dataset and design matrix, estimating neural responses using GLMsingle, estimating the reliability of responses at each voxel, and comparing those achieved via GLMsingle to those achieved using a baseline GLM.
 
 ## Additional information
-
-For additional information, please visit the Wiki page associated with this
-repository: https://github.com/kendrickkay/GLMsingle/wiki
 
 Terms of use: This content is licensed under a BSD 3-Clause License.
 
