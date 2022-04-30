@@ -46,6 +46,8 @@ gmfit = fitgmdist(v(:),2,'Replicates',numreps);
 
 % figure out a nice range
 rng = robustrange(v(:));
+rng(1) = min(rng(1),min(gmfit.mu));  % include the smaller of the two distribution means if necessary
+rng(2) = max(rng(2),max(gmfit.mu));  % include the bigger of the two distribution means if necessary
 
 % evaluate posterior
 allvals = linspace(rng(1),rng(2),nprecision);
@@ -55,18 +57,18 @@ for qq=1:length(allvals)
 end
 
 % figure out crossing
-if checkit(end,1) > .5  % if the first distribution is the higher one on the right
-  for ix=size(checkit,1):-1:1
-    if checkit(ix,1) <= .5
-      break;
-    end
+if checkit(end,1) > .5
+  whdist = 1;  % if the first distribution is the higher one on the right
+else
+  whdist = 2;  % if the second distribution is the higher one on the right
+end  
+for ix=size(checkit,1):-1:1
+  if checkit(ix,whdist) <= .5
+    break;
   end
-else                    % if the second distribution is the higher one on the right
-  for ix=size(checkit,1):-1:1
-    if checkit(ix,2) <= .5
-      break;
-    end
-  end
+end
+if checkit(ix,whdist) > .5
+  warning('no crossing of 0.5 found. results may be inaccurate!');
 end
 %OLD:
 %assert(any(checkit(:,1) > .5) && any(checkit(:,1) < .5),'no crossing of 0.5 detected');
