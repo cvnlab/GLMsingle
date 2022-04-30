@@ -55,8 +55,22 @@ for qq=1:length(allvals)
 end
 
 % figure out crossing
-assert(any(checkit(:,1) > .5) && any(checkit(:,1) < .5),'no crossing of 0.5 detected');
-[mn,ix] = min(abs(checkit(:,1)-.5));
+if checkit(end,1) > .5  % if the first distribution is the higher one on the right
+  for ix=size(checkit,1):-1:1
+    if checkit(ix,1) <= .5
+      break;
+    end
+  end
+else                    % if the second distribution is the higher one on the right
+  for ix=size(checkit,1):-1:1
+    if checkit(ix,2) <= .5
+      break;
+    end
+  end
+end
+%OLD:
+%assert(any(checkit(:,1) > .5) && any(checkit(:,1) < .5),'no crossing of 0.5 detected');
+%[mn,ix] = min(abs(checkit(:,1)-.5));
 
 % return it
 f = allvals(ix);
