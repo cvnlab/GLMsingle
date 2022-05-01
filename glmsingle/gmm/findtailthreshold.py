@@ -32,7 +32,7 @@ def findtailthreshold(v, figpath=None):
      from numpy.random import randn
      f, mns, sds, gmfit = findtailthreshold(np.r_[randn(1000), 5+3*randn(500)], figpath='test.png')
     """
-
+    
     # internal constants
     numreps = 3  # number of restarts for the GMM
     maxsz = 1000000  # maximum number of values to consider
@@ -62,11 +62,25 @@ def findtailthreshold(v, figpath=None):
     checkit = gmfit.predict_proba(allvals.reshape(-1, 1))
 
     # figure out crossing
-    np.testing.assert_equal(
-        np.any(checkit[:, 0] > .5) and np.any(checkit[:, 0] < .5),
-        True,
-        err_msg='no crossing of 0.5 detected')
-    ix = np.argmin(np.abs(checkit[:, 0]-.5))
+    if checkit[-1,0] > 0.5:
+        whdist = 0 # if the first distribution is the higher one on the right
+    else:
+        whdist = 1 # if the second distribution is the higher one on the right
+
+    for ix in range(checkit.shape[0] - 1, -1, -1):
+        if checkit[ix, whdist] <= 0.5:
+            break
+
+    # warn if necessary
+    if checkit[ix, whdist] > 0.5:
+        print('warning: no crossing of 0.5 found. results may be inaccurate!')
+     
+    # OLD
+    # np.testing.assert_equal(
+    #    np.any(checkit[:, 0] > .5) and np.any(checkit[:, 0] < .5),
+    #    True,
+    #    err_msg='no crossing of 0.5 detected')
+    # ix = np.argmin(np.abs(checkit[:, 0]-.5))
 
     # return it
     f = allvals[ix]
