@@ -56,7 +56,16 @@ def findtailthreshold(v, figpath=None):
 
     # figure out a nice range
     rng = robustrange(v2.flatten())[0]
-
+    
+    # include the smaller of the two distribution means if necessary
+    rng[0] = np.min([rng[0], np.min(gmfit.means_.flatten())])
+    
+    # include the bigger of the two distribution means if necessary
+    rng[1] = np.max([rng[1], np.max(gmfit.means_.flatten())])
+    
+    # OLD
+    # rng = robustrange(v2.flatten())[0]
+    
     # evaluate posterior
     allvals = np.linspace(rng[0], rng[1], num=nprecision)
     checkit = gmfit.predict_proba(allvals.reshape(-1, 1))
