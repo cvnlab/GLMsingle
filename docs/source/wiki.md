@@ -10,8 +10,7 @@ GLMsingle is an analysis technique (an algorithm) for obtaining accurate
 estimates of single-trial beta weights in fMRI data.
 
 If you have questions or discussion points, please use the Discussions feature
-of this github repository, or alternatively, e-mail Kendrick (kay@umn.edu). If
-you find a bug, please let us know by raising a Github issue.
+of this github repository, or if you find a bug, please let us know by raising a Github Issue.
 
 ## Example scripts
 
@@ -23,31 +22,6 @@ You can browse these example scripts here:
 - [Python - example 2](https://htmlpreview.github.io/?https://github.com/kendrickkay/GLMsingle/blob/main/examples/example2.html)
 - [MATLAB - example 1](https://htmlpreview.github.io/?https://github.com/kendrickkay/GLMsingle/blob/main/matlab/examples/example1preview/example1.html)
 - [MATLAB - example 2](https://htmlpreview.github.io/?https://github.com/kendrickkay/GLMsingle/blob/main/matlab/examples/example2preview/example2.html)
-
-## Tips on usage
-
-### What's the deal with `sessionindicator`?
-
-If your experiment wants to analyze/combine data from multiple distinct scan
-sessions (multiple scanner visits), there is the possibility that after basic
-pre-processing, there may be substantial abrupt differences in percent BOLD
-signal change across responses observed on different days. The
-`sessionindicator` option allows you to tell the code how runs are grouped, and
-it will internally use this information to z-score responses within sessions in
-order to better estimate cross-validation performance. This normalization is
-just done internally (under the hood) and does not propagate to the final
-outputs.
-
-### Can I exert control over the noise pool voxels?
-
-The default behavior is to automatically select noise pool voxels based on
-passing a simple signal intensity threshold (i.e. a simple mask that ignores
-out-of-brain voxels) and on having very low amounts of BOLD variance related to
-the experiment (i.e. a "R<sup>2</sup>" threshold). If you want to specifically
-control the voxels that are used for the noise pool, you can achieve this by
-setting `brainthresh` to [99 0] (which allows all voxels to pass the intensity
-threshold), `brainR2` to 100 (which allows potentially all voxels in) and then
-setting `brainexclude` to be all voxels that you do NOT want in the noise pool.
 
 ## FAQ
 
@@ -98,6 +72,12 @@ inaccurate and we want to actually limit the extent to which we fit the data.
 Thus, somewhat counter-intuitively, ridge regression _increases_ the residuals
 of the model fit.
 
+### I'm concerned about the noise pool. What if there are signals in there?
+
+This is an interesting issue to think about. The short answer is that GLMsingle guards against improper use of nuisance regressors through cross-validation. If, for some reason, there are valid experimental signals being learned from the noise pool, GLMsingle will tend to not use these signals since they will likely degrade the cross-validation performance.
+
+Note that even if the noise pool includes "good" voxels, improvement in beta estimates are still possible. This is something demonstrated in Figure 6 of Kay et al. Frontiers 2013, where we deliberately included the entire brain in the noise pool (just to see what would happen). The intuition is that results will depend on the specific mixture of noise and signal being learned in the data-derived nuisance regressors. If the nuisance regressors have a little bit of signal mixed in, they can still be useful as an approximate model of the noise.
+
 ### In GLMsingle, the GLMdenoise and ridge regression (RR) components of the method require experimental conditions to repeat across runs. How should I think about whether this is appropriate for my experiment?
 
 In order to determine the hyperparameter settings, it is indeed necessary for
@@ -113,6 +93,91 @@ correlated across voxels in the dataset; hence, its flexibility is actually
 quite limited. Ridge regression can only dampen the instabilities of beta
 estimates that persists across temporally nearby trials and in a uniform manner
 for all trials in the experiment; hence, its flexibility is also quite limited.
+
+### I noticed that GLMsingle needs some conditions to repeat across runs. But my experiment is not fully balanced in this regard (or I have just a few repeats). Is this a problem?
+
+In general, we don't think that perfect balancing is critical. The reason
+lies in thinking about the nature of the technique --- the repeats are simply
+used to set the hyperparameters (number of nuisance regressors; fractional
+regularization amount for each voxel). In our experience, even just a handful of
+repeats appears to be sufficient to robustly guide the estimation of the
+hyperparameters. Thus, even if you can code only a subset of the trials in your
+experiment as condition repeats, this may be sufficient to guide the
+hyperparameter estimation, and the overall results from GLMsingle might be quite
+good. (In fact, there are very few repeats in the NSD and BOLD5000 datasets,
+which are the main two datasets demonstrated in the GLMsingle pre-print.)
+
+## Tips on usage
+
+### My experiment design is not quite synchronized with my fMRI data.
+
+GLMsingle requires the design matrix and the fMRI data to be synchronized at some level of granularity. For example, if the design matrix is specified at 1-s increments, the fMRI data need to also be prepared at 1-s increments. Sometimes, users have experiments where events do not occur at exactly the time points of the fMRI data. In order to accommodate these scenarios, one can perform some upsampling/resampling of the fMRI data and/or the design matrix in order to get the two objects to match.
+
+One drawback is the increase in memory and disk space if upsampling is performed. However, keep in mind that one could just upsample to a moderate level (e.g. 1 s) and then perform a little bit of "rounding the design matrix to the nearest TR/volume". Rounding might introduce fairly negligible levels of inaccuracy given the sluggishness of the HRF.
+
+### How do I deal with experimental conditions with different durations?
+
+GLMsingle is designed to estimate betas (response amplitudes) for trials that are expected to share similar timecourse shapes. For example, if an experiment has brief events (e.g. 2-s long), GLMsingle convolves an HRF with a 2-s long square wave to generate the expected timecourse shape, and the idea is to estimate betas that modulate the amplitude of this timecourse shape for the different experimental conditions. If an experiment has long events (e.g. 16-s long blocks), GLMsingle will similarly convolve an HRF with a 16-s long square wave to generate the expected timecourse shape. The timecourse shapes in the two situations are very different.
+
+A major challenge is how to interpret betas when they reflect amplitudes of timecourses reflecting different durations. This is a tricky general problem, and GLMsingle is not particularly suited to resolving that situation.
+
+Note that within a range, the expected timecourse shape undergoes fairly modest changes. For example, the timecourse shape resulting with convolution of a fixed HRF with a 1-s square wave is quite similar to the result of convolution of that fixed HRF with a 2-s square wave. Certainly, the amplitude is very different (as expected); but the shape is fairly similar. So, one approach is to code events generically as, say, 1.5-s in duration, and this will allow the different activity induced by the 1-s and 2-s events to show up in the estimated response amplitude (betas).
+
+### Can I exert control over the noise pool voxels?
+
+The default behavior is to automatically select noise pool voxels based on
+passing a simple signal intensity threshold (i.e. a simple mask that ignores
+out-of-brain voxels) and on having very low amounts of BOLD variance related to
+the experiment (i.e. a "R<sup>2</sup>" threshold). If you want to specifically
+control the voxels that are used for the noise pool, you can achieve this by
+setting `brainthresh` to [99 0] (which allows all voxels to pass the intensity
+threshold), `brainR2` to 100 (which allows potentially all voxels in) and then
+setting `brainexclude` to be all voxels that you do NOT want in the noise pool.
+
+### What's the deal with `sessionindicator`?
+
+If your experiment wants to analyze/combine data from multiple distinct scan
+sessions (multiple scanner visits), there is the possibility that after basic
+pre-processing, there may be substantial abrupt differences in percent BOLD
+signal change across responses observed on different days. The
+`sessionindicator` option allows you to tell the code how runs are grouped, and
+it will internally use this information to z-score responses within sessions in
+order to better estimate cross-validation performance. This normalization is
+just done internally (under the hood) and does not propagate to the final
+outputs.
+
+## Things to watch out for
+
+### Filenames
+
+If you use the input option `wantlibrary=0` to use a canonical HRF
+(instead of the library of HRFs), the filename that is written is still 
+"`FITHRF`" (even though the results reflect what the user specified).
+The reason is just due to the internal code architecture (fitting with a 
+library consisting of one HRF is still treated as "`FITHRF`").
+
+## Designing design matrices
+
+### How should I design my design matrix?
+
+For some experiments, thinking about how to setup the design matrix is a major challenge that deserves careful thought. For example, consider an experiment where there are occasional one-back events, and these events are actually not of interest. Moreover, suppose you do not want to assume that the brain response to these one-back events are somehow similar to other trials in the experiment. Then, what you could do is to code these one-back events as unique conditions that have only one presentation. For example, if there are 30 one-back events, you could just add 30 new columns to your design matrix and indicate the onset of each one-back event in one of the columns. Then, after you obtain betas from GLMsingle, you can either just ignore all of the betas associated with those columns, or use them for some purpose!
+
+### Do I need blanks?
+
+In general, you should include blanks or dead time in your experiment. And you should not explicitly code those periods in the design matrix.
+
+If you try to use a design matrix where "everything" is coded, this is problematic because of the inability to estimate the baseline signal level (GLMsingle uses a set of polynomials per run to model the baseline signal). In these cases, consider omitting the coding of some of the experimental events (e.g. "fixation periods"); in doing so, the idea is that you are trying to estimate changes in the BOLD response **relative** to what the BOLD signal level is during these omitted periods.
+
+## Additional questions/discussion
+
+### What does GLMsingle think a "signal" is?
+
+GLMsingle treats responses evoked by an experimental condition as a signal
+if they tend to replicate across repeated trials of that condition.
+If the evoked response is zero, then clearly there is no signal.
+If the evoked response has some variability across trials, that is okay.
+The general goal is to attempt to analyze a set of data in order
+to improve the replicability of the condition responses.
 
 ### What are the metrics of quality that are relevant here?
 
@@ -156,19 +221,6 @@ data to GLMsingle. Instead, you could divide your data into two halves (for
 example), independently give each half to GLMsingle, and then test your
 hypothesis that indeed responses are reliable across the two halves.
 
-### I noticed that GLMsingle needs some conditions to repeat across runs. But my experiment is not fully balanced in this regard (or I have just a few repeats). Is this a problem?
-
-In general, we don't think that perfect balancing is that critical. The reason
-lies in thinking about the nature of the technique --- the repeats are simply
-used to set the hyperparameters (number of nuisance regressors; fractional
-regularization amount for each voxel). In our experience, even just a handful of
-repeats appears to be sufficient to robustly guide the estimation of the
-hyperparameters. Thus, even if you can code only a subset of the trials in your
-experiment as condition repeats, this may be sufficient to guide the
-hyperparameter estimation, and the overall results from GLMsingle might be quite
-good. (In fact, there are very few repeats in the NSD and BOLD5000 datasets,
-which are the main two datasets demonstrated in the GLMsingle pre-print.)
-
 ### How does R<sup>2</sup> start becoming meaningful in the full FITHRF_GLMDENOISE_RR version?
 
 For a single-trial design matrix, note that in a sense the predictors are
@@ -184,7 +236,22 @@ voxels with little or no SNR. As a consequence, the variance explained by the
 beta estimates that are produced by ridge regression will be directly related to
 the "goodness" of the voxel as determined by the cross-validation procedure.
 Thus, the ridge regression results will have high R<sup>2</sup> values for the
-voxels that seem to have reproducible beta estimates across runs.
+voxels that seem to have reproducible beta estimates across runs. (One 
+note: The R<sup>2</sup> values reflect the explanatory power of the model with
+the shrunken beta weights. However, by default we apply a post-hoc scaling and 
+offset to the (potentially shrunken) betas from each voxel to match the overall
+mean of the unregularized betas. Thus, there is a minor mismatch, in that the
+R<sup>2</sup> does not quite correspond to the post-hoc scaled/offset betas.)
+
+Note that it is for these reasons that we write a figure inspection of
+the typeD model R<sup>2</sup> values (typeD_R2.png), which includes RR.
+The R<sup>2</sup> values from the other models are not very informative.
+
+### Why does HRF selection improve beta estimates?
+
+The extent to which using a better HRF improves GLM outcomes (like beta estimates) depends on how different the shape of the timecourse of the chosen HRF is from some alternative default HRF. If the shape is only slightly different, beta estimates will only slightly change. If the shape is radically different, the beta estimates will change substantially.
+
+In the brain, hemodynamic timecourses can vary due to variations in vasculature distributions (e.g. close to a vein, far from a vein). If the imaging resolution is high, these variations can be substantial. How much impact timecourse variations have can also depend on the experiment. In general, block designs tend to create experimental predictors that are less affected by HRF variations than event-related designs. Thus, for event-related designs especially, getting the HRF right becomes more critical for achieving accurate beta estimates.
 
 ### Why does ridge regression improve beta estimates?
 
@@ -265,6 +332,16 @@ amplitude issues is to normalize (e.g. z-score) the responses you observe from a
 voxel (or region) over the course of a scan session. Of course, one should think
 carefully about the implications of such an approach for downstream analyses...
 
+### Let's talk about the HRF library. How do I know if the library is appropriate for my data?
+
+The HRF library was based on a large survey of "activated" voxels in the visual-memory experiment conducted as part of the Natural Scenes Dataset (NSD). The voxels tended to be in the "back of the brain" but we did not restrict this to be the case (hence, some frontal voxels contributed too). Results were combined across 8 subjects and we attempted to generate a library that is representative of all 8 subjects.
+
+While we think the library should work well as a generic library, certainly it could be valuable to perform detailed and further assessments of this issue. In fact, one could perform finite impulse response (FIR) modeling and derive a new library of HRFs for a specific set of data using the procedures detailed in the NSD paper, and then hook that library into GLMsingle.
+
+### Why isn't the HRF selection cross-validated?
+
+GLMdenoise has a natural "unregularized" state: do not include any derived nuisance regressors as they may introduce overfitting. Ridge regression also has a natural "unregularized" state: perform ordinary least squares estimates and do not introduce any shrinkage bias. The selection of the HRF, however, is a bit different. First, we always need some HRF (it is not as if we can have a model without some HRF timecourse). Second, we lack a baseline HRF, as the canonical HRF used in GLMsingle for the ON-OFF model is really just a very approximate HRF. The different candidates in the HRF library do not really count as different levels of regularization (for which cross-validation might be applied). Rather, each HRF candidate is itself a fully valid HRF choice. In the current approach, we are fully accepting of the idea of chooosing the candidate that works the best (i.e. maximizes the fit to the data). (However, it is certainly true that the statistical approach could be radically altered in such a way that there is some deliberate bias to choose a modal HRF and to only deviate from the modal HRF if the data allow it. This could be a workable approach, but comes with its own set of challenges, such as computational time and added complexity.)
+
 ### What is the interpretation of the scale and offset?
 
 By default, after the application of ridge regression, GLMsingle applies a
@@ -276,18 +353,19 @@ can undo some of the bias by applying a simple scale and offset to the beta
 weights. For many post-hoc uses of the beta estimates, a scale and offset is
 probably not a big deal, but certainly one should think hard about whether or
 not this matters to the analyses you are trying to do. One can always omit the
-scale and offset (via appropriate setting of input options) and/or avoid ridge
-regression altogether.
+scale and offset (via appropriate setting of input option `wantautoscale`) 
+and/or avoid ridge regression altogether (via `wantfracridge`).
 
 ### In the NSD data paper, in the calculation of the noise ceiling, the beta weights are z-scored. What's going on there?
 
 The NSD experiment involves aggregating responses across many distinct scan
 sessions. Z-scoring is proposed as a potential (simple) method to reduce
-instabilities that exist across different scan sessions. Obviously, z-scoring
-can throw away relevant information, so one should be careful in that regard.
+instabilities that exist across different scan sessions. (Obviously, z-scoring
+can throw away relevant information, so one should be careful in that regard.)
+Omitting the z-scoring is perfectly fine as an alternative approach, and one
+can analyze a set of data accordingly.
 
-## Things to watch out for
+### If some of my conditions happen only once, and other conditions have multiple repeats, does that somehow make the singleton conditions different or strange?
 
-If you use the input option to use a canonical HRF (instead of the library of
-HRFs), the filename that is written is still "`FITHRF`" (even though the results
-reflect what the user specified).
+No, there shouldn't be any major worry here. The analysis components, generally speaking, treat each single trial equally. The repeats are used essentially just to determine the hyperparameters (i.e. number of nuisance regressors, amount of ridge regression shrinkage per voxel).
+
