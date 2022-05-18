@@ -81,6 +81,8 @@ def upsample_bold(processed, tr, tr_new, num_slices):
     from slicetime.nipype_interface import SliceTime
     # Grab all preprocessed runs
     bold_runs = processed.get(extension='.nii.gz', suffix='bold', return_type='filename')
+    # Filter for resolution - here we exclude res-2
+    bold_runsf = [b for b in bold_runs if 'res-2' not in b]
     # Import parameters
     tr_old = tr
     tr_new = tr_new
@@ -88,7 +90,7 @@ def upsample_bold(processed, tr, tr_new, num_slices):
     # sliceorder needs to be 1-based (see fakeout below)
     slicetimes = np.flip(np.arange(0, tr_old, tr_old/num_slices, dtype=object)).tolist()
     # Iter over runs
-    for run in bold_runs:
+    for run in bold_runsf:
         print('Upsampling:', run)
         st = SliceTime()
         st.inputs.in_file = run
