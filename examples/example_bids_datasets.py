@@ -1,4 +1,4 @@
-#!/home/rami/anaconda3/bin/python3
+#!/group/tuominen/anaconda3/bin/python3
 # Import libraries
 
 import os
@@ -31,13 +31,13 @@ def grab_data(root):
           '\n Total run duration:', total_dur)
     return raw, processed, tr, num_slices, total_dur
 
-def make_new_df(root, raw, total_dur):
+def make_new_df(root, raw, subjects, total_dur):
     ''' Make an empty dataframe, # of rows is equal to total run duration (seconds),
     because we will upsample the TR to 1s to reduce jitter. # of columns equal to
     total unique event types in .tsv file. In this case 3 unique event types exist,
     as we ignore the event type representing intertrial intervals (ITIs). '''
     # Grab event files
-    eventfiles = raw.get(extension='.tsv', suffix='events', return_type='filename')
+    eventfiles = raw.get(subject=subjects, extension='.tsv', suffix='events', return_type='filename')
     # Load into pandas
     for eventfile in eventfiles:
         design = pd.read_csv(eventfile, sep='\t')
@@ -51,7 +51,7 @@ def make_new_df(root, raw, total_dur):
         # For each stimulus type, mark the onset of the stimulus with 1. All other values should be 0
         for cs in [CSplus_shock, CSplus, CSminus]:
             for i in range(0, len(cs.index)):
-                tr_start = round(cs.iloc[i,0])
+                tr_start = int(round(cs.iloc[i,0]))
                 if cs is CSplus_shock:
                     new_design.iloc[tr_start, :] =  [tr_start, 1, 0, 0]
                 elif cs is CSplus:
@@ -74,13 +74,13 @@ def make_new_df(root, raw, total_dur):
         new_name['suffix'])), columns=['CSplusshock','CSplus','CSminus'],
         index=False, header=False)
         print('glmsingle event file saved:', new_name['subject'], 'run:', new_name['run'])
-def upsample_bold(processed, tr, tr_new, num_slices):
+def upsample_bold(processed, tr, tr_new, num_slices, subjects):
     ''' Upsample task-based fMRI data to 1s using pyslicetime scripts:
     https://github.com/Charestlab/pyslicetime/blob/master/example_nipype.py.
     Output will have suffix _stc appended.'''
     from slicetime.nipype_interface import SliceTime
     # Grab all preprocessed runs
-    bold_runs = processed.get(extension='.nii.gz', suffix='bold', return_type='filename')
+    bold_runs = processed.get(subject=subjects, extension='.nii.gz', suffix='bold', return_type='filename')
     # Filter for resolution - here we exclude res-2
     bold_runsf = [b for b in bold_runs if 'res-2' not in b]
     # Import parameters
@@ -99,12 +99,12 @@ def upsample_bold(processed, tr, tr_new, num_slices):
         st.inputs.slicetimes = slicetimes
         res = st.run()
 
-def smooth_bold(processed, smooth_num):
+def smooth_bold(processed, smooth_num, subjects):
     ''' Smooth data prior to first-level analysis using FSL in nipype.
     Output will have suffix _smooth appended.'''
     from nipype.interfaces.fsl import Smooth
     # Grab all upsampled runs
-    bold_runs = processed.get(extension='.nii.gz', suffix='stc', return_type='filename')
+    bold_runs = processed.get(subject=subjects, extension='.nii.gz', suffix='stc', return_type='filename')
     # Smooth data before inputting to GLMsingle
     for run in bold_runs:
         print('Smoothing:', os.path.basename(run))
@@ -116,12 +116,11 @@ def smooth_bold(processed, smooth_num):
         sm.inputs.fwhm = smooth_num
         res = sm.run()
 
-def run_1st_level(processed, stimdur, tr_new):
+def run_1st_level(processed, stimdur, tr_new, subjects):
     ''' Input several runs per subject to perform cross-validation
     in GLMdenoise (step 3 of GLMsingle). Imaging data and event data
     should be appended into separate lists. '''
     # Get all subjects
-    subjects = processed.get(return_type='id', target='subject')
     data = []
     design = []
     # Loop over subjects
@@ -157,20 +156,24 @@ def run_1st_level(processed, stimdur, tr_new):
 
 def main():
     # Hardcoded file path to existing BIDS dataset
-    root = '/home/rami/test/'
+    root = '/group/tuominen/EmoSal_BIDS'
     # Stimulus duration
     stimdur = 4
     # Desired repetition time
     tr_new = 1
     # Desired smoothing
     smooth_num = 6
+    # Desired subjects
+    subjects = ['avl003', 'avl004', 'avl005', 'avl006', 'avl007', 'avl009', 'avl010',
+    'avl011', 'avl012', 'avl-013r', 'avl014', 'avl016', 'avl017', 'avl018', 'avl019',
+    'avl021', 'avl022', 'avl024', 'avl025', 'avl027', 'avl028', 'avl200', 'avl201']
     # Execute functions
     ''' Can comment out intermediate steps if already complete. '''
     raw, processed, tr, num_slices, total_dur = grab_data(root)
-    make_new_df(root, raw, total_dur)
-    upsample_bold(processed, tr, tr_new, num_slices)
-    smooth_bold(processed, smooth_num)
-    run_1st_level(processed, stimdur, tr_new)
+    make_new_df(root, raw, subjects, total_dur)
+    upsample_bold(processed, tr, tr_new, num_slices, subjects)
+    smooth_bold(processed, smooth_num, subjects)
+    run_1st_level(processed, stimdur, tr_new, subjects)
 if __name__ == "__main__":
 # execute only if run as a script
     main()
