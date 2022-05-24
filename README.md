@@ -13,6 +13,9 @@ is available on bioRxiv (https://www.biorxiv.org/content/10.1101/2022.01.31.4784
 For additional documentation and FAQ on GLMsingle,
 please see: **https://glmsingle.readthedocs.io**
 
+For a lecture overview, implementation guide, and demo of GLMsingle,
+please see: **https://cbmm.mit.edu/video/glmsingle-toolbox-improving-single-trial-fmri-response-estimates**
+
 GLMsingle can be viewed as a wholesale replacement of its predecessor,
 GLMdenoise (http://github.com/kendrickkay/GLMdenoise).
 
