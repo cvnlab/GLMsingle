@@ -126,13 +126,21 @@ def run_1st_level(processed, stimdur, tr_new, subjects):
     # Loop over subjects
     for sub in subjects:
         # Grab all upsampled and smoothed runs
-        bold_runs = processed.get(subject=subjects, extension='.nii.gz', suffix='smooth', return_type='filename')
+        bold_runs = processed.get(subject=sub, extension='.nii.gz', suffix='smooth', return_type='filename')
+        # Grab all mask files for each bold run
+        mask_runs = processed.get(subject=sub, extension='.nii.gz', suffix='mask', return_type='filename', datatype='func')
+        # Merge
+        masked_runs = dict(zip(bold_runs, mask_runs))
         # Grab all GLMsingle-compatible event files
-        eventfiles = processed.get(subject=subjects, extension='.csv', suffix='glmsingle', return_type='filename')
+        eventfiles = processed.get(subject=sub, extension='.csv', suffix='glmsingle', return_type='filename')
         # Append all runs for a single subject session
         # fMRI data
-        for run in bold_runs:
+        for run in masked_runs.keys():
             r = nib.load(run).get_fdata().astype(np.float32)
+            m = nib.load(masked_runs[run]).get_fdata().astype(np.float32)
+            # Set all values outside brain mask to 0
+            zeros = np.where(m==0)
+            r[zeros] = 0
             data.append(r)
         # design matrices
         for event in eventfiles:
@@ -156,7 +164,7 @@ def run_1st_level(processed, stimdur, tr_new, subjects):
 
 def main():
     # Hardcoded file path to existing BIDS dataset
-    root = '/group/tuominen/EmoSal_BIDS'
+    root = '/Users/ramihamati/Documents/EmoSal_test'
     # Stimulus duration
     stimdur = 4
     # Desired repetition time
@@ -164,15 +172,13 @@ def main():
     # Desired smoothing
     smooth_num = 6
     # Desired subjects
-    subjects = ['avl003', 'avl004', 'avl005', 'avl006', 'avl007', 'avl009', 'avl010',
-    'avl011', 'avl012', 'avl-013r', 'avl014', 'avl016', 'avl017', 'avl018', 'avl019',
-    'avl021', 'avl022', 'avl024', 'avl025', 'avl027', 'avl028', 'avl200', 'avl201']
+    subjects = ['avl001']
     # Execute functions
     ''' Can comment out intermediate steps if already complete. '''
     raw, processed, tr, num_slices, total_dur = grab_data(root)
-    make_new_df(root, raw, subjects, total_dur)
-    upsample_bold(processed, tr, tr_new, num_slices, subjects)
-    smooth_bold(processed, smooth_num, subjects)
+    #make_new_df(root, raw, subjects, total_dur)
+    #upsample_bold(processed, tr, tr_new, num_slices, subjects)
+    #smooth_bold(processed, smooth_num, subjects)
     run_1st_level(processed, stimdur, tr_new, subjects)
 if __name__ == "__main__":
 # execute only if run as a script
