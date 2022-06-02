@@ -35,7 +35,7 @@ def picksubset(m, num, seed=None):
     idx = np.random.permutation(range(nm))[range(np.min([num, nm]))]
 
     f = m.flatten()[idx]
-    notf = np.ones(m.flatten().shape)
+    notf = np.ones(m.flatten().shape, dtype=int)
     notf[idx] = 0
     fnot = m.flatten()[notf]
 
