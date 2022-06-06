@@ -12,8 +12,8 @@ def findtailthreshold(v, figpath=None):
      <v> is a vector of values
      <wantfig> (optional) is whether to plot a diagnostic figure. Default: 1.
 
-     Fit a Gaussian Mixture Model (with n=2) to the data and 
-     find the point at which the posterior probability is 
+     Fit a Gaussian Mixture Model (with n=2) to the data and
+     find the point at which the posterior probability is
      equal (50/50) across the two Gaussians. This serves
      as a nice "tail threshold".
 
@@ -32,7 +32,7 @@ def findtailthreshold(v, figpath=None):
      from numpy.random import randn
      f, mns, sds, gmfit = findtailthreshold(np.r_[randn(1000), 5+3*randn(500)], figpath='test.png')
     """
-    
+
     # internal constants
     numreps = 3  # number of restarts for the GMM
     maxsz = 1000000  # maximum number of values to consider
@@ -49,23 +49,23 @@ def findtailthreshold(v, figpath=None):
     v2 = v[np.isfinite(v)]
     if len(v2) > maxsz:
         print('warning: too big, so taking a subset')
-        v2 = picksubset(v2, maxsz)
+        v2, _, _ = picksubset(v2, maxsz)
 
     # fit mixture of two gaussians
     gmfit = gmdist(n_components=2, n_init=numreps).fit(v2.reshape(-1, 1))
 
     # figure out a nice range
     rng = robustrange(v2.flatten())[0]
-    
+
     # include the smaller of the two distribution means if necessary
     rng[0] = np.min([rng[0], np.min(gmfit.means_.flatten())])
-    
+
     # include the bigger of the two distribution means if necessary
     rng[1] = np.max([rng[1], np.max(gmfit.means_.flatten())])
-    
+
     # OLD
     # rng = robustrange(v2.flatten())[0]
-    
+
     # evaluate posterior
     allvals = np.linspace(rng[0], rng[1], num=nprecision)
     checkit = gmfit.predict_proba(allvals.reshape(-1, 1))
@@ -83,7 +83,7 @@ def findtailthreshold(v, figpath=None):
     # warn if necessary
     if checkit[ix, whdist] > 0.5:
         print('warning: no crossing of 0.5 found. results may be inaccurate!')
-     
+
     # OLD
     # np.testing.assert_equal(
     #    np.any(checkit[:, 0] > .5) and np.any(checkit[:, 0] < .5),
