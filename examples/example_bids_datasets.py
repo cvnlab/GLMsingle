@@ -129,13 +129,15 @@ def run_1st_level(processed, stimdur, tr_new, subjects):
         bold_runs = processed.get(subject=sub, extension='.nii.gz', suffix='smooth', return_type='filename')
         # Grab all mask files for each bold run
         mask_runs = processed.get(subject=sub, extension='.nii.gz', suffix='mask', return_type='filename', datatype='func')
+        mask_runsf = [m for m in mask_runs if 'res-2' in m]
         # Merge
-        masked_runs = dict(zip(bold_runs, mask_runs))
+        masked_runs = dict(zip(bold_runs, mask_runsf))
         # Grab all GLMsingle-compatible event files
         eventfiles = processed.get(subject=sub, extension='.csv', suffix='glmsingle', return_type='filename')
         # Append all runs for a single subject session
         # fMRI data
         for run in masked_runs.keys():
+            print('Using:', os.path.dirname(masked_runs[run]), '\nto mask:', os.path.dirname(run))
             r = nib.load(run).get_fdata().astype(np.float32)
             m = nib.load(masked_runs[run]).get_fdata().astype(np.float32)
             # Set all values outside brain mask to 0
