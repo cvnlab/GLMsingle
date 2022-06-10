@@ -63,7 +63,7 @@ class GLM_single():
             of OLS. Other model types, if computed, use OLS.
 
         Note that if you set wantglmdenoise=1, you MUST have repeats of
-        conditions andan associated cross-validation scheme <params.xvalscheme>
+        conditions and an associated cross-validation scheme <params.xvalscheme>
         UNLESS you specify params.pcstop = -B. In other words, you can perform
         wantglmdenoise without any cross-validation, but you need to provide
         params.pcstop = -B.
