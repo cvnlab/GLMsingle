@@ -188,7 +188,7 @@ function results = GLMestimatesingletrial(design,data,stimdur,tr,outputdir,opt)
 %       the maximum. The advantage of stopping early is to achieve a selection
 %       strategy that is robust to noise and shallow performance curves and 
 %       that avoids overfitting.
-%     - B: where B is the number of PCs to use for the final model. B can be any 
+%     - -B: where B is the number of PCs to use for the final model. B can be any 
 %       integer between 0 and opt.numpcstotry. Note that if -B case is used, 
 %       cross-validation is NOT performed for the type-C model, and instead we
 %       blindly use B PCs.
