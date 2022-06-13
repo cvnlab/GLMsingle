@@ -107,11 +107,43 @@ hyperparameter estimation, and the overall results from GLMsingle might be quite
 good. (In fact, there are very few repeats in the NSD and BOLD5000 datasets,
 which are the main two datasets demonstrated in the GLMsingle pre-print.)
 
+## Pre-processing choices
+
+GLMsingle should be applied to pre-processed fMRI data. But which types of pre-processing are suitable? Please review the GLMsingle manuscript for detailed information, but here we comment on some types of pre-processing that have come up in conversations with users.
+
+* Skull stripping / brain masking -- This is totally fine. In fact, one should be able to run GLMsingle even on surface-prepared data (where voxels not in gray matter are already excluded).
+
+* High-pass temporal filtering -- This is unnecessary. In terms of high-pass filtering (where low frequency time series components are removed), GLMsingle automatically includes a set of polynomials to model the baseline signal level which may drift over the course of each run. Thus, one does not need to high-pass filter the fMRI data in pre-processing. (However, if you do include it, it actually won't make a big difference, since the polynomials will essentially model the components that were removed. But note that this assumes that the mean of each voxel has at least been retained, since GLMsingle uses this spatial information.)
+
+* Low-pass temporal filtering -- This is not very typical, and also not necessary. The HRF timecourse and ridge regression components of GLMsingle are intended to compensate for high temporal frequency noise in the data.
+
+* Projecting out nuisance components -- Pipelines often remove/project-out nuisance components (e.g. motion regressors, ICA derived noise, etc.) from fMRI time series in the course of pre-processing. While you can do this, and GLMsingle will likely still work, this is not quite recommended. This is because such pre-filtering approaches risk bias. And, GLMsingle's approach is to attempt to learn these types of nuisance components from the data themselves, so it is a bit ironic to use both approaches simultaneously.
+
+* Spatial smoothing -- This is fine, if you want to do this as a pre-processing step. Note that you might want to consider running GLMsingle on non-smoothed data, and then decide whether to apply spatial smoothing at a later analysis step (e.g. on the single-trial betas delivered by GLMsingle).
+
+* Registration / spatial changes -- It is typical to register fMRI data to an atlas space, or to a subject's anatomy, and/or to correct for head displacements within and across runs from a subject. These types of spatial changes are all fine, and do not fundamentally interact with the issues dealt with by GLMsingle.
+
+* Grand intensity scaling -- Some pipelines may scale a given dataset to help normalize units across subjects and/or sessions. This is likely fine, as long as it is a scaling (and not an additive offset). (Scaling preserves percent signal change, and preserves most of the important properties of a dataset.) However, we would have some worry if the scaling were applied differently for different voxels/brain regions and/or differently for different runs within a session, as such aggressive normalization may corrupt signals in undesirable ways.
+
+## Things to watch out for when applying GLMsingle
+
+### Data from multiple scan sessions
+
+BOLD response amplitudes can change substantially across scan sessions (days) for a single individual. Thus, if you are applying GLMsingle to data concatenated across days, this may pose some problems (since the amplitude changes will appear to be "noise" to GLMsingle and may confuse it). One approach is to use the `sessionindicator` input (see below). Another approach is to just apply GLMsingle separately to each scan session. Note that this approach is effective, but does push the issue down the line: you will eventually have to decide whether and how you will want to normalize betas from different scan sessions.
+
+### Filenames
+
+If you use the input option `wantlibrary=0` to use a canonical HRF
+(instead of the library of HRFs), the filename that is written is still 
+"`FITHRF`" (even though the results reflect what the user specified).
+The reason is just due to the internal code architecture (fitting with a 
+library consisting of one HRF is still treated as "`FITHRF`").
+
 ## Tips on usage
 
 ### My experiment design is not quite synchronized with my fMRI data.
 
-GLMsingle requires the design matrix and the fMRI data to be synchronized at some level of granularity. For example, if the design matrix is specified at 1-s increments, the fMRI data need to also be prepared at 1-s increments. Sometimes, users have experiments where events do not occur at exactly the time points of the fMRI data. In order to accommodate these scenarios, one can perform some upsampling/resampling of the fMRI data and/or the design matrix in order to get the two objects to match.
+GLMsingle requires the design matrix and the fMRI data to be synchronized at some level of granularity. For example, if the design matrix is specified at 1-s increments, the fMRI data need to also be prepared at 1-s increments. Sometimes, users have experiments where events do not occur at exactly the time points of the fMRI data. In order to accommodate these scenarios, one can perform some upsampling/resampling of the fMRI data and/or the design matrix in order to get the two objects to match. (You might find https://github.com/Charestlab/pyslicetime/blob/master/slicetime/tseriesinterp.py and/or https://github.com/cvnlab/knkutils/blob/master/timeseries/tseriesinterp.m useful for changing the sampling rate of fMRI time series data.)
 
 One drawback is the increase in memory and disk space if upsampling is performed. However, keep in mind that one could just upsample to a moderate level (e.g. 1 s) and then perform a little bit of "rounding the design matrix to the nearest TR/volume". Rounding might introduce fairly negligible levels of inaccuracy given the sluggishness of the HRF.
 
@@ -146,15 +178,9 @@ order to better estimate cross-validation performance. This normalization is
 just done internally (under the hood) and does not propagate to the final
 outputs.
 
-## Things to watch out for
+### Why do the betas look crazy outside the brain?
 
-### Filenames
-
-If you use the input option `wantlibrary=0` to use a canonical HRF
-(instead of the library of HRFs), the filename that is written is still 
-"`FITHRF`" (even though the results reflect what the user specified).
-The reason is just due to the internal code architecture (fitting with a 
-library consisting of one HRF is still treated as "`FITHRF`").
+GLMsingle's approach is to estimate percent signal change (PSC) by dividing estimated response amplitudes by the mean signal intensity at each given voxel. In voxels that have very little MR signal (e.g. voxels that are outside the brain), the PSC values might blow up. This is fine and not a reason for concern, as you should simply ignore the data from voxels outside of the brain. Alternatively, if you want to apply a brain mask to your data prior to GLMsingle, that would be fine too.
 
 ## Designing design matrices
 
@@ -164,9 +190,25 @@ For some experiments, thinking about how to setup the design matrix is a major c
 
 ### Do I need blanks?
 
-In general, you should include blanks or dead time in your experiment. And you should not explicitly code those periods in the design matrix.
+In general, you should definitely include blanks or dead time in your experiment. And you should not explicitly code those periods in the design matrix. The reason is that GLMsingle uses a set of polynomials per run to model the baseline signal, and the baseline signal is estimated based on sections of your experiment that are not explicitly coded as experimental events. Note that the interpretation of the single-trial beta amplitudes is that they are evoked responses in the BOLD signal above and beyond whatever the baseline signal is (and this baseline signal may drift to some extent up and down over the course of the run).
 
-If you try to use a design matrix where "everything" is coded, this is problematic because of the inability to estimate the baseline signal level (GLMsingle uses a set of polynomials per run to model the baseline signal). In these cases, consider omitting the coding of some of the experimental events (e.g. "fixation periods"); in doing so, the idea is that you are trying to estimate changes in the BOLD response **relative** to what the BOLD signal level is during these omitted periods.
+If you try to use a design matrix where "everything" is coded, this is problematic because of the inability to estimate the baseline signal level. In these cases, consider omitting the coding of some of the experimental events (e.g. "fixation periods"); in doing so, the idea is that you are trying to estimate changes in the BOLD response **relative** to what the BOLD signal level is during these omitted periods.
+
+### What is the minimum trial separation?
+
+Since the BOLD response is very sluggish, the response to two successive trials can overlap a lot. And, the more closely spaced your trials, the larger the overlap. It is an empirical question as to how effectively GLMsingle can separate the response amplitudes to closely spaced trials. Clearly, the closer the spacing, the harder it is to accurately estimate responses from nearby trials; however, the counteracting factor here is that with more closely spaced trials, a larger number of trials can be conducted (which counteracts the loss of power).
+
+We do not yet know what the "minimum trial separation" is. Good results were obtained in the Natural Scenes Dataset with a trial separation of 4 s --- in that experiment, an image was shown for 3 s, and then there was a 1 s gap before the next image. Note that the gap here is not very relevant from GLMsingle's point of view. It would be perfectly fine to have, e.g., continuous "mini blocks" that last for a 4-s trial and then immediately move on to the next 4-s trial.
+
+We would guess that going faster than 4 s would be risky. Perhaps 3 s would still deliver reasonable results, but faster than that would seem risky (but is an open question). Keep in mind that in GLMsingle, you code the onsets of trials, so what we are talking about here is the separation between the onsets of successive trials. Also, keep in mind that a separate issue is the `stimdur` input, which controls the duration of the expected hemodynamic response to a given trial. For example, in a situation where successive trials are spaced 6 seconds apart, if the `stimdur` input is 6 seconds, this has different collinearity properties compared to the situation where the `stimdur` input is 1 second.
+
+### What about trial subcomponents?
+
+In some cognitive experiments, there are multiple stages to a trial. For example, one might get a cue, preparatory period, a stimulus presentation, another cue to indicate to make a response, and/or an explicit motor (button press) period.
+
+It is up to the experimenter how to design the modeling approach. From GLMsingle's point of view, it does not distinguish (nor care about) these subcomponents. One approach is to code each subcomponent that you wish to model as a distinct condition. For example, you could code the cue for condition A as "condition A1" and the stimulus for condition A as "condition A2". The theory and interpretation is that you are attempting to estimate a separate response amplitude associated with the cue (and its associated brain activity) and the stimulus (and its associated brain activity). As usual, you will have to make some choices as to whether to treat different presentations of a given type of trial as counting as "repeats" or not.
+
+Alternatively, it is totally valid to treat all subcomponents of a trial as contributing to a single response amplitude. From a statistical point of view, this is an easier and more straightforward approach. Ultimately, it depends on your analysis approach and what types of information you are hoping to extract from the data.
 
 ## Additional questions/discussion
 
