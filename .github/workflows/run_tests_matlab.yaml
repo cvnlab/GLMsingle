@@ -1,0 +1,68 @@
+name: MATLAB tests
+
+# Installs
+# - MATLAB github action
+# - MOXunit
+# - MOcov
+# Get test data
+# cd into .github/workflows
+# run .github/workflows/tests_matlab.m
+# If tests pass, uploads coverage to codecov
+
+on:
+  push:
+    # TODO only run on master branch on push 
+    branches: ["main"]
+  pull_request:
+    branches: ["*"]
+
+jobs:
+  tests:
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest] # "macos-latest" or "windows-latest" don't work (yet?)
+        matlab-version: ["R2020a"] # add more versions if needed: "R2021a"
+      fail-fast: false  # Don't cancel all jobs if one fails
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Install MATLAB ${{ matrix.matlab-version }}
+        uses: matlab-actions/setup-matlab@v1.0.1
+        with:
+          release: ${{ matrix.matlab-version }}
+
+      - name: Shallow clone GLMsingle
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+          fetch-depth: 0 # 0 means we only get the last commit, not the whole git history
+
+      - name: Install Moxunit and MOcov
+        run: |
+          git clone https://github.com/MOxUnit/MOxUnit.git --depth 1
+          git clone https://github.com/MOcov/MOcov.git --depth 1
+
+      - name: Download data
+        run: make tests/data/nsdcoreexampledataset.mat
+
+      - name: Run tests
+        uses: matlab-actions/run-command@v1.0.1
+        with:
+          command:
+            cd(fullfile(getenv('GITHUB_WORKSPACE'), '.github', 'workflows'));
+            run run_tests_ci;
+
+      - name: Check logs
+        run: |
+          cat test_report.log | grep 0
+          bash <(curl -s https://codecov.io/bash)
+
+      - name: Code coverage
+        uses: codecov/codecov-action@v1
+        with:
+          file: coverage.xml # optional
+          flags: matlab # optional
+          name: codecov-umbrella # optional
+          fail_ci_if_error: true # optional (default = false)

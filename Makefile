@@ -47,11 +47,11 @@ install_dev: ## install for both matlab and python developpers
 	pip install -e .
 	pip install -r requirements_dev.txt
 
-lint: lint/black lint/flake8 lint/miss_hit ## check style
+lint: lint/black lint/flake8 lint/miss_hit ## check style for MATLAB and python
 
-test: test-matlab test-python
+test: test-matlab test-python # run tests with MATLAB and python
 
-tests/data/nsdcoreexampledataset.mat: 
+tests/data/nsdcoreexampledataset.mat: ## install test data
 	mkdir tests/data
 	curl -fsSL --retry 5 -o "tests/data/nsdcoreexampledataset.mat" https://osf.io/k89b2/download
 
@@ -64,8 +64,9 @@ tests/data/nsdcoreexampledataset.mat:
 
 lint/miss_hit: ## lint and checks matlab code
 	mh_style --fix tests && mh_metric --ci tests && mh_lint tests
+	mh_style --fix .github/workflows && mh_metric --ci .github/workflows && mh_lint .github/workflows
 
-test-matlab: tests/data/nsdcoreexampledataset.mat
+test-matlab: tests/data/nsdcoreexampledataset.mat ## run tests with MATLAB
 	$(MATLAB) $(MATLAB_ARG) -r "run_tests; exit()"
 
 coverage-matlab: test-matlab
