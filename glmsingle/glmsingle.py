@@ -104,26 +104,28 @@ class GLM_single():
 
         <xvalscheme> (optional) is a list of lists or list of run indices,
          indicating the cross-validation scheme. For example, if we have 8
-         runs, we could use [[1, 2], [3, 4], [5, 6], [7, 8]] which indicates
+         runs, we could use [[0, 1], [2, 3], [4, 5], [6, 7]] which indicates
          to do 4 folds of cross-validation, first holding out the 1st and 2nd
          runs, then the 3rd and 4th runs, etc.
-         Default: [[1], [2], [3], ... [n]] where n is the number of runs.
+         Default: [[0], [1], [2], ... [n-1]] where n is the number of runs. 
+         Notice the 0-based indexing here.
 
        <sessionindicator> (optional) is 1 x n (where n is the number of runs)
-       with positive integers indicating the run groupings that are
-       interpreted as "sessions". The purpose of this input is to allow for
-       session-wise z-scoring of single-trial beta weights for the purposes of
-       hyperparameter evaluation.
-       For example, if you are analyzing data aggregated from multiple scan
-       sessions, you may want beta weights to be z-scored per voxel within
-       each session in order to compensate for any potential gross changes in
-       betas across scan sessions.
-       Note that the z-scoring has effect only INTERNALLY: it is used merely to
-       calculate the cross-validation performance and the associated
-       hyperparameter selection; the outputs of this function do not reflect
-       z-scoring, and the user may wish to post-hoc apply z-scoring.
-       Default: np.ones((1,n)) which means to interpret
-       all runs as coming from the same session.
+         with positive integers indicating the run groupings that are
+         interpreted as "sessions". The purpose of this input is to allow for
+         session-wise z-scoring of single-trial beta weights for the purposes of
+         hyperparameter evaluation.
+         For example, if you are analyzing data aggregated from multiple scan
+         sessions, you may want beta weights to be z-scored per voxel within
+         each session in order to compensate for any potential gross changes in
+         betas across scan sessions.
+         Note that the z-scoring has effect only INTERNALLY: it is used merely to
+         calculate the cross-validation performance and the associated
+         hyperparameter selection; the outputs of this function do not reflect
+         z-scoring, and the user may wish to post-hoc apply z-scoring.
+         Default: np.ones((1,n)).astype(int) which means to interpret
+         all runs as coming from the same session. Here, we use 1-based
+         indexing for the session indicator. e.g. [1, 2, 3, 4] for 4 sessions.
 
        *** I/O FLAGS ***
 
