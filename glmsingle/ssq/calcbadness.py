@@ -94,21 +94,29 @@ def calcbadness(xvals, validcolumns, stimix, results, sessionindicator):
         trainix = np.setdiff1d(alltheruns, testix)
 
         # calc
-        # vector of trial indices in the testing data
-        testcols = np.asarray(validcolumns[testix])
+        # we need to check whether we need
+        # to concatenate multiple test runs
+        if testix.size > 1:
+            # vector of trial indices in the testing data
+            testcols = np.concatenate(np.asarray(validcolumns)[testix])
+
+            # vector of condition-ids in the testing data
+            testids = np.concatenate(np.asarray(stimix)[testix])
+        else:
+            # default leave-one-out case.
+            # vector of trial indices in the testing data
+            testcols = np.asarray(validcolumns)[testix]
+
+            # vector of condition-ids in the testing data
+            testids = np.asarray(stimix)[testix]
 
         # vector of trial indices in the training data
-        traincols = np.concatenate(
-            np.asarray([validcolumns[tx] for tx in trainix])
-            )
-
-        # vector of condition-ids in the testing data
-        testids = stimix[testix]
+        traincols = np.concatenate(np.asarray(validcolumns)[trainix])
 
         # vector of condition-ids in the training data
-        trainids = np.concatenate(
-            np.asarray([stimix[tx] for tx in trainix])
-            )
+        trainids = np.concatenate(np.asarray(stimix)[trainix])
+
+
         # calculate cross-validation performance
         for pcr in range(len(results)):
             # hashrec = cell(1,max(testids));  # speed-up by caching results
