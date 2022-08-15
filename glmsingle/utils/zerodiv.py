@@ -42,7 +42,7 @@ def zerodiv(data1, data2, val=0, wantcaution=1):
         # do it
         bad = data2 == 0
         bad2 = abs(data2) < 1e-5
-        if wantcaution and np.any(bad2.ravel()) and ~bad.ravel():
+        if wantcaution and np.any(np.logical_and(bad2.ravel(), np.logical_not(bad.ravel()))):
             print(
                 'warning: abs value of one or more divisors'
                 'less than 1e-5.treating them as 0.')
