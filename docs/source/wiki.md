@@ -411,3 +411,28 @@ can analyze a set of data accordingly.
 
 No, there shouldn't be any major worry here. The analysis components, generally speaking, treat each single trial equally. The repeats are used essentially just to determine the hyperparameters (i.e. number of nuisance regressors, amount of ridge regression shrinkage per voxel).
 
+## Basic checklist for calling GLMsingle correctly
+
+### Data
+
+- The data should be your fMRI data (after minimal pre-processing).
+- Are the voxel dimensions correct (e.g. XYZ dimensions)?
+- Are the number of runs correct?
+- Are the number of volumes in each run correct?
+- Do you know your voxel size?
+- Do you know what the TR associated with your prepared fMRI data is? Is it correct?
+- Can you confirm that the fMRI volumes are sane? If you plot a slice from an example volume, does it look like a brain? If you compare a volume from the beginning of a run (or session) to a volume from the end of a run (and/or session), does it look quite similar (and stable)?
+- Look at the time-series data for an example voxel (just choose one). Does it look like a reasonable time-series? Are the units reasonable (e.g. arbitrary raw scanner units fluctuating around 1000 or 500 or something like that?)?
+- Can you confirm that if you, say, watch a movie of your brain volumes over time, that the brain imaging is stable and that there are no massive transients or artifacts?
+- Are all of your runs consistently prepared and have the same format (aside from possible differences in the number of volumes in different runs)?
+  
+### Design
+
+- The design specifies how you think about the structure of your experiment.
+- Do you have a strategy for how you are trying to model your data?
+- Have you thought about the <stimdur> input?
+- Did you code your trial onsets correctly? Double-check that each column of your design matrix has onsets matched to your fMRI volumes.
+- Consider performing a careful visual inspection of the design matrix that is fed to GLMsingle. Does it match your expectation with respect to the timing of your experiment?
+- Are you sure the coding of the design matrix makes sense for your experiment?
+- Did you make sure to NOT code blank/null trials?
+- Did you make sure that the coding of the design matrix is correct in all of your runs?
