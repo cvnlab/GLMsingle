@@ -51,7 +51,7 @@ clear
 clc
 close all
 
-this_dir = fileparts(mfilename('fullpath'));
+this_dir = fileparts(matlab.desktop.editor.getActiveFilename);
 
 % Add path to GLMsingle
 run(fullfile(this_dir, '..', '..', 'setup.m'));
