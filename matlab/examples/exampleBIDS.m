@@ -15,15 +15,15 @@ BIDS_folder = sprintf('%s/data/BIDS',this_dir);
 subj        = '01';
 ses         = 'auditoryperception';
 task        = 'auditoryperception';
-tr = 2;
+tr          = 2;
 
 
 %% Add dependencies and download the example dataset
-this_dir = fileparts(matlab.desktop.editor.getActiveFilename);
+this_dir    = fileparts(matlab.desktop.editor.getActiveFilename);
 % Add path to GLMsingle
 run(fullfile(this_dir, '..', '..', 'setup.m'));
 % Name of directory to which outputs will be saved
-outputdir = fullfile(this_dir, 'exampleBIDSoutput');
+outputdir   = fullfile(this_dir, 'exampleBIDSoutput');
 
 % Download files to data directory
 input_dir = fullfile(this_dir, 'data');
