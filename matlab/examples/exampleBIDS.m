@@ -1,3 +1,5 @@
+% This tutorial builds on example1 and example2 where all the processing
+% steps are explained in detail. We advise to run/read them first
 % The aim of this example is to introduce users how to use GLMsingle
 % with BIDS formatted data. This data comes from an openneuro database 
 % "study forest" https://openneuro.org/datasets/ds000113/versions/1.3.0
@@ -146,7 +148,7 @@ opt = struct('wantmemoryoutputs',[1 1 1 1]);
 
 %% Plot a slice of brain with GLMsingle outputs
 
-models.FIT_HRF_GLMdenoise_RR = results{4}
+models.FIT_HRF_GLMdenoise_RR = results{4};
 % We are going to plot several outputs from the FIT_HRF_GLMdenoise_RR GLM,
 % which contains the full set of GLMsingle optimizations.
 
