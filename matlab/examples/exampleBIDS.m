@@ -1,5 +1,6 @@
-% This tutorial builds on example1 and example2 where all the processing
-% steps are explained in detail. We advise to run/read them first
+%% BIDS Example Overview
+% This tutorial builds on Example1 and Example2 where all the processing
+% steps are explained in detail. We advise to run/read them first.
 % The aim of this example is to introduce users how to use GLMsingle
 % with BIDS formatted data. This data comes from an openneuro database 
 % "study forest" https://openneuro.org/datasets/ds000113/versions/1.3.0
@@ -45,24 +46,19 @@ func_folder = sprintf('%s/subj-%s/ses-%s/func/',BIDS_folder,subj,ses);
 runs        = dir(sprintf('%s/*%s*.*gz',func_folder,task)); 
 % runs are ordered from 1-8
 data        = cell(1,length(runs));
-data_header = cell(1,length(runs));
 
 % find design files 
 designPath = func_folder;
 design        = cell(1,length(runs));
 
-for r = 1 : length(runs)
-%     
+for r = 1 : length(runs)     
     data{r} = niftiread([func_folder filesep runs(r).name]);
-    data_header{r} = niftiinfo([func_folder filesep runs(r).name]);
 end
 
 
-% You can pick which runs you want to use, here we are going to use all
-% available runs n = 8;
 runnum = 1 : length(runs);  
 n = length(runnum);
-%% load BIDS-formatted tsv files
+%% load BIDS-formatted tsv files (experimantal design files).
 
 TR = zeros(n,1);
 numvol = zeros(n,1);
@@ -70,8 +66,7 @@ T = cell(n,1);
 scan = 1;
 
     for jj = 1:length(runnum)
-              
-        
+
         TR(scan)     = tr;
         numvol(scan) = size(data{1},4);
         % TSV
@@ -80,9 +75,7 @@ scan = 1;
         tsvfile  = sprintf('%s_events.tsv', prefix);        
         assert(exist(fullfile(func_folder,tsvfile), 'file')>0)  
         T{scan}      = tdfread(fullfile(func_folder,tsvfile));
-        
         scan = scan+1;
-        
     end
 
 
