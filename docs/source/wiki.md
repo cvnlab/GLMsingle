@@ -117,7 +117,7 @@ GLMsingle should be applied to pre-processed fMRI data. But which types of pre-p
 
 * Low-pass temporal filtering -- This is not very typical, and also not necessary. The HRF timecourse and ridge regression components of GLMsingle are intended to compensate for high temporal frequency noise in the data.
 
-* Projecting out nuisance components -- Pipelines often remove/project-out nuisance components (e.g. motion regressors, ICA derived noise, etc.) from fMRI time series in the course of pre-processing. While you can do this, and GLMsingle will likely still work, this is not quite recommended. This is because such pre-filtering approaches risk bias. And, GLMsingle's approach is to attempt to learn these types of nuisance components from the data themselves, so it is a bit ironic to use both approaches simultaneously.
+* Projecting out nuisance components -- Pipelines often remove/project-out nuisance components (e.g. motion regressors, ICA derived noise, low-rank approaches like NORDIC, etc.) from fMRI time series in the course of pre-processing. While you can do this, and GLMsingle will likely still work, this is not quite recommended. This is because such pre-filtering approaches risk bias. And, GLMsingle's approach is to attempt to learn these types of nuisance components from the data themselves, so it is a bit ironic to use both approaches simultaneously. Moreover, it is possible that using a pre-filtering approach will actually cause strange complications with GLMsingle, so beware.
 
 * Spatial smoothing -- This is fine, if you want to do this as a pre-processing step. Note that you might want to consider running GLMsingle on non-smoothed data, and then decide whether to apply spatial smoothing at a later analysis step (e.g. on the single-trial betas delivered by GLMsingle).
 
@@ -181,6 +181,12 @@ outputs.
 ### Why do the betas look crazy outside the brain?
 
 GLMsingle's approach is to estimate percent signal change (PSC) by dividing estimated response amplitudes by the mean signal intensity at each given voxel. In voxels that have very little MR signal (e.g. voxels that are outside the brain), the PSC values might blow up. This is fine and not a reason for concern, as you should simply ignore the data from voxels outside of the brain. Alternatively, if you want to apply a brain mask to your data prior to GLMsingle, that would be fine too.
+
+### How do I interpret the fractional ridge regression values?
+
+In cases where there are strong BOLD responses from the experiment, you should notice that some voxels in the brain have large fractions (i.e. fractions near 1). This indicates that very little regularization is recommended for these voxels. However, if signal-to-noise ratio is weak, the optimal fractions might be near 0. By default, the smallest fraction that is evaluated is 0.05. Hence, it might be the case that most (or all) voxels might have the optimal fraction selected to be 0.05. The interpretation of this, if it occurs, is that heavy regularization of single-trial betas is necessary to improve generalization performance. This does indicate that signals appear to be weak; however, it does not necessarily indicate that there is a problem with the data or analysis per se.
+
+Furthermore, if you inspect the typeD_R2 and the FRACvalue outputs from GLMsingle, we have noticed that these metrics tend accentuate high-SNR voxels and therefore make it somewhat difficult to distinguish low-SNR voxels from surrounding noise voxels. Bear in mind that even if a voxel doesn't "show up" when inspecting these metrics, the single-trial betas that are estimated for the voxel can still have meaningful signals contained within them. We suggest that ultimate determination of whether voxels contain signals should be guided by the user's analyses of the single-trial betas that are provided by GLMsingle.
 
 ## Designing design matrices
 
