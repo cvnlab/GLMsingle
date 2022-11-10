@@ -51,7 +51,7 @@ clear
 clc
 close all
 
-this_dir = fileparts(matlab.desktop.editor.getActiveFilename);
+this_dir    = fileparts(which('example1.m'));
 
 % Add path to GLMsingle
 run(fullfile(this_dir, '..', '..', 'setup.m'));
@@ -198,7 +198,7 @@ if ~exist(fullfile(outputdir, 'GLMsingle', 'TYPEB_FITHRF.mat'),'file') || ...
    ~exist(fullfile(outputdir, 'GLMsingle', 'TYPEC_FITHRF_GLMDENOISE.mat'),'file') || ...
    ~exist(fullfile(outputdir, 'GLMsingle', 'TYPED_FITHRF_GLMDENOISE_RR.mat'),'file')
     
-    [results] = GLMestimatesingletrial(design,data,stimdur,tr,[outputdir '/GLMsingle'],opt);
+    [results designSINGLE] = GLMestimatesingletrial(design,data,stimdur,tr,[outputdir '/GLMsingle'],opt);
     
     % We assign outputs of GLMestimatesingletrial to "models" structure.
     % Note that results{1} contains GLM estimates from an ONOFF model,
