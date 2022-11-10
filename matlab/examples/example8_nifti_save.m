@@ -13,12 +13,12 @@ close all
 % (explaiend at the end of the script).
 
 % load GLMsingle results
-load('./../EXAMPLE FIGURE OUTPUTS/example2outputs/GLMsingle/TYPED_FITHRF_GLMDENOISE_RR.mat')
+load('./example2outputs/GLMsingle/TYPED_FITHRF_GLMDENOISE_RR.mat')
 
 
 % we will save following estiamtes (modelmd corresponds to single trial betas)
 val2save = {'modelmd';'R2';'HRFindex';'FRACvalue'};
-niftidir = './../EXAMPLE FIGURE OUTPUTS/example2outputs/GLMsingle/GLMDENOISE_RR_nifti_files';
+niftidir = './example2outputs/GLMsingle/GLMDENOISE_RR_nifti_files';
 mkdir(niftidir);
 
 voxelsize = [1.8 1.8 1.8];

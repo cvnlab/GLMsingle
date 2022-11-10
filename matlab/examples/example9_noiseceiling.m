@@ -1,7 +1,6 @@
 clc
 clear all
 close all
-addpath(genpath('/Users/jankurzawski/Dropbox/NSD_data/nsddatapaper'))
 
 % To run this script we recommend running Example1 first to create all the
 % necessary outpouts from GLMsingle that are going to be reused here.
@@ -13,12 +12,11 @@ addpath(genpath('/Users/jankurzawski/Dropbox/NSD_data/nsddatapaper'))
 % responses to stimuli that were repeated 3 times during 1st NSD session.
 
 % load design nsdcoreexampledataset.mat from downloaded data folder.
-load('./../EXAMPLE FIGURE OUTPUTS/data/nsdcoreexampledataset.mat')
+load('./data/nsdcoreexampledataset.mat')
 
 
 % load data
-addpath(genpath('/Users/jk7127/Dropbox/NSD_data/nsddatapaper'))
-workdir = './../EXAMPLE FIGURE OUTPUTS/example1outputs/GLMsingle/';
+workdir = './example1outputs/GLMsingle/';
 models = dir(sprintf('%s/*.mat',workdir));
 
 results = cell(1,length(models));
