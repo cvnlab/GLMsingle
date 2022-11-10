@@ -13,7 +13,6 @@ clc
 close all
 
 
-this_dir    = fileparts(matlab.desktop.editor.getActiveFilename);
 BIDS_folder = sprintf('%s/data/BIDS',this_dir);
 subj        = '01';
 ses         = 'auditoryperception';
