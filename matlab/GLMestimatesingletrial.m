@@ -1,8 +1,8 @@
-function results = GLMestimatesingletrial(design,data,stimdur,tr,outputdir,opt)
+function [results,designSINGLE] = GLMestimatesingletrial(design,data,stimdur,tr,outputdir,opt)
 %
 % USAGE::
 %
-%   results = GLMestimatesingletrial(design,data,stimdur,tr,outputdir,opt)
+%   [results,designSINGLE] = GLMestimatesingletrial(design,data,stimdur,tr,outputdir,opt)
 %
 % <design> is the experimental design. There are two possible cases:
 %
