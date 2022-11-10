@@ -16,10 +16,9 @@ close all
 % in the paper how well your prediction matches the fMRI time series.
 
 % load data
-
-load predtcs % for now this is a seperate mat-file. It addtionally holds
-% designSINGLE. Once designSingle is added as an output to the GLMsingle
-% call it will be laoded from the results folder.
+load('./data/nsdflocexampledataset.mat')
+% load results of TYPED model
+results = load('./example2outputs/GLMsingle/TYPED_FITHRF_GLMDENOISE_RR.mat');
 
 stimdur = 3;
 tr = 1;
