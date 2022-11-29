@@ -2,9 +2,9 @@
 
 ## Basic information
 
-GLMsingle is introduced and described in the following pre-print:
+GLMsingle is introduced and described in the following paper:
 
-[Prince, J.S., Charest, I., Kurzawski, J.W., Pyles, J.A., Tarr, M.J., Kay, K.N. GLMsingle: a toolbox for improving single-trial fMRI response estimates. bioRxiv (2022).](https://doi.org/10.1101/2022.01.31.478431)
+[Prince, J.S., Charest, I., Kurzawski, J.W., Pyles, J.A., Tarr, M., Kay, K.N. Improving the accuracy of single-trial fMRI response estimates using GLMsingle. *eLife* (2022).](https://doi.org/10.7554/eLife.77599)
 
 GLMsingle is an analysis technique (an algorithm) for obtaining accurate
 estimates of single-trial beta weights in fMRI data.
