@@ -1,8 +1,8 @@
-function [results,designSINGLE] = GLMestimatesingletrial(design,data,stimdur,tr,outputdir,opt)
+function [results,resultsdesign] = GLMestimatesingletrial(design,data,stimdur,tr,outputdir,opt)
 %
 % USAGE::
 %
-%   [results,designSINGLE] = GLMestimatesingletrial(design,data,stimdur,tr,outputdir,opt)
+%   [results,resultsdesign] = GLMestimatesingletrial(design,data,stimdur,tr,outputdir,opt)
 %
 % <design> is the experimental design. There are two possible cases:
 %
@@ -256,7 +256,10 @@ function [results,designSINGLE] = GLMestimatesingletrial(design,data,stimdur,tr,
 %
 % *** OUTPUTS: ***
 %
-% There are various outputs for each of the four model types:
+% We return model results in the output variable <results>.
+% These results are saved to disk in files called 'TYPEA...',
+% 'TYPEB...', and so on. There are various outputs for each 
+% of the four model types:
 %
 % <modelmd> is either
 %
@@ -295,16 +298,37 @@ function [results,designSINGLE] = GLMestimatesingletrial(design,data,stimdur,tr,
 %
 % <scaleoffset> is the scale and offset applied to RR estimates to best match the unregularized result
 %
-
-% History (keep in line with Python version):
-% - 2021/06/03 - add the option for use to specify two directories for <outputdir>
-% - 2020/08/22 - Implement opt.sessionindicator. Also, now the cross-validation units now reflect
-%                the "session-wise z-scoring" hyperparameter selection approach; thus, the cross-
-%                validation units have been CHANGED relative to prior analyses!
-% - 2020/05/14 - Version 1.0 released!
-%                (Tweak some documentation; output more results; fix a small bug (opt.fracs(1)~=1).)
-% - 2020/05/12 - Add pcvoxels output.
-% - 2020/05/12 - Initial version. Beta version. Use with caution.
+% Note that not all outputs exist for every model type.
+%
+%
+%
+% We also return design-related results in the output variable <resultsdesign>.
+% These results are saved to disk to a file called 'DESIGNINFO...'.
+% The outputs include:
+%
+% <design> is as specified by the user (with possibly some minor regularization)
+%
+% <stimdur> is as specified by the user
+%
+% <tr> is as specified by the user
+%
+% <opt> is as specified by the user (with possibly some minor regularization)
+%
+% <designSINGLE> is a single-trial design matrix corresponding to <design>
+%
+% <stimorder> is a row vector indicating which condition (1-indexed)
+%   each trial (in chronological order) belongs to
+%
+% <numtrialrun> is a row vector with the number of trials in each run
+% 
+% <condcounts> is a row vector with the number of trials
+%   associated with each condition
+% 
+% <condinruns> is a row vector with the number of runs that
+%   each condition shows up in
+%
+% <endbuffers> is a row vector with the number of seconds after the 
+%   last trial onset in each run
 
 %% %%%%%%%%%%%%%%%%%%% DEAL WITH INPUTS
 
@@ -521,6 +545,56 @@ for p=1:length(design)
     end
   end
   stimix{p} = stimorder(validcolumns{p});
+end
+
+% calculate number of trials for each condition
+condcounts = [];  % 1 x cond with counts
+for p=1:numcond
+  condcounts(p) = sum(stimorder==p);
+end
+
+% calculate for each condition, how many runs it shows up in
+condinruns = [];  % 1 x cond with counts
+for p=1:numcond
+  condinruns(p) = sum(cellfun(@(x) sum(x==p)>0,stimix));
+end
+
+% calculate buffer at the end of each run
+endbuffers = [];  % 1 x runs with number of seconds
+for p=1:length(design)
+  temp = find(sum(design{p},2));  % 1-indices of when trials happen
+  temp = size(design{p},1) - temp(end);  % number of volumes AFTER last trial onset
+  endbuffers(p) = temp*tr;  % number of seconds AFTER last trial onset for which we have data
+end
+
+% do some diagnostics
+fprintf('*** DIAGNOSTICS ***:\n');
+fprintf('There are %d runs.\n',length(design));
+fprintf('The number of conditions in this experiment is %d.\n',numcond);
+fprintf('The stimulus duration corresponding to each trial is %.2f seconds.\n',stimdur);
+fprintf('The TR (time between successive data points) is %.2f seconds.\n',tr);
+fprintf('The number of trials in each run is: %s.\n',mat2str(numtrialrun));
+fprintf('The number of trials for each condition is: %s.\n',mat2str(condcounts));
+fprintf('For each condition, the number of runs in which it appears: %s.\n',mat2str(condinruns));
+fprintf('For each run, how much ending buffer do we have in seconds? %s.\n',mat2str(endbuffers,6));
+
+% issue warning if trials get to close to the end
+if any(endbuffers < 8)
+  warning('You have specified trial onsets that occur less than 8 seconds from the end of at least one of the runs. This may cause estimation problems! As a solution, consider simply omitting specification of these ending trials from the original design matrix.');
+end
+
+% construct a nice output struct for this design-related stuff
+varstoinsert = {'design' 'stimdur' 'tr' 'opt' 'designSINGLE' 'stimorder' 'numtrialrun' 'condcounts' 'condinruns' 'endbuffers'};
+resultsdesign = struct; 
+for p=1:length(varstoinsert)
+  resultsdesign.(varstoinsert{p}) = eval(varstoinsert{p});
+end
+
+% save to disk
+if ischar(outputdir{1})
+  file0 = fullfile(outputdir{1},'DESIGNINFO.mat');
+  fprintf('*** Saving design-related results to %s. ***\n',file0);
+  save(file0,'-struct','resultsdesign','-v7.3');
 end
 
 %% %%%%%%%%%%%%%%%%%%% FIT TYPE-A MODEL [ON-OFF]
