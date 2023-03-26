@@ -1,8 +1,8 @@
-function [results,designSINGLE] = GLMestimatesingletrial(design,data,stimdur,tr,outputdir,opt)
+function [results,resultsdesign] = GLMestimatesingletrial(design,data,stimdur,tr,outputdir,opt)
 %
 % USAGE::
 %
-%   [results,designSINGLE] = GLMestimatesingletrial(design,data,stimdur,tr,outputdir,opt)
+%   [results,resultsdesign] = GLMestimatesingletrial(design,data,stimdur,tr,outputdir,opt)
 %
 % <design> is the experimental design. There are two possible cases:
 %
@@ -141,6 +141,16 @@ function [results,designSINGLE] = GLMestimatesingletrial(design,data,stimdur,tr,
 %   Note that if <wantlibrary> is 0, <hrflibrary> is clobbered with the contents
 %   of <hrftoassume>, which in effect causes a single assumed HRF to be used.
 %
+%   *** DIAGNOSTIC MODEL (FIR) FLAGS ***
+%
+%   <firdelay> (optional) is the total time duration in seconds over which to estimate
+%   the run-wise FIR model (where we assume an ONOFF design matrix in which all
+%   conditions are collapsed together). Default: 30.
+%
+%   <firpct> (optional) is a percentile threshold. We average the FIR model 
+%   R2 values across runs and then select voxels that pass this threshold.
+%   These voxels are used for the FIR timecourse summaries. Default: 99.
+%
 %   *** MODEL TYPE A (ONOFF) FLAGS ***
 %
 %   (none)
@@ -254,9 +264,14 @@ function [results,designSINGLE] = GLMestimatesingletrial(design,data,stimdur,tr,
 % a single scalar opt.fracs. In other words, you can perform wantfracridge 
 % without any cross-validation, but you need to provide opt.fracs as a scalar.
 %
+%
+%
 % *** OUTPUTS: ***
 %
-% There are various outputs for each of the four model types:
+% We return model results in the output variable <results>.
+% These results are saved to disk in files called 'TYPEA...',
+% 'TYPEB...', and so on. There are various outputs for each 
+% of the four model types:
 %
 % <modelmd> is either
 %
@@ -295,16 +310,112 @@ function [results,designSINGLE] = GLMestimatesingletrial(design,data,stimdur,tr,
 %
 % <scaleoffset> is the scale and offset applied to RR estimates to best match the unregularized result
 %
-
-% History (keep in line with Python version):
-% - 2021/06/03 - add the option for use to specify two directories for <outputdir>
-% - 2020/08/22 - Implement opt.sessionindicator. Also, now the cross-validation units now reflect
-%                the "session-wise z-scoring" hyperparameter selection approach; thus, the cross-
-%                validation units have been CHANGED relative to prior analyses!
-% - 2020/05/14 - Version 1.0 released!
-%                (Tweak some documentation; output more results; fix a small bug (opt.fracs(1)~=1).)
-% - 2020/05/12 - Add pcvoxels output.
-% - 2020/05/12 - Initial version. Beta version. Use with caution.
+% Note that not all outputs exist for every model type.
+%
+%
+%
+% We also return design-related results in the output variable <resultsdesign>.
+% These results are saved to disk to a file called 'DESIGNINFO...'.
+% The outputs include:
+%
+% <design> is as specified by the user (with possibly some minor regularization)
+%
+% <stimdur> is as specified by the user
+%
+% <tr> is as specified by the user
+%
+% <opt> is as specified by the user (with possibly some minor regularization)
+%
+% <designSINGLE> is a single-trial design matrix corresponding to <design>
+%
+% <stimorder> is a row vector indicating which condition (1-indexed)
+%   each trial (in chronological order) belongs to
+%
+% <numtrialrun> is a row vector with the number of trials in each run
+% 
+% <condcounts> is a row vector with the number of trials
+%   associated with each condition
+% 
+% <condinruns> is a row vector with the number of runs that
+%   each condition shows up in
+%
+% <endbuffers> is a row vector with the number of seconds after the 
+%   last trial onset in each run
+%
+%
+%
+% We also return diagnostic FIR-related results --- these are saved
+% to disk to a file called 'RUNWISEFIR...'. The outputs include:
+%
+% <firR2> is the R2 of the FIR model for each run (X x Y x Z x run).
+%
+% <firtcs> is the estimated FIR timecourse for each run (X x Y x Z x 1 x time x run).
+%   Note that the first time point is coincident with trial onset and the
+%   time points are at the sampling rate corresponding to <tr>.
+%
+% <firavg> is the average FIR timecourse in each run (time x run).
+%   These are obtained by averaging the "best" voxels (see opt.firpct).
+%
+% <firgrandavg> is the average of <firavg> across runs (time x 1).
+%
+%
+%
+% *** FIGURES: ***
+%
+% If <outputdir> is set appropriately, we will generate a variety of useful
+% figures and save them to disk. Note that if you provide your data in 3D
+% format (e.g. X x Y x Z x T), we will be able to write out a number of
+% additional useful slice inspections that you will not get if you provide
+% your data in collapsed format (e.g. XYZ x T).
+%
+% FRACvalue.png - chosen fractional ridge regression value
+%                 (copper colormap between 0 and 1)
+%
+% HRFindex.png - 1-index of chosen HRF
+%                (jet colormap between 1 and the number of HRFs in the library)
+%
+% meanvol.png - simply the mean across all data volumes
+% 
+% noisepool.png - voxels selected for the noise pool (white means selected)
+% 
+% onoffR2_vs_HRFindex.png - scatter plot of the R^2 of the ONOFF model 
+%                           against the chosen HRF index. All voxels are shown.
+%                           A small amount of jitter is added to the HRF index
+%                           in order to aid visibility.
+%
+% onoffR2.png - R^2 of the ONOFF model (sqrt hot colormap between 0% and 100%)
+%
+% onoffR2hist.png - depicts the finding of an automatic threshold on the ONOFF
+%                   model R^2. This is used in determining the noise pool
+%                   (but can be overridden by opt.brainR2).
+%
+% pcvoxels.png - voxels used to summarize GLMdenoise cross-validation results
+%                (white means selected)
+%
+% runwiseFIR_R2_runXX.png - for each run, the R^2 of the diagnostic FIR model
+%                           (sqrt hot colormap between 0% and 100%)
+%
+% runwiseFIR_R2_runavg.png - simply the average of the R^2 across runs
+%
+% runwiseFIR.png - Upper left shows run-wise FIR estimates. The estimates reflect
+%                  the mean FIR timecourse averaged across a set of "best" voxels 
+%                  (see opt.firpct). The mean of these mean FIR timecourses
+%                  across runs is indicated by the thick red line. Upper right
+%                  shows FIR amplitudes at the peak time observed in the
+%                  grand mean timecourse (indicated by the dotted black line).
+%                  Bottom left shows the HRFs in the library as colored lines 
+%                  and the "assumed HRF" as a thick black line. Note that these
+%                  reflect any user-specified customization (as controlled via
+%                  opt.hrftoassume and opt.hrflibrary).
+%
+% typeD_R2_runXX.png - the R^2 of the final type-D model computed using data
+%                      from individual runs (sqrt hot colormap between 0% and 100%)
+%
+% typeD_R2.png - the R^2 of the final type-D model (using all data) 
+%
+% xvaltrend.png - shows the cross-validation performance for different numbers
+%                 of GLMdenoise regressors. Note that the y-axis units are 
+%                 correct but not easy to interpret.
 
 %% %%%%%%%%%%%%%%%%%%% DEAL WITH INPUTS
 
@@ -404,6 +515,12 @@ if ~isfield(opt,'hrftoassume') || isempty(opt.hrftoassume)
 end
 if ~isfield(opt,'hrflibrary') || isempty(opt.hrflibrary)
   opt.hrflibrary = getcanonicalhrflibrary(stimdur,tr)';
+end
+if ~isfield(opt,'firdelay') || isempty(opt.firdelay)
+  opt.firdelay = 30;
+end
+if ~isfield(opt,'firpct') || isempty(opt.firpct)
+  opt.firpct = 99;
 end
 if ~isfield(opt,'wantlss') || isempty(opt.wantlss)
   opt.wantlss = 0;
@@ -521,6 +638,152 @@ for p=1:length(design)
     end
   end
   stimix{p} = stimorder(validcolumns{p});
+end
+
+% calculate number of trials for each condition
+condcounts = [];  % 1 x cond with counts
+for p=1:numcond
+  condcounts(p) = sum(stimorder==p);
+end
+
+% calculate for each condition, how many runs it shows up in
+condinruns = [];  % 1 x cond with counts
+for p=1:numcond
+  condinruns(p) = sum(cellfun(@(x) sum(x==p)>0,stimix));
+end
+
+% calculate buffer at the end of each run
+endbuffers = [];  % 1 x runs with number of seconds
+for p=1:length(design)
+  temp = find(sum(design{p},2));  % 1-indices of when trials happen
+  temp = size(design{p},1) - temp(end);  % number of volumes AFTER last trial onset
+  endbuffers(p) = temp*tr;  % number of seconds AFTER last trial onset for which we have data
+end
+
+% do some diagnostics
+fprintf('*** DIAGNOSTICS ***:\n');
+fprintf('There are %d runs.\n',length(design));
+fprintf('The number of conditions in this experiment is %d.\n',numcond);
+fprintf('The stimulus duration corresponding to each trial is %.2f seconds.\n',stimdur);
+fprintf('The TR (time between successive data points) is %.2f seconds.\n',tr);
+fprintf('The number of trials in each run is: %s.\n',mat2str(numtrialrun));
+fprintf('The number of trials for each condition is: %s.\n',mat2str(condcounts));
+fprintf('For each condition, the number of runs in which it appears: %s.\n',mat2str(condinruns));
+fprintf('For each run, how much ending buffer do we have in seconds? %s.\n',mat2str(endbuffers,6));
+
+% issue warning if trials get to close to the end
+if any(endbuffers < 8)
+  warning('You have specified trial onsets that occur less than 8 seconds from the end of at least one of the runs. This may cause estimation problems! As a solution, consider simply omitting specification of these ending trials from the original design matrix.');
+end
+
+% construct a nice output struct for this design-related stuff
+varstoinsert = {'design' 'stimdur' 'tr' 'opt' 'designSINGLE' 'stimorder' 'numtrialrun' 'condcounts' 'condinruns' 'endbuffers'};
+resultsdesign = struct; 
+for p=1:length(varstoinsert)
+  resultsdesign.(varstoinsert{p}) = eval(varstoinsert{p});
+end
+
+% save to disk
+if ischar(outputdir{1})
+  file0 = fullfile(outputdir{1},'DESIGNINFO.mat');
+  fprintf('*** Saving design-related results to %s. ***\n',file0);
+  save(file0,'-struct','resultsdesign','-v7.3');
+end
+
+%% %%%%%%%%%%%%%%%%%%% FIT DIAGNOSTIC RUN-WISE FIR MODEL
+
+% The approach:
+% (1) Every stimulus is treated as the same.
+% (2) We fit an FIR model up to 30 s.
+% (3) Each run is fit completely separately.
+
+% collapse all conditions and fit each run separately
+fprintf('*** FITTING DIAGNOSTIC RUN-WISE FIR MODEL ***\n');
+design0 = cellfun(@(x) sum(x,2),design,'UniformOutput',0);
+firR2 = [];   % X x Y x Z x runs (R2 of FIR model for each run)
+firtcs = [];  % X x Y x Z x 1 x time x runs (FIR timecourse for each run)
+for p=1:length(data)
+  results0 = GLMestimatemodel(design0(p),data(p),stimdur,tr,'fir',floor(opt.firdelay/tr),0, ...
+                              struct('extraregressors',{opt.extraregressors}, ...
+                                     'maxpolydeg',opt.maxpolydeg, ...
+                                     'wantpercentbold',opt.wantpercentbold, ...
+                                     'suppressoutput',1));
+  firR2 = cat(4,firR2,results0.R2);
+  firtcs = cat(6,firtcs,results0.modelmd);
+end
+clear results0;
+
+% calc
+firR2mn = mean(firR2,4);
+firthresh = prctile(firR2mn(:),opt.firpct);
+firix = find(firR2mn > firthresh);  % we want to average the top 1st percentile
+
+% calc timecourse averages
+firavg = [];  % time x runs
+for rr=1:length(data)
+  temp = subscript(squish(firtcs(:,:,:,:,:,rr),4),{firix ':'});  % voxels x time
+  firavg(:,rr) = mean(temp,1);
+end
+firgrandavg = mean(firavg,2);  % time x 1
+
+% figures
+if wantfig
+
+  % make the figure
+  figureprep([100 100 1100 750]);
+  subplot(2,2,1); hold on;
+  cmap0 = cmapturbo(length(data));
+  h = []; legendlabs = {};
+  for rr=1:length(data)
+    h(rr) = plot(0:tr:(size(firavg,1)-1)*tr,firavg(:,rr),'o-','Color',cmap0(rr,:));
+    legendlabs{rr} = sprintf('Run %d',rr);
+  end
+  h(end+1) = plot(0:tr:(length(firgrandavg)-1)*tr,firgrandavg,'r-','LineWidth',2);
+  legendlabs{end+1} = 'Run Avg';
+  [~,mxix] = max(firgrandavg);
+  ax = axis; axis([0 (size(firavg,1)-1)*tr*1.5 ax(3:4)]); ax = axis;
+  straightline(0,'h','k-');
+  straightline((mxix-1)*tr,'v','k:');
+  xlabel('Time from trial onset (s)');
+  ylabel('BOLD (%)');
+  legend(h,legendlabs,'Location','NorthEast');
+  subplot(2,2,2); hold on;
+  bar(1:length(data),firavg(mxix,:));
+  axis([0 length(data)+1 ax(3:4)]);
+  set(gca,'XTick',1:length(data));
+  xlabel('Run number');
+  ylabel('BOLD at peak time (%)');
+  subplot(2,2,3); hold on;
+  cmap0 = cmapturbo(nh);
+  h = []; legendlabs = {};
+  for hh=1:nh
+    h(hh) = plot(0:tr:(size(opt.hrflibrary,1)-1)*tr,opt.hrflibrary(:,hh),'-','Color',cmap0(hh,:));
+    legendlabs{hh} = sprintf('HRFindex%d',hh);
+  end
+  h(end+1) = plot(0:tr:(length(opt.hrftoassume)-1)*tr,opt.hrftoassume,'k-','LineWidth',2);
+  legendlabs{end+1} = 'HRFassume';
+  xlim(ax(1:2));
+  straightline(0,'h','k-');
+  xlabel('Time from trial onset (s)');
+  ylabel('BOLD (a.u.)');
+  legend(h,legendlabs,'Location','NorthEast');
+  figurewrite('runwiseFIR',[],[],outputdir{2});
+
+  % more figures
+  if is3d
+    for rr=1:size(firR2,4)
+      imwrite(uint8(255*makeimagestack(firR2(:,:,:,rr),[0 100]).^0.5),hot(256),fullfile(outputdir{2},sprintf('runwiseFIR_R2_run%02d.png',rr)));
+    end
+    imwrite(uint8(255*makeimagestack(firR2mn,[0 100]).^0.5),hot(256),fullfile(outputdir{2},'runwiseFIR_R2_runavg.png'));
+  end
+
+end
+
+% save
+if ischar(outputdir{1})
+  file0 = fullfile(outputdir{1},'RUNWISEFIR.mat');
+  fprintf('*** Saving FIR results to %s. ***\n',file0);
+  save(file0,'firR2','firtcs','firavg','firgrandavg','-v7.3');
 end
 
 %% %%%%%%%%%%%%%%%%%%% FIT TYPE-A MODEL [ON-OFF]
@@ -711,8 +974,22 @@ else
   end
 
   % figures?
-  if wantfig && is3d
-    imwrite(uint8(255*makeimagestack(HRFindex,[1 nh])),jet(256),fullfile(outputdir{2},'HRFindex.png'));
+  if wantfig
+    
+    % HRFindex in slices
+    if is3d
+      imwrite(uint8(255*makeimagestack(HRFindex,[1 nh])),jet(256),fullfile(outputdir{2},'HRFindex.png'));
+    end
+    
+    % ONOFFR2 vs. HRFindex scatter
+    figureprep([100 100 600 600]); hold on;
+    scatter(onoffR2(:),HRFindex(:)+0.2*randn(size(HRFindex(:))),9,'r.');
+    set(gca,'YTick',1:nh);
+    ylim([0 nh+1]);
+    xlabel('ON-OFF model R^2');
+    ylabel('HRF index (with small amount of jitter)');
+    figurewrite('onoffR2_vs_HRFindex',[],[],outputdir{2});
+    
   end
 
   % preserve in memory if desired, and then clean up
@@ -1122,6 +1399,9 @@ for ttt=1:length(todo)
     end
     if whmodel==4 && is3d
       imwrite(uint8(255*makeimagestack(R2,[0 100]).^0.5),hot(256),fullfile(outputdir{2},'typeD_R2.png'));
+      for rr=1:size(R2run,4)
+        imwrite(uint8(255*makeimagestack(R2run(:,:,:,rr),[0 100]).^0.5),hot(256),fullfile(outputdir{2},sprintf('typeD_R2_run%02d.png',rr)));
+      end
       imwrite(uint8(255*makeimagestack(FRACvalue,[0 1])),copper(256),fullfile(outputdir{2},'FRACvalue.png'));
     end
   end
