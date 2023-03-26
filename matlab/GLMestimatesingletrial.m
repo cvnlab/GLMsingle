@@ -326,7 +326,7 @@ function [results,resultsdesign] = GLMestimatesingletrial(design,data,stimdur,tr
 %
 % <opt> is as specified by the user (with possibly some minor regularization)
 %
-% <designSINGLE> is a single-trial design matrix corresponding to <design>
+% <designSINGLE> is a single-trial design matrix corresponding to <design>.
 %
 % <stimorder> is a row vector indicating which condition (1-indexed)
 %   each trial (in chronological order) belongs to
