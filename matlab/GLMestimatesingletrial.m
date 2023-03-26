@@ -326,21 +326,21 @@ function [results,resultsdesign] = GLMestimatesingletrial(design,data,stimdur,tr
 %
 % <opt> is as specified by the user (with possibly some minor regularization)
 %
-% <designSINGLE> is a single-trial design matrix corresponding to <design>.
+% <designSINGLE> is a single-trial design matrix corresponding to <design>
 %
 % <stimorder> is a row vector indicating which condition (1-indexed)
-%   each trial (in chronological order) belongs to
+% each trial (in chronological order) belongs to
 %
 % <numtrialrun> is a row vector with the number of trials in each run
 % 
 % <condcounts> is a row vector with the number of trials
-%   associated with each condition
+% associated with each condition
 % 
 % <condinruns> is a row vector with the number of runs that
-%   each condition shows up in
+% each condition shows up in
 %
 % <endbuffers> is a row vector with the number of seconds after the 
-%   last trial onset in each run
+% last trial onset in each run
 %
 %
 %
@@ -350,11 +350,11 @@ function [results,resultsdesign] = GLMestimatesingletrial(design,data,stimdur,tr
 % <firR2> is the R2 of the FIR model for each run (X x Y x Z x run).
 %
 % <firtcs> is the estimated FIR timecourse for each run (X x Y x Z x 1 x time x run).
-%   Note that the first time point is coincident with trial onset and the
-%   time points are at the sampling rate corresponding to <tr>.
+% Note that the first time point is coincident with trial onset and the
+% time points are at the sampling rate corresponding to <tr>.
 %
 % <firavg> is the average FIR timecourse in each run (time x run).
-%   These are obtained by averaging the "best" voxels (see opt.firpct).
+% These are obtained by averaging the "best" voxels (see opt.firpct).
 %
 % <firgrandavg> is the average of <firavg> across runs (time x 1).
 %
@@ -369,53 +369,50 @@ function [results,resultsdesign] = GLMestimatesingletrial(design,data,stimdur,tr
 % your data in collapsed format (e.g. XYZ x T).
 %
 % FRACvalue.png - chosen fractional ridge regression value
-%                 (copper colormap between 0 and 1)
+% (copper colormap between 0 and 1)
 %
 % HRFindex.png - 1-index of chosen HRF
-%                (jet colormap between 1 and the number of HRFs in the library)
+% (jet colormap between 1 and the number of HRFs in the library)
 %
 % meanvol.png - simply the mean across all data volumes
 % 
 % noisepool.png - voxels selected for the noise pool (white means selected)
 % 
 % onoffR2_vs_HRFindex.png - scatter plot of the R^2 of the ONOFF model 
-%                           against the chosen HRF index. All voxels are shown.
-%                           A small amount of jitter is added to the HRF index
-%                           in order to aid visibility.
+% against the chosen HRF index. All voxels are shown. A small amount of 
+% jitter is added to the HRF index in order to aid visibility.
 %
 % onoffR2.png - R^2 of the ONOFF model (sqrt hot colormap between 0% and 100%)
 %
 % onoffR2hist.png - depicts the finding of an automatic threshold on the ONOFF
-%                   model R^2. This is used in determining the noise pool
-%                   (but can be overridden by opt.brainR2).
+% model R^2. This is used in determining the noise pool (but can be 
+% overridden by opt.brainR2).
 %
 % pcvoxels.png - voxels used to summarize GLMdenoise cross-validation results
-%                (white means selected)
+% (white means selected)
 %
 % runwiseFIR_R2_runXX.png - for each run, the R^2 of the diagnostic FIR model
-%                           (sqrt hot colormap between 0% and 100%)
+% (sqrt hot colormap between 0% and 100%)
 %
 % runwiseFIR_R2_runavg.png - simply the average of the R^2 across runs
 %
 % runwiseFIR.png - Upper left shows run-wise FIR estimates. The estimates reflect
-%                  the mean FIR timecourse averaged across a set of "best" voxels 
-%                  (see opt.firpct). The mean of these mean FIR timecourses
-%                  across runs is indicated by the thick red line. Upper right
-%                  shows FIR amplitudes at the peak time observed in the
-%                  grand mean timecourse (indicated by the dotted black line).
-%                  Bottom left shows the HRFs in the library as colored lines 
-%                  and the "assumed HRF" as a thick black line. Note that these
-%                  reflect any user-specified customization (as controlled via
-%                  opt.hrftoassume and opt.hrflibrary).
+% the mean FIR timecourse averaged across a set of "best" voxels (see opt.firpct). 
+% The mean of these mean FIR timecourses across runs is indicated by the thick 
+% red line. Upper right shows FIR amplitudes at the peak time observed in the
+% grand mean timecourse (indicated by the dotted black line). Bottom left shows 
+% the HRFs in the library as colored lines and the "assumed HRF" as a thick 
+% black line. Note that these reflect any user-specified customization (as 
+% controlled via opt.hrftoassume and opt.hrflibrary).
 %
 % typeD_R2_runXX.png - the R^2 of the final type-D model computed using data
-%                      from individual runs (sqrt hot colormap between 0% and 100%)
+% from individual runs (sqrt hot colormap between 0% and 100%)
 %
 % typeD_R2.png - the R^2 of the final type-D model (using all data) 
 %
 % xvaltrend.png - shows the cross-validation performance for different numbers
-%                 of GLMdenoise regressors. Note that the y-axis units are 
-%                 correct but not easy to interpret.
+% of GLMdenoise regressors. Note that the y-axis units are correct but not 
+% easy to interpret.
 
 %% %%%%%%%%%%%%%%%%%%% DEAL WITH INPUTS
 
