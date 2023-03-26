@@ -353,8 +353,9 @@ function [results,resultsdesign] = GLMestimatesingletrial(design,data,stimdur,tr
 % Note that the first time point is coincident with trial onset and the
 % time points are at the sampling rate corresponding to <tr>.
 %
-% <firavg> is the average FIR timecourse in each run (time x run).
-% These are obtained by averaging the "best" voxels (see opt.firpct).
+% <firavg> is the estimated FIR timecourse in each run (time x run).
+% These are obtained by calculating the median timecourse
+% across the "best" voxels (see opt.firpct).
 %
 % <firgrandavg> is the average of <firavg> across runs (time x 1).
 %
@@ -719,7 +720,7 @@ firix = find(firR2mn > firthresh);  % we want to average the top 1st percentile
 firavg = [];  % time x runs
 for rr=1:length(data)
   temp = subscript(squish(firtcs(:,:,:,:,:,rr),4),{firix ':'});  % voxels x time
-  firavg(:,rr) = mean(temp,1);
+  firavg(:,rr) = median(temp,1);
 end
 firgrandavg = mean(firavg,2);  % time x 1
 
