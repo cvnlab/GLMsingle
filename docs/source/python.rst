@@ -7,7 +7,3 @@ Python doc
    :members:
    :undoc-members:
    :show-inheritance:
-
-.. module:: glmsingle.cod.calc_cod
-
-.. autofunction:: calc_cod
