@@ -369,6 +369,16 @@ function [results,resultsdesign] = GLMestimatesingletrial(design,data,stimdur,tr
 % additional useful slice inspections that you will not get if you provide
 % your data in collapsed format (e.g. XYZ x T).
 %
+% betaviz_type[B,C,D].png - an image visualization of betas obtained
+% under the type-B, type-C, and type-D models. The matrix dimensions
+% are 1,000 voxels x trials. We choose 1,000 voxels equally spaced in 
+% descending order from the 100th to 75th percentiles of
+% the R^2 values produced by the ONOFF model. The colormap is
+% cmapsign4.m (blueish colors to black to reddish colors) from 
+% -X to X where X is the 99th percentile of the absolute value 
+% of the betas in the first model that is actually
+% computed (typically, this will be the type-B model). 
+%
 % FRACvalue.png - chosen fractional ridge regression value
 % (copper colormap between 0 and 1)
 %
@@ -809,6 +819,10 @@ results0 = rmfield(results0,{'models' 'modelse' 'signal' 'noise' 'SNR' 'hrffitvo
 onoffR2 = results0.R2;
 meanvol = results0.meanvol;
 
+% determine onoffvizix for beta inspection
+[~,onoffvizix] = sort(nanreplace(onoffR2(:),-Inf));  % ascending order; ensure NaN is treated as -Inf
+onoffvizix = onoffvizix(floor(length(onoffvizix)*(1:-.25/999:0.75)));  % 1000 voxels from 100th percentile to 75th percentile
+
 % save to disk if desired
 if opt.wantfileoutputs(whmodel)==1
   file0 = fullfile(outputdir{1},'TYPEA_ONOFF.mat');
@@ -988,6 +1002,13 @@ else
     ylabel('HRF index (with small amount of jitter)');
     figurewrite('onoffR2_vs_HRFindex',[],[],outputdir{2});
     
+    % beta visualization
+    temp = subscript(squish(modelmd,3),{onoffvizix ':'});
+    if ~exist('betavizmx','var')
+      betavizmx = prctile(abs(temp(:)),99);
+    end
+    imwrite(cmaplookup(temp,-betavizmx,betavizmx,[],cmapsign4(256)),fullfile(outputdir{2},'betaviz_typeB.png'));
+    
   end
 
   % preserve in memory if desired, and then clean up
@@ -1129,7 +1150,7 @@ else
       ix2 = find(opt.pcR2cutoffmask==1);
     end
     assert(length(ix2) > 0,'no voxels are in pcR2cutoffmask');
-    [~,ix3] = sort(onoffR2(ix2),'descend');
+    [~,ix3] = sort(nanreplace(onoffR2(ix2),-Inf),'descend');
     num = min(100,length(ix2));
     ix = ix2(ix3(1:num));
   end
@@ -1402,6 +1423,14 @@ for ttt=1:length(todo)
       end
       imwrite(uint8(255*makeimagestack(FRACvalue,[0 1])),copper(256),fullfile(outputdir{2},'FRACvalue.png'));
     end
+
+    % beta visualization
+    temp = subscript(squish(modelmd,3),{onoffvizix ':'});
+    if ~exist('betavizmx','var')
+      betavizmx = prctile(abs(temp(:)),99);
+    end
+    imwrite(cmaplookup(temp,-betavizmx,betavizmx,[],cmapsign4(256)),fullfile(outputdir{2},sprintf('betaviz_type%s.png',choose(whmodel==3,'C','D'))));
+
   end
 
   % preserve in memory if desired
