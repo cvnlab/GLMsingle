@@ -379,6 +379,12 @@ function [results,resultsdesign] = GLMestimatesingletrial(design,data,stimdur,tr
 % of the betas in the first model that is actually
 % computed (typically, this will be the type-B model). 
 %
+% dmetric_type[B,C,D].png - a "deviation from zero" metric calculated
+% based on the betas obtained under the type-B, type-C, and type-D models.
+% We use a hot colormap ranging between the min and max of the values
+% obtained for the first model that is computed (typically, this will be 
+% the type-B model).
+%
 % FRACvalue.png - chosen fractional ridge regression value
 % (copper colormap between 0 and 1)
 %
@@ -1009,6 +1015,13 @@ else
     end
     imwrite(cmaplookup(temp,-betavizmx,betavizmx,[],cmapsign4(256)),fullfile(outputdir{2},'betaviz_typeB.png'));
     
+    % dmetric visualization
+    temp = calcdmetric(modelmd,stimorder);
+    if ~exist('drng','var')
+      drng = [min(temp(:)) max(temp(:))];
+    end
+    imwrite(uint8(255*makeimagestack(temp,drng)),hot(256),fullfile(outputdir{2},'dmetric_typeB.png'));
+    
   end
 
   % preserve in memory if desired, and then clean up
@@ -1431,6 +1444,13 @@ for ttt=1:length(todo)
     end
     imwrite(cmaplookup(temp,-betavizmx,betavizmx,[],cmapsign4(256)),fullfile(outputdir{2},sprintf('betaviz_type%s.png',choose(whmodel==3,'C','D'))));
 
+    % dmetric visualization
+    temp = calcdmetric(modelmd,stimorder);
+    if ~exist('drng','var')
+      drng = [min(temp(:)) max(temp(:))];
+    end
+    imwrite(uint8(255*makeimagestack(temp,drng)),hot(256),fullfile(outputdir{2},sprintf('dmetric_type%s.png',choose(whmodel==3,'C','D'))));
+
   end
 
   % preserve in memory if desired
@@ -1521,6 +1541,27 @@ for xx=1:length(xvals)
   end
 
 end
+
+%%
+
+function f = calcdmetric(modelmd,stimorder)
+
+tempmn = [];
+tempsd = [];
+mncnt = 1;
+sdcnt = 1;
+for p=1:max(stimorder)
+  ix = find(stimorder==p);
+  if length(ix) > 0
+    tempmn(:,:,:,mncnt) = mean(modelmd(:,:,:,ix),4);
+    mncnt = mncnt + 1;
+  end
+  if length(ix) > 1
+    tempsd(:,:,:,sdcnt) = std(modelmd(:,:,:,ix),[],4);
+    sdcnt = sdcnt + 1;
+  end
+end
+f = sqrt(mean(tempmn.^2,4)) ./ sqrt(mean(tempsd.^2,4));  % RMSdeviationfromzero ./ noisesd
 
 %%%%%%%%%%%%%%%%%%% JUNK:
 
