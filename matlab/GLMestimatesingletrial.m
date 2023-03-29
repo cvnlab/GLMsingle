@@ -1016,11 +1016,13 @@ else
     imwrite(cmaplookup(temp,-betavizmx,betavizmx,[],cmapsign4(256)),fullfile(outputdir{2},'betaviz_typeB.png'));
     
     % dmetric visualization
-    temp = calcdmetric(modelmd,stimorder);
-    if ~exist('drng','var')
-      drng = [min(temp(:)) max(temp(:))];
+    if is3d
+      temp = calcdmetric(modelmd,stimorder);
+      if ~exist('drng','var')
+        drng = [min(temp(:)) max(temp(:))];
+      end
+      imwrite(uint8(255*makeimagestack(temp,drng)),hot(256),fullfile(outputdir{2},'dmetric_typeB.png'));
     end
-    imwrite(uint8(255*makeimagestack(temp,drng)),hot(256),fullfile(outputdir{2},'dmetric_typeB.png'));
     
   end
 
@@ -1445,11 +1447,13 @@ for ttt=1:length(todo)
     imwrite(cmaplookup(temp,-betavizmx,betavizmx,[],cmapsign4(256)),fullfile(outputdir{2},sprintf('betaviz_type%s.png',choose(whmodel==3,'C','D'))));
 
     % dmetric visualization
-    temp = calcdmetric(modelmd,stimorder);
-    if ~exist('drng','var')
-      drng = [min(temp(:)) max(temp(:))];
+    if is3d
+      temp = calcdmetric(modelmd,stimorder);
+      if ~exist('drng','var')
+        drng = [min(temp(:)) max(temp(:))];
+      end
+      imwrite(uint8(255*makeimagestack(temp,drng)),hot(256),fullfile(outputdir{2},sprintf('dmetric_type%s.png',choose(whmodel==3,'C','D'))));
     end
-    imwrite(uint8(255*makeimagestack(temp,drng)),hot(256),fullfile(outputdir{2},sprintf('dmetric_type%s.png',choose(whmodel==3,'C','D'))));
 
   end
 
