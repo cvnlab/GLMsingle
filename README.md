@@ -17,6 +17,9 @@ please see: **https://glmsingle.readthedocs.io**
 For a lecture overview, implementation guide, and demo of GLMsingle,
 please see: **https://cbmm.mit.edu/video/glmsingle-toolbox-improving-single-trial-fmri-response-estimates**
 
+For a video walkthrough of the figure outputs from GLMsingle,
+please see: **https://www.youtube.com/watch?v=aZFh-YUZUYE**
+
 GLMsingle can be viewed as a wholesale replacement of its predecessor,
 GLMdenoise (http://github.com/kendrickkay/GLMdenoise).
 
@@ -87,6 +90,8 @@ If you use GLMsingle in your research, please cite the following paper:
 
 ## Change history
 
+* 2023/03/27 - More diagnostic figures added.
+* 2023/03/26 - A number of new useful diagnostics are computed: these include diagnostics of the design matrix (information is shown in the command window), new figure visualizations, and a new run-wise FIR model that is used to generate diagnostic figures. These changes are currently implemented in MATLAB and will be ported to Python soon. The changes are described in the function documentation and covered in the new video walkthrough of figure outputs (see above).
 * 2022/11/28 - Version 1.1 of GLMsingle is now released. A git tag has been added to the repo. This version corresponds to what is described in the Prince et al. 2022 paper.
 * 2021/10/12 - Version 1.0 of GLMsingle is now released. A git tag has been added to the repo.
 * 2021/05/21 - The core code is complete, but is in "beta" and we are generating tutorial examples of usage. The initial 1.0 release should be forthcoming.
