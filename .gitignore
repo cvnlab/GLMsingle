@@ -14,6 +14,7 @@ example*outputs
 figures/
 report.html
 ##*.png
+*.DS_Store
 
 # pyenv
 Pipfile
