@@ -15,6 +15,8 @@ function download_data(URL, input_file)
             % remove eventual previously incomplete downloads
             delete(fullfile(this_dir, 'download'))
           end
+          % if fails, may need to install wget e.g. via "brew install wget"
+          % and may need to restart matlab following install
           system(sprintf('wget --verbose %s', URL)); 
           movefile(fullfile(this_dir, 'download'), input_file);
         end
