@@ -3,6 +3,9 @@
 % GLMsingle is new tool that provides efficient, scalable, and accurate
 % single-trial fMRI response estimates.
 %
+% For a complete description of GLMsingle, please refer to our manuscript 
+% published in eLife: https://elifesciences.org/articles/77599
+%
 % The purpose of this Example 1 notebook is to guide the user through basic
 % calls to GLMsingle, using a representative, small-scale test dataset (in
 % this case, an example session from a rapid event-related visual fMRI
@@ -73,7 +76,8 @@ download_data(URL, input_file);
 load(input_file)
 
 % Data comes from the NSD dataset (subj01, nsd01 scan session).
-% https://www.biorxiv.org/content/10.1101/2021.02.22.432340v1.full.pdf
+% Website: https://naturalscenesdataset.org/
+% Paper: https://www.nature.com/articles/s41593-021-00962-x
 
 %% Data overview
 clc
@@ -107,6 +111,7 @@ end
 
 xticks(0:53:length(design{d}))
 set(gcf,'Position',[418   412   782   605])
+set(gca,'FontSize',15)
 
 %%
 % design -> Each run has a corresponding design matrix where each column
@@ -198,7 +203,7 @@ if ~exist(fullfile(outputdir, 'GLMsingle', 'TYPEB_FITHRF.mat'),'file') || ...
    ~exist(fullfile(outputdir, 'GLMsingle', 'TYPEC_FITHRF_GLMDENOISE.mat'),'file') || ...
    ~exist(fullfile(outputdir, 'GLMsingle', 'TYPED_FITHRF_GLMDENOISE_RR.mat'),'file')
     
-    [results designSINGLE] = GLMestimatesingletrial(design,data,stimdur,tr,[outputdir '/GLMsingle'],opt);
+    [results, designSINGLE] = GLMestimatesingletrial(design,data,stimdur,tr,[outputdir '/GLMsingle'],opt);
     
     % We assign outputs of GLMestimatesingletrial to "models" structure.
     % Note that results{1} contains GLM estimates from an ONOFF model,
@@ -312,7 +317,7 @@ end
 
 %%
 
-% Now, "models" variable holds solutions for 4 GLM models
+% Now, the "models" variable holds solutions for 4 GLM models
 disp(fieldnames(models))
 
 %% Get indices of repeated conditions to use for reliability calculations
@@ -321,12 +326,12 @@ disp(fieldnames(models))
 % voxel-wise split-half reliablity for each model. Reliability values
 % reflect a correlation between beta weights for repeated presentations of
 % the same conditions. In short, we are going to check how
-% reliable/reproducible are the single trial responses to repeated
+% reliable/reproducible the single trial responses are to repeated
 % conditions estimated with each GLM type.
 
 % This NSD scan session has a large number of images that are just shown
 % once during the session, some images that are shown twice, and a few that
-% are shown three times. In the code below, we are attempting to locate the
+% are shown three times. In the code below, we locate the
 % indices in the beta weight GLMsingle outputs modelmd(x,y,z,trials) that
 % correspond to repeated images. Here we only consider stimuli that have
 % been presented at least twice. For the purpose of the example we ignore

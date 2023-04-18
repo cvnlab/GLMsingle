@@ -3,6 +3,9 @@
 % GLMsingle is new tool that provides efficient, scalable, and accurate
 % single-trial fMRI response estimates.
 %
+% For a complete description of GLMsingle, please refer to our manuscript 
+% published in eLife: https://elifesciences.org/articles/77599
+%
 % The purpose of this Example 2 notebook is to guide the user through basic
 % calls to GLMsingle, using a representative, small-scale test dataset (in
 % this case, 4 runs from an fMRI localizer session containing a block

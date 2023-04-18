@@ -6,8 +6,8 @@
    <!--
 This HTML was auto-generated from MATLAB code.
 To make changes, update the MATLAB code and republish this document.
-      --><title>Example 1 Overview</title><meta name="generator" content="MATLAB 9.4"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2021-08-05"><meta name="DC.source" content="example1.m"><style type="text/css">
-html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+      --><title>Example 1 Overview</title><meta name="generator" content="MATLAB 9.12"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2023-01-09"><meta name="DC.source" content="example1.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
 
 html { min-height:100%; margin-bottom:1px; }
 html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
@@ -23,7 +23,7 @@ a:visited { color:#004aa0; text-decoration:none; }
 
 p { padding:0px; margin:0px 0px 20px; }
 img { padding:0px; margin:0px 0px 20px; border:none; }
-p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; }
 
 ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
 ul li { padding:0px; margin:0px 0px 7px 0px; }
@@ -52,6 +52,7 @@ span.comment { color:#228B22 }
 span.string { color:#A020F0 }
 span.untermstring { color:#B20000 }
 span.syscmd { color:#B28C00 }
+span.typesection { color:#A0522D }
 
 .footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
 .footer p { margin:0px; }
@@ -66,38 +67,35 @@ table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px soli
 
 
 
-  </style></head><body><div class="content"><h1>Example 1 Overview</h1><!--introduction--><p>GLMsingle is new tool that provides efficient, scalable, and accurate single-trial fMRI response estimates.</p><p>The purpose of this Example 1 notebook is to guide the user through basic calls to GLMsingle, using a representative, small-scale test dataset (in this case, an example session from a rapid event-related visual fMRI dataset - the Natural Scenes Dataset core experiment).</p><p>The goal is to examine the effect of GLMsingle on the reliability of single-trial fMRI response estimates. By default, the tool implements a set of optimizations that improve upon generic GLM approaches by: (1) identifying an optimal hemodynamic response function (HRF) at each voxel, (2) deriving a set of useful GLM nuisance regressors via "GLMdenoise" and picking an optimal number to include in the final GLM, and (3) applying a custom amount of ridge regularization at each voxel using an efficient technique called "fracridge". The output of GLMsingle are GLM betas reflecting the estimated percent signal change in each voxel in response to each experimental stimulus or condition being modeled.</p><p>Beyond directly improving the reliability of neural responses to repeated stimuli, these optimized techniques for signal estimation can have a range of desirable downstream effects such as: improving cross-subject representational similarity within and between datasets; improving the single-image decodability of evoked neural patterns via MVPA; and, decreasing the correlation in spatial patterns observed at neighboring timepoints in analysis of fMRI GLM outputs. See our video presentation at V-VSS 2020 for a summary of these phenomena as observed in recent massive-scale fMRI datasets (the Natural Scenes Dataset and BOLD5000): https://www.youtube.com/watch?v=yb3Nn7Han8o</p><p>Example 1 contains a full walkthrough of the process of loading an example dataset and design matrix, estimating neural responses using GLMsingle, estimating the reliability of responses at each voxel, and comparing those achieved via GLMsingle to those achieved using a baseline GLM. After loading and visualizing formatted fMRI time-series and their corresponding design matrices, we will describe the default behavior of GLMsingle and show how to modify hyperparameters if the user desires. Throughout the notebook we will highlight important metrics and outputs using figures, print statements, and comments.</p><p>Users encountering bugs, unexpected outputs, or other issues regarding GLMsingle shouldn't hesitate to raise an issue on GitHub: https://github.com/kendrickkay/GLMsingle/issues</p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Add dependencies and download the example dataset</a></li><li><a href="#2">Data overview</a></li><li><a href="#6">Call GLMestimatesingletrial with default parameters</a></li><li><a href="#7">Summary of important outputs</a></li><li><a href="#8">Plot a slice of brain showing GLMsingle outputs</a></li><li><a href="#9">Run a baseline GLM to compare with GLMsingle</a></li><li><a href="#11">Get indices of repeated conditions to use for reliability calculations</a></li><li><a href="#14">Compute median split-half reliability for each GLM version</a></li><li><a href="#15">Compare visual voxel reliabilities between beta versions</a></li></ul></div><h2 id="1">Add dependencies and download the example dataset</h2><pre class="codeinput"><span class="comment">% We will assume that the current working directory is the directory that</span>
-<span class="comment">% contains this script.</span>
-
-<span class="comment">% Add path to GLMsingle</span>
-addpath(genpath(<span class="string">'../../matlab'</span>));
-
-<span class="comment">% You also need fracridge repository to run this code. For example, you</span>
-<span class="comment">% could do:</span>
-<span class="comment">%   git clone https://github.com/nrdg/fracridge.git</span>
-<span class="comment">% and then do:</span>
-<span class="comment">%   addpath('fracridge')</span>
-
-<span class="comment">% Start fresh</span>
+  </style></head><body><div class="content"><h1>Example 1 Overview</h1><!--introduction--><p>GLMsingle is new tool that provides efficient, scalable, and accurate single-trial fMRI response estimates.</p><p>For a complete description of GLMsingle, please refer to our manuscript published in eLife: <a href="https://elifesciences.org/articles/77599">https://elifesciences.org/articles/77599</a></p><p>The purpose of this Example 1 notebook is to guide the user through basic calls to GLMsingle, using a representative, small-scale test dataset (in this case, an example session from a rapid event-related visual fMRI dataset - the Natural Scenes Dataset core experiment).</p><p>The goal is to examine the effect of GLMsingle on the reliability of single-trial fMRI response estimates. By default, the tool implements a set of optimizations that improve upon generic GLM approaches by: (1) identifying an optimal hemodynamic response function (HRF) at each voxel, (2) deriving a set of useful GLM nuisance regressors via "GLMdenoise" and picking an optimal number to include in the final GLM, and (3) applying a custom amount of ridge regularization at each voxel using an efficient technique called "fracridge". The output of GLMsingle are GLM betas reflecting the estimated percent signal change in each voxel in response to each experimental stimulus or condition being modeled.</p><p>Beyond directly improving the reliability of neural responses to repeated stimuli, these optimized techniques for signal estimation can have a range of desirable downstream effects such as: improving cross-subject representational similarity within and between datasets; improving the single-image decodability of evoked neural patterns via MVPA; and, decreasing the correlation in spatial patterns observed at neighboring timepoints in analysis of fMRI GLM outputs. See our video presentation at V-VSS 2020 for a summary of these phenomena as observed in recent massive-scale fMRI datasets (the Natural Scenes Dataset and BOLD5000): <a href="https://www.youtube.com/watch?v=yb3Nn7Han8o">https://www.youtube.com/watch?v=yb3Nn7Han8o</a></p><p>Example 1 contains a full walkthrough of the process of loading an example dataset and design matrix, estimating neural responses using GLMsingle, estimating the reliability of responses at each voxel, and comparing those achieved via GLMsingle to those achieved using a baseline GLM. After loading and visualizing formatted fMRI time-series and their corresponding design matrices, we will describe the default behavior of GLMsingle and show how to modify hyperparameters if the user desires. Throughout the notebook we will highlight important metrics and outputs using figures, print statements, and comments.</p><p>Users encountering bugs, unexpected outputs, or other issues regarding GLMsingle shouldn't hesitate to raise an issue on GitHub: <a href="https://github.com/kendrickkay/GLMsingle/issues">https://github.com/kendrickkay/GLMsingle/issues</a></p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Add dependencies and download the example dataset</a></li><li><a href="#2">Data overview</a></li><li><a href="#6">Call GLMestimatesingletrial with default parameters</a></li><li><a href="#7">Summary of important outputs</a></li><li><a href="#8">Plot a slice of brain showing GLMsingle outputs</a></li><li><a href="#9">Run a baseline GLM to compare with GLMsingle</a></li><li><a href="#11">Get indices of repeated conditions to use for reliability calculations</a></li><li><a href="#14">Compute median split-half reliability for each GLM version</a></li><li><a href="#15">Compare visual voxel reliabilities between beta versions</a></li></ul></div><h2 id="1">Add dependencies and download the example dataset</h2><pre class="codeinput"><span class="comment">% Start fresh</span>
 clear
 clc
 close <span class="string">all</span>
 
+this_dir    = fileparts(which(<span class="string">'example1.m'</span>));
+
+<span class="comment">% Add path to GLMsingle</span>
+run(fullfile(this_dir, <span class="string">'..'</span>, <span class="string">'..'</span>, <span class="string">'setup.m'</span>));
+
 <span class="comment">% Name of directory to which outputs will be saved</span>
-outputdir = <span class="string">'example1outputs'</span>;
+outputdir = fullfile(this_dir, <span class="string">'example1outputs'</span>);
 
 <span class="comment">% Download files to data directory</span>
-<span class="keyword">if</span> ~exist(<span class="string">'./data'</span>,<span class="string">'dir'</span>)
+input_dir = fullfile(this_dir, <span class="string">'data'</span>);
+<span class="keyword">if</span> ~exist(input_dir, <span class="string">'dir'</span>)
     mkdir(<span class="string">'data'</span>)
 <span class="keyword">end</span>
 
-<span class="keyword">if</span> ~exist(<span class="string">'./data/nsdcoreexampledataset.mat'</span>,<span class="string">'file'</span>)
-    <span class="comment">% download data with curl</span>
-    system(<span class="string">'curl -L --output ./data/nsdcoreexampledataset.mat https://osf.io/k89b2/download'</span>)
-<span class="keyword">end</span>
-load(<span class="string">'./data/nsdcoreexampledataset.mat'</span>)
+input_file = fullfile(input_dir, <span class="string">'nsdcoreexampledataset.mat'</span>);
+URL = <span class="string">'https://osf.io/k89b2/download'</span>;
+
+download_data(URL, input_file);
+
+load(input_file)
+
 <span class="comment">% Data comes from the NSD dataset (subj01, nsd01 scan session).</span>
-<span class="comment">% https://www.biorxiv.org/content/10.1101/2021.02.22.432340v1.full.pdf</span>
+<span class="comment">% Website: https://naturalscenesdataset.org/</span>
+<span class="comment">% Paper: https://www.nature.com/articles/s41593-021-00962-x</span>
 </pre><h2 id="2">Data overview</h2><pre class="codeinput">clc
 whos
 
@@ -113,14 +111,19 @@ fprintf(<span class="string">'There are %d runs in total.\n'</span>,length(desig
 fprintf(<span class="string">'The dimensions of the data for the first run are %s.\n'</span>,mat2str(size(data{1})));
 fprintf(<span class="string">'The stimulus duration is %.3f seconds.\n'</span>,stimdur);
 fprintf(<span class="string">'The sampling rate (TR) is %.3f seconds.\n'</span>,tr);
-</pre><pre class="codeoutput">  Name             Size                 Bytes  Class     Attributes
+</pre><pre class="codeoutput">  Name              Size                 Bytes  Class     Attributes
 
-  ROI            145x186               215760  double              
-  data             1x12             388369344  cell                
-  design           1x12                 69408  cell                
-  outputdir        1x15                    30  char                
-  stimdur          1x1                      8  double              
-  tr               1x1                      8  double              
+  ROI             145x186               215760  double              
+  URL               1x29                    58  char                
+  data              1x12             388369248  cell                
+  design            1x12                 69312  cell                
+  input_dir         1x94                   188  char                
+  input_file        1x120                  240  char                
+  outputdir         1x105                  210  char                
+  stimdur           1x1                      8  double              
+  this_dir          1x89                   178  char                
+  tmp               1x109                  218  char                
+  tr                1x1                      8  double              
 
 There are 12 runs in total.
 The dimensions of the data for the first run are [145 186 1 300].
@@ -139,6 +142,7 @@ The sampling rate (TR) is 1.000 seconds.
 
 xticks(0:53:length(design{d}))
 set(gcf,<span class="string">'Position'</span>,[418   412   782   605])
+set(gca,<span class="string">'FontSize'</span>,15)
 </pre><img vspace="5" hspace="5" src="example1_01.png" alt=""> <p>design -&gt; Each run has a corresponding design matrix where each column describes a single condition (conditions are repeated across runs). Each design matrix is binary with 1 specfing the time (TR) when the stimulus is presented on the screen.</p><p>In this NSD scan session, there are a total of 750 trials, in which a total of 583 distinct images are shown. (Thus, some images were presented more than once.) In the design matrix shown, there are 583 predictor columns/conditions, one per distinct image. Notice that white rectangles are pseudo randomized and they indicate when the presentation of each image occurs. Note that in some runs not all images are shown; if a column does not have a white rectangle it means that this image is shown in a different run within the session.</p><pre class="codeinput"><span class="comment">% Show an example slice of the first fMRI volume.</span>
 figure(2);clf
 imagesc(data{1}(:,:,:,1));
@@ -205,9 +209,11 @@ opt = struct(<span class="string">'wantmemoryoutputs'</span>,[1 1 1 1]);
 <span class="comment">% "example1outputs/GLMsingle". If these outputs don't already exist, we</span>
 <span class="comment">% will perform the time-consuming call to GLMestimatesingletrial.m;</span>
 <span class="comment">% otherwise, we will just load from disk.</span>
-<span class="keyword">if</span> ~exist([outputdir <span class="string">'/GLMsingle'</span>],<span class="string">'dir'</span>)
+<span class="keyword">if</span> ~exist(fullfile(outputdir, <span class="string">'GLMsingle'</span>, <span class="string">'TYPEB_FITHRF.mat'</span>),<span class="string">'file'</span>) || <span class="keyword">...</span>
+   ~exist(fullfile(outputdir, <span class="string">'GLMsingle'</span>, <span class="string">'TYPEC_FITHRF_GLMDENOISE.mat'</span>),<span class="string">'file'</span>) || <span class="keyword">...</span>
+   ~exist(fullfile(outputdir, <span class="string">'GLMsingle'</span>, <span class="string">'TYPED_FITHRF_GLMDENOISE_RR.mat'</span>),<span class="string">'file'</span>)
 
-    [results] = GLMestimatesingletrial(design,data,stimdur,tr,[outputdir <span class="string">'/GLMsingle'</span>],opt);
+    [results, designSINGLE] = GLMestimatesingletrial(design,data,stimdur,tr,[outputdir <span class="string">'/GLMsingle'</span>],opt);
 
     <span class="comment">% We assign outputs of GLMestimatesingletrial to "models" structure.</span>
     <span class="comment">% Note that results{1} contains GLM estimates from an ONOFF model,</span>
@@ -291,7 +297,7 @@ opt.wantmemoryoutputs = [0 1 0 0];
 
 <span class="comment">% If these outputs don't already exist, we will perform the call to</span>
 <span class="comment">% GLMestimatesingletrial.m; otherwise, we will just load from disk.</span>
-<span class="keyword">if</span> ~exist([outputdir <span class="string">'/GLMbaseline'</span>],<span class="string">'dir'</span>)
+<span class="keyword">if</span> ~exist(fullfile(outputdir, <span class="string">'GLMbaseline'</span>, <span class="string">'TYPEB_FITHRF.mat'</span>),<span class="string">'file'</span>)
 
     [ASSUME_HRF] = GLMestimatesingletrial(design,data,stimdur,tr,[outputdir <span class="string">'/GLMbaseline'</span>],opt);
     models.ASSUME_HRF = ASSUME_HRF{2};
@@ -309,23 +315,23 @@ opt.wantmemoryoutputs = [0 1 0 0];
 <span class="comment">% We assign outputs from GLMestimatesingletrial to "models" structure.</span>
 <span class="comment">% Again, results{1} contains GLM estimates from an ONOFF model so we are</span>
 <span class="comment">% not going to extract it.</span>
-</pre><pre class="codeinput"><span class="comment">% Now, "models" variable holds solutions for 4 GLM models</span>
+</pre><pre class="codeinput"><span class="comment">% Now, the "models" variable holds solutions for 4 GLM models</span>
 disp(fieldnames(models))
-</pre><pre class="codeoutput">    'FIT_HRF'
-    'FIT_HRF_GLMdenoise'
-    'FIT_HRF_GLMdenoise_RR'
-    'ASSUME_HRF'
+</pre><pre class="codeoutput">    {'FIT_HRF'              }
+    {'FIT_HRF_GLMdenoise'   }
+    {'FIT_HRF_GLMdenoise_RR'}
+    {'ASSUME_HRF'           }
 
 </pre><h2 id="11">Get indices of repeated conditions to use for reliability calculations</h2><pre class="codeinput"><span class="comment">% To compare the results of different GLMs we are going to calculate the</span>
 <span class="comment">% voxel-wise split-half reliablity for each model. Reliability values</span>
 <span class="comment">% reflect a correlation between beta weights for repeated presentations of</span>
 <span class="comment">% the same conditions. In short, we are going to check how</span>
-<span class="comment">% reliable/reproducible are the single trial responses to repeated</span>
+<span class="comment">% reliable/reproducible the single trial responses are to repeated</span>
 <span class="comment">% conditions estimated with each GLM type.</span>
 
 <span class="comment">% This NSD scan session has a large number of images that are just shown</span>
 <span class="comment">% once during the session, some images that are shown twice, and a few that</span>
-<span class="comment">% are shown three times. In the code below, we are attempting to locate the</span>
+<span class="comment">% are shown three times. In the code below, we locate the</span>
 <span class="comment">% indices in the beta weight GLMsingle outputs modelmd(x,y,z,trials) that</span>
 <span class="comment">% correspond to repeated images. Here we only consider stimuli that have</span>
 <span class="comment">% been presented at least twice. For the purpose of the example we ignore</span>
@@ -482,12 +488,15 @@ set(gcf,<span class="string">'Position'</span>,[36 343 1116 674])
 <span class="comment">% Also, keep in mind that in the above figure, we are simply showing the</span>
 <span class="comment">% median as a metric of the central tendency (you may want to peruse</span>
 <span class="comment">% individual voxels in scatter plots, for example).</span>
-</pre><img vspace="5" hspace="5" src="example1_04.png" alt=""> <p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2018a</a><br></p></div><!--
+</pre><img vspace="5" hspace="5" src="example1_04.png" alt=""> <p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2022a</a><br></p></div><!--
 ##### SOURCE BEGIN #####
 %% Example 1 Overview
 %
 % GLMsingle is new tool that provides efficient, scalable, and accurate
 % single-trial fMRI response estimates.
+%
+% For a complete description of GLMsingle, please refer to our manuscript 
+% published in eLife: https://elifesciences.org/articles/77599
 %
 % The purpose of this Example 1 notebook is to guide the user through basic
 % calls to GLMsingle, using a representative, small-scale test dataset (in
@@ -532,38 +541,35 @@ set(gcf,<span class="string">'Position'</span>,[36 343 1116 674])
 
 %% Add dependencies and download the example dataset
 
-% We will assume that the current working directory is the directory that
-% contains this script.
-
-% Add path to GLMsingle
-addpath(genpath('../../matlab'));
-
-% You also need fracridge repository to run this code. For example, you
-% could do:
-%   git clone https://github.com/nrdg/fracridge.git
-% and then do:
-%   addpath('fracridge')
-
 % Start fresh
 clear
 clc
 close all
 
+this_dir    = fileparts(which('example1.m'));
+
+% Add path to GLMsingle
+run(fullfile(this_dir, '..', '..', 'setup.m'));
+
 % Name of directory to which outputs will be saved
-outputdir = 'example1outputs';
+outputdir = fullfile(this_dir, 'example1outputs');
 
 % Download files to data directory
-if ~exist('./data','dir')
+input_dir = fullfile(this_dir, 'data');
+if ~exist(input_dir, 'dir')
     mkdir('data')
 end
 
-if ~exist('./data/nsdcoreexampledataset.mat','file')
-    % download data with curl
-    system('curl -L REPLACE_WITH_DASH_DASHoutput ./data/nsdcoreexampledataset.mat https://osf.io/k89b2/download')
-end
-load('./data/nsdcoreexampledataset.mat')
+input_file = fullfile(input_dir, 'nsdcoreexampledataset.mat');
+URL = 'https://osf.io/k89b2/download';
+
+download_data(URL, input_file);
+
+load(input_file)
+
 % Data comes from the NSD dataset (subj01, nsd01 scan session).
-% https://www.biorxiv.org/content/10.1101/2021.02.22.432340v1.full.pdf
+% Website: https://naturalscenesdataset.org/
+% Paper: https://www.nature.com/articles/s41593-021-00962-x
 
 %% Data overview
 clc
@@ -597,6 +603,7 @@ end
 
 xticks(0:53:length(design{d}))
 set(gcf,'Position',[418   412   782   605])
+set(gca,'FontSize',15)
 
 %%
 % design -> Each run has a corresponding design matrix where each column
@@ -684,9 +691,11 @@ opt = struct('wantmemoryoutputs',[1 1 1 1]);
 % "example1outputs/GLMsingle". If these outputs don't already exist, we
 % will perform the time-consuming call to GLMestimatesingletrial.m;
 % otherwise, we will just load from disk.
-if ~exist([outputdir '/GLMsingle'],'dir')
+if ~exist(fullfile(outputdir, 'GLMsingle', 'TYPEB_FITHRF.mat'),'file') || ...
+   ~exist(fullfile(outputdir, 'GLMsingle', 'TYPEC_FITHRF_GLMDENOISE.mat'),'file') || ...
+   ~exist(fullfile(outputdir, 'GLMsingle', 'TYPED_FITHRF_GLMDENOISE_RR.mat'),'file')
     
-    [results] = GLMestimatesingletrial(design,data,stimdur,tr,[outputdir '/GLMsingle'],opt);
+    [results, designSINGLE] = GLMestimatesingletrial(design,data,stimdur,tr,[outputdir '/GLMsingle'],opt);
     
     % We assign outputs of GLMestimatesingletrial to "models" structure.
     % Note that results{1} contains GLM estimates from an ONOFF model,
@@ -779,7 +788,7 @@ opt.wantmemoryoutputs = [0 1 0 0];
 
 % If these outputs don't already exist, we will perform the call to
 % GLMestimatesingletrial.m; otherwise, we will just load from disk.
-if ~exist([outputdir '/GLMbaseline'],'dir')
+if ~exist(fullfile(outputdir, 'GLMbaseline', 'TYPEB_FITHRF.mat'),'file')
     
     [ASSUME_HRF] = GLMestimatesingletrial(design,data,stimdur,tr,[outputdir '/GLMbaseline'],opt);
     models.ASSUME_HRF = ASSUME_HRF{2};
@@ -800,7 +809,7 @@ end
 
 %%
 
-% Now, "models" variable holds solutions for 4 GLM models
+% Now, the "models" variable holds solutions for 4 GLM models
 disp(fieldnames(models))
 
 %% Get indices of repeated conditions to use for reliability calculations
@@ -809,12 +818,12 @@ disp(fieldnames(models))
 % voxel-wise split-half reliablity for each model. Reliability values
 % reflect a correlation between beta weights for repeated presentations of
 % the same conditions. In short, we are going to check how
-% reliable/reproducible are the single trial responses to repeated
+% reliable/reproducible the single trial responses are to repeated
 % conditions estimated with each GLM type.
 
 % This NSD scan session has a large number of images that are just shown
 % once during the session, some images that are shown twice, and a few that
-% are shown three times. In the code below, we are attempting to locate the
+% are shown three times. In the code below, we locate the
 % indices in the beta weight GLMsingle outputs modelmd(x,y,z,trials) that
 % correspond to repeated images. Here we only consider stimuli that have
 % been presented at least twice. For the purpose of the example we ignore
