@@ -1,4 +1,3 @@
-
 import numpy as np
 from glmsingle.cod.calc_cod import calc_cod, calc_cod_stack
 from glmsingle.design.construct_stim_matrices import construct_stim_matrices
@@ -66,8 +65,9 @@ def fit_model(design, data2, tr, hrfmodel, hrfknobs,
     if hrfmodel == 'fir':
 
         # since 'fir', we can assume design is not the onset case, but check it
-        np.testing.assert_equal(type(design[0]) is int, True)
-
+        # todo: repair this assert statement. it was buggy beforehand.
+        #np.testing.assert_equal(type(design[0]), list)
+       
         # calc
         numconditions = design[0].shape[1]
 
@@ -107,11 +107,11 @@ def fit_model(design, data2, tr, hrfmodel, hrfknobs,
                 olsmatrix(np.concatenate(desw)),
                 data2)  # L*conditions x voxels
 
-        # voxels x conditions x L
-        f = np.transpose(np.reshape(f, [hrfknobs+1, numconditions]), [2, 1, 0])
-
+        # voxels x conditions x L        
+        f = np.transpose(np.reshape(f, (hrfknobs + 1, numconditions, -1)), (2, 1, 0))
+        
         fout = {}
-        fout['betas'] = f.T.astype(np.float32)
+        fout['betas'] = f.astype(np.float32)
         fout['hrffitvoxels'] = hrffitvoxels
 
     elif hrfmodel == 'assume':
@@ -163,7 +163,7 @@ def fit_model(design, data2, tr, hrfmodel, hrfknobs,
 
         # since 'optimize', we can assume design is not the onset case,
         # but check it
-        np.testing.assert_true(type(design[0]), list)
+        np.testing.assert_equal(type(design[0]), list)
 
         # calc
         numinhrf = len(hrfknobs)

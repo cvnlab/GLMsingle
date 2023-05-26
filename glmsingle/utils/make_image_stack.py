@@ -1,7 +1,6 @@
 import numpy as np
 from math import floor, ceil
 
-
 def make_image_stack(m):
     """make image stack from 3D volume
     <m> is a 3D matrix.  if more than 3D, we reshape to be 3D.
@@ -40,7 +39,7 @@ def make_image_stack(m):
     # make a zero array of chunksize
     # add border
     mchunk = np.zeros((tnrows, tncols, chunksize))
-    mchunk[:, :, :numim] = mx
+    mchunk[:, :, :numim] = 0
     mchunk[:-1, :-1, :numim] = m
 
     # combine images
@@ -53,7 +52,7 @@ def make_image_stack(m):
         ri += tnrows
         # if we have filled rows rows, change column
         # and reset r
-        if plane != 0 and ri == tnrows * rows:
+        if ri == tnrows * rows:
             ci += tncols
             ri = 0
 

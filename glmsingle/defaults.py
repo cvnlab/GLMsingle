@@ -5,6 +5,8 @@ default_params = {
     'numforhrf': 50,
     'hrfthresh': 0.5,
     'hrffitmask': 1,
+    'firdelay': 30,
+    'firpct': 99,
     'R2thresh': 0,
     'hrfmodel': 'optimise',
     'n_jobs': 1,

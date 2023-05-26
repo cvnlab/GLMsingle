@@ -422,7 +422,7 @@ def glm_estimatemodel(design, data, stimdur, tr, hrfmodel, hrfknobs,
     """
 
     # DEAL WITH INPUTS, ETC.
-    data, design, xyz = check_inputs(data, design)
+    data, design, xyz, numcond = check_inputs(data, design)
 
     dimdata, dimtime = [0, 1]
     numvoxels = data[0].shape[dimdata]
@@ -567,7 +567,7 @@ def glm_estimatemodel(design, data, stimdur, tr, hrfmodel, hrfknobs,
             opt,
             combinedmatrix,
             cache)
-
+                
         if opt['suppressoutput'] == 0:
             print('done.\n')
 
@@ -701,8 +701,14 @@ def glm_estimatemodel(design, data, stimdur, tr, hrfmodel, hrfknobs,
 
         if opt['suppressoutput'] == 0:
             print('preparing output...')
-
-        if hrfmodel in ['assume', 'optimize']:
+            
+        if hrfmodel == 'fir':
+            # XYZ by n_timepoints?
+                results['betasmd'] = results['betas'].astype(np.float32)
+                results['betasse'] = np.zeros(
+                    results['betas'].shape).astype(np.float32)
+            
+        elif hrfmodel in ['assume', 'optimize']:
             if type(results) is list:
                 temp = [t['hrfknobs'] for t in results]
                 betas = [t['betas'] for t in results]
@@ -755,12 +761,21 @@ def glm_estimatemodel(design, data, stimdur, tr, hrfmodel, hrfknobs,
             # compute the time-series fit corresponding
             # to the final model estimate
             ntimes = [x.shape[0] for x in dataw]
+            
+            # accounts for the extra dimension in results['betasmd'] if hrfmodel is fir
+            if hrfmodel == 'fir':
+                dimtime = 2
+            else:
+                dimtime = 1
+            
             modelfit = glm_predictresponses(
                 results,
                 design,
                 tr,
-                ntimes)
-
+                ntimes,
+                dimdata=0,
+                dimtime=dimtime)
+            
         if resamplecase == 'xval':
             pass
             # in the cross-validation case, we have already computed
@@ -779,10 +794,10 @@ def glm_estimatemodel(design, data, stimdur, tr, hrfmodel, hrfknobs,
 
         # remove polynomials from the model fits (or predictions)
         modelfit = [polymatrix[x] @ modelfit[x] for x in range(numruns)]
-
+        
         # calculate overall R^2 [beware: MEMORY] XYZ x time
         results['R2'] = calc_cod_stack(modelfit, dataw)
-
+        
         # [XYZ by time] by n_runs
         results['R2run'] = [calc_cod(
             mfit,
@@ -803,19 +818,20 @@ def glm_estimatemodel(design, data, stimdur, tr, hrfmodel, hrfknobs,
 
         if hrfmodel == 'fir':
             # results['betasmd'] shape xyz x n_cond x n_fir?
+            
             results['signal'] = np.max(
-                np.max(
-                    np.abs(
-                        results['betasmd']
-                    ),
-                    dimdata,
-                    dimdata+1
-                )
-            )
+                                    np.max(
+                                        np.abs(results['betasmd']),
+                                        dimdata+1),
+                                        dimdata+1)
+                
+            
             results['noise'] = np.mean(
-                np.mean(results['betasse'], dimdata), dimdata+1)
+                                    np.mean(results['betasse'], dimdata+1), 
+                                                                dimdata+1)
+            
             with np.errstate(divide="ignore", invalid="ignore"):
-                results['SNR'] = results.signal / results.noise
+                results['SNR'] = results['signal'] / results['noise']
 
         if hrfmodel in ['assume', 'optimize']:
             # betasmd can be either:

@@ -2,8 +2,7 @@ import numpy as np
 from glmsingle.design.construct_stim_matrices import construct_stim_matrices
 from glmsingle.design.convolve_design import convolve_design
 
-
-def glm_predictresponses(model, design, tr, numtimepoints, dimdata=0):
+def glm_predictresponses(model, design, tr, numtimepoints, dimdata=0, dimtime=1):
     """
      responses = glm_predictresponses(model,design,tr,numtimepoints,dimdata)
 
@@ -31,6 +30,10 @@ def glm_predictresponses(model, design, tr, numtimepoints, dimdata=0):
           This case is compatible only with the common-HRF <model>.
      <tr> is the sampling rate in seconds
      <numtimepoints> is a vector with the number of time points in each run
+     <dimdata> is the 0-indexed dimension of model['betasmd'] corresponding 
+          to XYZ (default: 0)
+     <dimtime> is the 0-indexed dimension of model['betasmd'] corresponding
+          to the number of timepoints (default: 1)
 
      Given various inputs, compute the predicted time-series response.
 
@@ -41,6 +44,7 @@ def glm_predictresponses(model, design, tr, numtimepoints, dimdata=0):
        in the other cases (cases 2 and 3).
 
      History:
+     - 2023/04/28 include <dimdata> and <dimtime> as inputs
      - 2013/05/12: allow <design> to specify onset times; add <tr>,
                    <numtimepoints> as inputs
      - 2013/05/12: update to indicate fractional values in design matrix are
@@ -57,13 +61,11 @@ def glm_predictresponses(model, design, tr, numtimepoints, dimdata=0):
             # handle special case of onoff design
             design = [p[:, np.newaxis] for p in design]
     
-    dimdata = 0
-    dimtime = dimdata + 1
     if type(model) == list:
         xyzsize = model[1]['betasmd'].shape[dimdata]
     else:
         xyzsize = model['betasmd'].shape[dimdata]
-
+        
     # make cell
     if type(design) is not list:
         design = [design]
@@ -97,15 +99,11 @@ def glm_predictresponses(model, design, tr, numtimepoints, dimdata=0):
             temp = construct_stim_matrices(
                 design[p].T,
                 prenumlag=0,
-                postnumlag=timecourselen
+                postnumlag=timecourselen - 1
             ).astype(np.float32)  # time*L x conditions
 
             # weight design matrix by the timecourses
-            responses.append(
-                np.reshape(
-                    temp @ model['betasmd'].reshape(xyzsize, -1),
-                    [xyzsize, numtimepoints[p]])
-            )
+            responses.append(temp @ np.squeeze(np.transpose(model['betasmd'],[2,1,0])))
 
     # undo cell if necessary
     if ismatrixcase:

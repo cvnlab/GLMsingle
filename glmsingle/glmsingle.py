@@ -4,6 +4,8 @@ import numpy as np
 import h5py
 from tqdm import tqdm
 import matplotlib.pyplot as plt
+from matplotlib.colors import Normalize
+
 from sklearn.preprocessing import normalize
 from glmsingle.check_inputs import check_inputs
 from glmsingle.defaults import default_params
@@ -32,7 +34,7 @@ class GLM_single():
         This function computes up to four model outputs (called type-A (ONOFF),
         type-B (FITHRF), type-C (FITHRF_GLMDENOISE), and type-D
         (FITHRF_GLMDENOISE_RR)),and either saves the model outputs to disk,
-        or returns them in <results>, or both,depending on what the user
+        or returns them in <results>, or both, depending on what the user
         specifies.
 
         There are a variety of cases that you can achieve. Here are some
@@ -198,6 +200,16 @@ class GLM_single():
         *** MODEL TYPE A (ONOFF) FLAGS ***
 
         (none)
+        
+        *** DIAGNOSTIC MODEL (FIR) FLAGS ***
+        
+        <firdelay> (optional) is the total time duration in seconds over which to estimate 
+         the run-wise FIR model (where we assume an ONOFF design matrix in which all 
+         conditions are collapsed together). Default: 30.
+        
+        <firpct> (optional) is a percentile threshold. We average the FIR model 
+         R2 values across runs and then select voxels that pass this threshold.
+         These voxels are used for the FIR timecourse summaries. Default: 99.
 
         *** MODEL TYPE B (FITHRF) FLAGS ***
 
@@ -347,7 +359,10 @@ class GLM_single():
         Returns:
         __________
 
-        There are various outputs for each of the four model types:
+        We return model results in the output variable <results>.
+        These results are saved to disk in files called 'TYPEA...',
+        'TYPEB...', and so on. There are various outputs for each 
+        of the four model types:
 
         <modelmd> is either
          (1) the HRF (time x 1) and ON-OFF beta weights (X x Y x Z)
@@ -387,6 +402,124 @@ class GLM_single():
 
         <scaleoffset> is the scale and offset applied to RR estimates to best
                     match the unregularized result
+                    
+        Note that not all outputs exist for every model type.
+
+
+        We also return design-related results in the output variable <resultsdesign>.
+        These results are saved to disk to a file called 'DESIGNINFO...'.
+        The outputs include:
+
+        <design> is as specified by the user (with possibly some minor regularization)
+
+        <stimdur> is as specified by the user
+
+        <tr> is as specified by the user
+
+        <opt> is as specified by the user (with possibly some minor regularization)
+
+        <designSINGLE> is a single-trial design matrix corresponding to <design>
+
+        <stimorder> is a row vector indicating which condition (1-indexed)
+        each trial (in chronological order) belongs to
+
+        <numtrialrun> is a row vector with the number of trials in each run
+
+        <condcounts> is a row vector with the number of trials
+        associated with each condition
+
+        <condinruns> is a row vector with the number of runs that
+        each condition shows up in
+
+        <endbuffers> is a row vector with the number of seconds after the 
+        last trial onset in each run
+
+
+        We also return diagnostic FIR-related results --- these are saved
+        to disk to a file called 'RUNWISEFIR...'. The outputs include:
+
+        <firR2> is the R2 of the FIR model for each run (X x Y x Z x run).
+
+        <firtcs> is the estimated FIR timecourse for each run (X x Y x Z x 1 x time x run).
+        Note that the first time point is coincident with trial onset and the
+        time points are at the sampling rate corresponding to <tr>.
+
+        <firavg> is the estimated FIR timecourse in each run (time x run).
+        These are obtained by calculating the median timecourse
+        across the "best" voxels (see opt.firpct).
+
+        <firgrandavg> is the average of <firavg> across runs (time x 1).
+        
+
+        *** FIGURES: ***
+
+        If <outputdir> is set appropriately, we will generate a variety of useful
+        figures and save them to disk. Note that if you provide your data in 3D
+        format (e.g. X x Y x Z x T), we will be able to write out a number of
+        additional useful slice inspections that you will not get if you provide
+        your data in collapsed format (e.g. XYZ x T).
+
+        betaviz_type[B,C,D].png - an image visualization of betas obtained
+        under the type-B, type-C, and type-D models. The matrix dimensions
+        are 1,000 voxels x trials. We choose 1,000 voxels equally spaced in 
+        descending order from the 100th to 75th percentiles of
+        the R^2 values produced by the ONOFF model. The colormap is
+        cmapsign4.py (blueish colors to black to reddish colors) from 
+        -X to X where X is the 99th percentile of the absolute value 
+        of the betas in the first model that is actually
+        computed (typically, this will be the type-B model). 
+
+        dmetric_type[B,C,D].png - a "deviation from zero" metric calculated
+        based on the betas obtained under the type-B, type-C, and type-D models.
+        We use a hot colormap ranging between the min and max of the values
+        obtained for the first model that is computed (typically, this will be 
+        the type-B model).
+
+        FRACvalue.png - chosen fractional ridge regression value
+        (copper colormap between 0 and 1)
+
+        HRFindex.png - 1-index of chosen HRF
+        (jet colormap between 1 and the number of HRFs in the library)
+
+        meanvol.png - simply the mean across all data volumes
+
+        noisepool.png - voxels selected for the noise pool (white means selected)
+
+        onoffR2_vs_HRFindex.png - scatter plot of the R^2 of the ONOFF model 
+        against the chosen HRF index. All voxels are shown. A small amount of 
+        jitter is added to the HRF index in order to aid visibility.
+
+        onoffR2.png - R^2 of the ONOFF model (sqrt hot colormap between 0% and 100%)
+
+        onoffR2hist.png - depicts the finding of an automatic threshold on the ONOFF
+        model R^2. This is used in determining the noise pool (but can be 
+        overridden by opt.brainR2).
+
+        pcvoxels.png - voxels used to summarize GLMdenoise cross-validation results
+        (white means selected)
+
+        runwiseFIR_R2_runXX.png - for each run, the R^2 of the diagnostic FIR model
+        (sqrt hot colormap between 0% and 100%)
+
+        runwiseFIR_R2_runavg.png - simply the average of the R^2 across runs
+
+        runwiseFIR.png - Upper left shows run-wise FIR estimates. The estimates reflect
+        the mean FIR timecourse averaged across a set of "best" voxels (see opt.firpct). 
+        The mean of these mean FIR timecourses across runs is indicated by the thick 
+        red line. Upper right shows FIR amplitudes at the peak time observed in the
+        grand mean timecourse (indicated by the dotted black line). Bottom left shows 
+        the HRFs in the library as colored lines and the "assumed HRF" as a thick 
+        black line. Note that these reflect any user-specified customization (as 
+        controlled via opt.hrftoassume and opt.hrflibrary).
+
+        typeD_R2_runXX.png - the R^2 of the final type-D model computed using data
+        from individual runs (sqrt hot colormap between 0% and 100%)
+
+        typeD_R2.png - the R^2 of the final type-D model (using all data) 
+
+        xvaltrend.png - shows the cross-validation performance for different numbers
+        of GLMdenoise regressors. Note that the y-axis units are correct but not 
+        easy to interpret.
 
         """
 
@@ -398,7 +531,7 @@ class GLM_single():
 
         # xyz can either be a tuple of dimensions x y z
         # or a boolean indicating that data was 2D
-        data, design, xyz = check_inputs(data, design)
+        data, design, xyz, numcond = check_inputs(data, design)
 
         # keep class bound data and design
         self.data = data
@@ -585,8 +718,199 @@ class GLM_single():
                     cnt += 1
             validcolumns.append(np.asarray(run_validcolumns))
 
-            stimix.append(np.asarray(stimorder)[np.asarray(run_validcolumns)])
+            stimix.append(np.asarray(stimorder)[np.asarray(run_validcolumns)]) 
+            
+        # calculate number of trials for each condition
+        condcounts = []  # 1 x cond with counts
+        for p in range(numcond):
+            condcounts.append(np.sum(np.asarray(stimorder) == p))
 
+        # calculate for each condition, how many runs it shows up in
+        condinruns = []  # 1 x cond with counts
+        for p in range(numcond):
+            condinruns.append(np.sum([np.sum(np.array(x) == p) > 0 for x in stimix]))
+
+        # calculate buffer at the end of each run
+        endbuffers = []  # 1 x runs with number of seconds
+        for p in range(len(design)):
+            temp = np.nonzero(np.sum(design[p], axis=1))[0] + 1  # 1-indices of when trials happen
+            temp = design[p].shape[0] - temp[-1]  # number of volumes AFTER last trial onset 
+            endbuffers.append(temp * tr)  # number of seconds AFTER last trial onset for which we have data
+
+        # do some diagnostics
+        print("*** DIAGNOSTICS ***:")
+        print(f"There are {len(design)} runs.")
+        print(f"The number of conditions in this experiment is {numcond}.")
+        print(f"The stimulus duration corresponding to each trial is {stimdur:.2f} seconds.")
+        print(f"The TR (time between successive data points) is {tr:.2f} seconds.")
+        print(f"The number of trials in each run is: {numtrialrun}.")
+        print(f"The number of trials for each condition is: {condcounts}.")
+        print(f"For each condition, the number of runs in which it appears: {condinruns}.")
+        print(f"For each run, how much ending buffer do we have in seconds? {endbuffers}.")
+                
+        # issue warning if trials get too close to the end
+        if any(endbuffer < 8 for endbuffer in endbuffers):
+            print('Warning: You have specified trial onsets that occur less than 8 seconds from the end of at least one of the runs. This may cause estimation problems! As a solution, consider simply omitting specification of these ending trials from the original design matrix.')
+
+        # construct a nice output dict for this design-related stuff
+        varstoinsert = ['design', 'stimdur', 'tr', 'params', 'designSINGLE', 'stimorder', 'numtrialrun', 'condcounts', 'condinruns', 'endbuffers']
+        resultsdesign = {}
+        for var in varstoinsert:
+            resultsdesign[var] = locals()[var]
+
+        if isinstance(outputdir, str):
+            file0 = os.path.join(outputdir, 'DESIGNINFO.npy')
+            print(f"*** Saving design-related results to {file0}. ***")
+            np.save(file0, resultsdesign, allow_pickle=True)
+            
+            
+        # FIT DIAGNOSTIC RUN-WISE FIR MODEL
+
+        # The approach:
+        # (1) Every stimulus is treated as the same.
+        # (2) We fit an FIR model up to 30 s.
+        # (3) Each run is fit completely separately.
+
+        # collapse all conditions and fit each run separately
+        skip = False
+        
+        if skip is False:
+            print("*** FITTING DIAGNOSTIC RUN-WISE FIR MODEL ***")
+            design0 = [np.sum(x, axis=1)[:, np.newaxis] for x in self.design]
+            
+            firR2 = [] # X x Y x Z x runs (R2 of FIR model for each run)
+            firtcs = [] # X x Y x Z x 1 x time x runs (FIR timecourse for each run)
+            glm_params = {
+                    'extra_regressors': params['extra_regressors'],
+                    'maxpolydeg': params['maxpolydeg'],
+                    'wantpercentbold': params['wantpercentbold'],
+                    'suppressoutput': 1
+                }
+
+            for p, data_p in enumerate(self.data):
+
+                # fit the model for each run separately
+                results0, cache0 = glm_estimatemodel(design0[p], data_p, stimdur, tr, 'fir', int(np.floor(params['firdelay'] / tr)),
+                                              0, glm_params)
+                firR2.append(results0['R2'])
+                firtcs.append(results0['betasmd'])
+
+            del results0  # clear results0
+
+            # stack arrays along the appropriate dimensions
+            firR2 = np.stack(firR2, axis=-1)
+            firtcs = np.stack(firtcs, axis=-1)
+
+            # calculate the mean R2 and threshold
+            firR2mn = np.mean(firR2, axis=-1)
+            firthresh = np.nanpercentile(firR2mn.ravel(), params['firpct'])
+            firix = np.where(firR2mn > firthresh)
+
+            # calculate timecourse averages
+            firavg = []
+            for rr, data_rr in enumerate(self.data):
+                temp = firtcs[..., rr].reshape(-1, firtcs.shape[-2])[firix]
+                firavg.append(np.median(temp, axis=0))
+
+            firavg = np.stack(firavg, axis=-1)
+            firgrandavg = np.mean(firavg, axis=-1)
+            
+        if wantfig:
+            # Prepare the figure
+            fig, ax = plt.subplots(2, 2, figsize=(11, 7.5))
+
+            # Subplot 1
+            cmap0 = plt.cm.turbo(np.linspace(0, 1, len(self.data)))
+            h = []
+            legendlabs = []
+
+            for rr in range(len(self.data)):
+                h_rr, = ax[0, 0].plot(np.arange(0, tr * (firavg.shape[0]), tr), firavg[:, rr], 'o-', color=cmap0[rr, :], linewidth = 1, markerfacecolor='none')
+                h.append(h_rr)
+                legendlabs.append(f'Run {rr + 1}')
+
+            h_avg, = ax[0, 0].plot(np.arange(0, tr * (len(firgrandavg)), tr), firgrandavg, 'r-', linewidth=2)
+            
+            h.append(h_avg)
+            legendlabs.append('Run Avg')
+            mxix = np.argmax(firgrandavg)
+            ax[0, 0].axhline(0, color='k', linestyle='-')
+            ax[0, 0].axvline(mxix * tr, color='k', linestyle=':')
+            # Get the current axis limits
+            xmin, xmax = ax[0, 0].get_xlim()
+            # Update the lower limit to be -2/3 of the upper limit
+            ax[0, 0].set_xlim(xmin=xmin, xmax=1.5*xmax)
+            #ax[0, 0].set_xlim([0, len(firgrandavg) + int(0.5 * len(firgrandavg)) - 1])
+            ax[0, 0].set_xlabel('Time from trial onset (s)')
+            ax[0, 0].set_ylabel('BOLD (%)')
+            ax[0, 0].legend(h, legendlabs, loc='upper right', fontsize = 5.5)
+
+            # Subplot 2
+            ax[0, 1].bar(np.arange(len(self.data)), firavg[mxix, :])
+            ax[0, 1].set_xticks(np.arange(len(self.data)))
+            ax[0, 1].set_xlabel('Run number')
+            ax[0, 1].set_ylabel('BOLD at peak time (%)')
+            # Get the current axis limits
+            ymin, ymax = ax[0, 1].get_ylim()
+
+            # Update the lower limit to be -2/3 of the upper limit
+            ax[0, 1].set_ylim(ymin=-2/3 * ymax, ymax=ymax)
+
+            # Subplot 3
+            cmap0 = plt.cm.turbo(np.linspace(0, 1, nh))
+            h = []
+            legendlabs = []
+
+            for hh in range(nh):
+                h_hh, = ax[1, 0].plot(np.arange(0, tr * (params['hrflibrary'].shape[0]), tr), params['hrflibrary'][:, hh], '-', color=cmap0[hh, :], linewidth = 1)
+                h.append(h_hh)
+                legendlabs.append(f'HRFindex{hh + 1}')
+
+            h_assume, = ax[1, 0].plot(np.arange(0, tr * (len(params['hrftoassume'])), tr), params['hrftoassume'], 'k-', linewidth=2)
+            legendlabs.append('HRFassume')
+            h.append(h_assume)
+            ax[1, 0].set_xlim(ax[0, 0].get_xlim())
+            ax[1, 0].axhline(0, color='k', linestyle='-')
+            ax[1, 0].set_xlabel('Time from trial onset (s)')
+            ax[1, 0].set_ylabel('BOLD (a.u.)')
+            ax[1, 0].legend(h, legendlabs, loc='upper right', fontsize = 5.5)
+            
+            # Remove top and right spines for subplots
+            for a in [ax[0, 0], ax[0, 1], ax[1, 0]]:
+                a.spines['top'].set_visible(False)
+                a.spines['right'].set_visible(False)
+
+            # Remove all axes and boxes for the bottom right subplot
+            ax[1, 1].axis('off')
+            
+            # Save the figure
+            plt.savefig(f'{figuredir}/runwiseFIR.png')                
+            plt.show()
+            
+            for rr in range(firR2.shape[-1]):
+                plot_firR2 = firR2[...,rr].reshape(xyz)
+                img_data = make_image_stack(plot_firR2)
+                img_data_normalized = (img_data / 100) ** 0.5
+                plt.imshow(img_data_normalized, cmap='hot', norm=Normalize(vmin=0, vmax=1), interpolation='none')
+                plt.axis('off')
+                plt.savefig(f'{figuredir}/runwiseFIR_R2_run{rr:02d}.png', bbox_inches='tight')
+                plt.close()
+
+            img_data_avg = make_image_stack(firR2mn.reshape(xyz))
+            img_data_avg_normalized = (img_data_avg / 100) ** 0.5
+            plt.imshow(img_data_avg_normalized, cmap='hot', norm=Normalize(vmin=0, vmax=1), interpolation='none')
+            plt.axis('off')
+            plt.savefig(f'{figuredir}/runwiseFIR_R2_runavg.png', bbox_inches='tight')
+            plt.close()
+                        
+        if isinstance(outputdir, str):
+            file0 = os.path.join(outputdir, 'RUNWISEFIR.npy')
+            print(f'*** Saving FIR results to {file0}. ***')
+            np.save(file0, {'firR2': firR2, 
+                            'firtcs': firtcs, 
+                            'firavg': firavg, 
+                            'firgrandavg': firgrandavg}, allow_pickle=True)
+                                
         # FIT TYPE-A MODEL [ON-OFF]
 
         # The approach:
@@ -619,7 +943,13 @@ class GLM_single():
         onoffR2 = results0['R2']
         meanvol = results0['meanvol']
         betasmd = results0['betasmd']
-
+        
+        # Determine onoffvizix for beta inspection
+        onoffvizix = np.argsort(np.nan_to_num(onoffR2.ravel(), nan=-np.inf))  # Ascending order; ensure NaN is treated as -Inf
+        step = -0.25/1000
+        idx = np.floor(len(onoffvizix) * np.arange(1,0.75,step)).astype(int) - 1
+        onoffvizix = onoffvizix[idx] # 1000 voxels from 100th percentile to 75th percentile
+        
         # save to disk if desired
         if params['wantfileoutputs'][whmodel] == 1:
             if params['wanthdf5'] == 1:
@@ -657,7 +987,8 @@ class GLM_single():
                     make_image_stack(onoffR2.reshape(xyz)),
                     vmin=0,
                     vmax=100,
-                    cmap='hot'
+                    cmap='hot',
+                    interpolation='none'
                 )
                 ax = plt.gca()
                 ax.axes.xaxis.set_ticklabels([])
@@ -665,14 +996,14 @@ class GLM_single():
                 plt.colorbar()
                 plt.savefig(os.path.join(figuredir, 'onoffR2.png'))
                 plt.close('all')
-                plt.imshow(make_image_stack(meanvol.reshape(xyz)), cmap='gray')
+                plt.imshow(make_image_stack(meanvol.reshape(xyz)), cmap='gray',interpolation='none')
                 ax = plt.gca()
                 ax.axes.xaxis.set_ticklabels([])
                 ax.axes.yaxis.set_ticklabels([])
                 plt.colorbar()
                 plt.savefig(os.path.join(figuredir, 'meanvol.png'))
                 plt.close('all')
-
+                
         # preserve in memory if desired, and then clean up
         if params['wantmemoryoutputs'][whmodel] == 1:
             if xyz:
@@ -940,7 +1271,8 @@ class GLM_single():
                 plt.imshow(
                     make_image_stack(HRFindex.reshape(xyz)),
                     vmin=0,
-                    vmax=nh)
+                    vmax=nh,
+                    interpolation='none')
                 ax = plt.gca()
                 ax.axes.xaxis.set_ticklabels([])
                 ax.axes.yaxis.set_ticklabels([])
@@ -1463,7 +1795,8 @@ class GLM_single():
                             make_image_stack(noisepool.reshape(xyz)),
                             vmin=0,
                             vmax=1,
-                            cmap='gray'
+                            cmap='gray',
+                            interpolation='none'
                         )
                         ax = plt.gca()
                         ax.axes.xaxis.set_ticklabels([])
@@ -1477,7 +1810,8 @@ class GLM_single():
                             make_image_stack(pcvoxels.reshape(xyz)),
                             vmin=0,
                             vmax=1,
-                            cmap='gray'
+                            cmap='gray',
+                            interpolation='none'
                         )
                         ax = plt.gca()
                         ax.axes.xaxis.set_ticklabels([])
@@ -1501,7 +1835,8 @@ class GLM_single():
                         make_image_stack(R2),
                         vmin=0,
                         vmax=100,
-                        cmap='hot'
+                        cmap='hot',
+                        interpolation='none'
                     )
                     ax = plt.gca()
                     ax.axes.xaxis.set_ticklabels([])
@@ -1513,7 +1848,8 @@ class GLM_single():
                         make_image_stack(FRACvalue.reshape(xyz)),
                         vmin=0,
                         vmax=1,
-                        cmap='copper'
+                        cmap='copper',
+                        interpolation='none'
                     )
                     ax = plt.gca()
                     ax.axes.xaxis.set_ticklabels([])
@@ -1564,4 +1900,4 @@ class GLM_single():
         else:
             print('*** return model types in results ***\n')
 
-        return results
+        return results, resultsdesign

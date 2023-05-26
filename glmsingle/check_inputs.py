@@ -1,6 +1,5 @@
 import numpy as np
 
-
 def check_inputs(data, design):
     """
     check that the data and design meet the required
@@ -18,11 +17,13 @@ def check_inputs(data, design):
         data (list): flattened XYZ data format
         design (list): design matrix with a list entry per run
     """
+    
     # massage <design> and sanity-check it
     if type(design) is not list:
         design = [design]
 
     numcond = design[0].shape[1]
+    
     for p in range(len(design)):
         np.testing.assert_array_equal(
             np.unique(design[p]),
@@ -86,4 +87,4 @@ def check_inputs(data, design):
                 'than <data>. We are truncating <design>.\n')
             design[run_i] = design[run_i][np.arange(data[run_i].shape[-1]), :]
 
-    return data, design, xyz
+    return data, design, xyz, numcond
