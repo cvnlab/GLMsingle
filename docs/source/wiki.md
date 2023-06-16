@@ -155,6 +155,8 @@ A major challenge is how to interpret betas when they reflect amplitudes of time
 
 Note that within a range, the expected timecourse shape undergoes fairly modest changes. For example, the timecourse shape resulting with convolution of a fixed HRF with a 1-s square wave is quite similar to the result of convolution of that fixed HRF with a 2-s square wave. Certainly, the amplitude is very different (as expected); but the shape is fairly similar. So, one approach is to code events generically as, say, 1.5-s in duration, and this will allow the different activity induced by the 1-s and 2-s events to show up in the estimated response amplitude (betas).
 
+Another potential idea is to code a long event as a string of successive short events. For example, suppose that you have some trials that are 2-s in duration, and that occasionally you have a trial that is 6-s in duration. If you are willing to believe that the 6-s duration event is homogeneous in its neural activity over time, you could code this event as a series of 3 2-s events, and label each of these events as reflecting the same condition. In this way, you still conform to the idea that the timecourse of the hemodynamic response is fixed and that you expect the timecourse shape to summate over time. Once you get the individual single-trial betas out, you can simply, for example, average over the 3 individual betas, if you like.
+
 ### Can I exert control over the noise pool voxels?
 
 The default behavior is to automatically select noise pool voxels based on
