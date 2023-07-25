@@ -1,7 +1,6 @@
 import numpy as np
 import copy
 
-
 def calcbadness(xvals, validcolumns, stimix, results, sessionindicator):
     """
     badness = calcbadness(xvals,validcolumns,stimix,results,sessionindicator)
@@ -70,7 +69,7 @@ def calcbadness(xvals, validcolumns, stimix, results, sessionindicator):
 
         wh = np.flatnonzero(np.array(sessionindicator) == sess)
 
-        whcol = np.concatenate(np.asarray(validcolumns)[wh])
+        whcol = np.concatenate(np.asarray(validcolumns, dtype='object')[wh])
 
         # mean of unregularized case
         mn = np.mean(results[0][:, whcol], axis=1)
@@ -98,24 +97,23 @@ def calcbadness(xvals, validcolumns, stimix, results, sessionindicator):
         # to concatenate multiple test runs
         if testix.size > 1:
             # vector of trial indices in the testing data
-            testcols = np.concatenate(np.asarray(validcolumns)[testix])
+            testcols = np.concatenate(np.asarray(validcolumns, dtype='object')[testix])
 
             # vector of condition-ids in the testing data
-            testids = np.concatenate(np.asarray(stimix)[testix])
+            testids = np.concatenate(np.asarray(stimix, dtype='object')[testix])
         else:
             # default leave-one-out case.
             # vector of trial indices in the testing data
-            testcols = np.asarray(validcolumns)[testix]
+            testcols = np.asarray(validcolumns, dtype='object')[testix]
 
             # vector of condition-ids in the testing data
-            testids = np.asarray(stimix)[testix]
+            testids = np.asarray(stimix, dtype='object')[testix]
 
         # vector of trial indices in the training data
-        traincols = np.concatenate(np.asarray(validcolumns)[trainix])
+        traincols = np.concatenate(np.asarray(validcolumns, dtype='object')[trainix])
 
         # vector of condition-ids in the training data
-        trainids = np.concatenate(np.asarray(stimix)[trainix])
-
+        trainids = np.concatenate(np.asarray(stimix, dtype='object')[trainix])
 
         # calculate cross-validation performance
         for pcr in range(len(results)):
