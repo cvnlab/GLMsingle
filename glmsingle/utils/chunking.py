@@ -34,7 +34,7 @@ def chunking(vect, num, chunknum=None):
         for point in range(nchunk):
             f.append(vect[point*num:np.min((len(vect), int((point+1)*num)))])
 
-        return np.asarray(f)
+        return np.asarray(f, dtype='object')
     else:
         f = chunking(vect, num)
         # double check that these behave like in matlab (xbegin)
@@ -42,4 +42,4 @@ def chunking(vect, num, chunknum=None):
         # double check that these behave like in matlab (xend)
         xend = np.min((len(vect), chunknum*num))
 
-        return np.asarray(f[num-1]), xbegin, xend
+        return np.asarray(f[num-1], dtype='object'), xbegin, xend
