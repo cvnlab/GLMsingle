@@ -1,6 +1,6 @@
 import numpy as np
 import copy
-import pdb
+
 
 def calcbadness(xvals, validcolumns, stimix, results, sessionindicator):
     """
