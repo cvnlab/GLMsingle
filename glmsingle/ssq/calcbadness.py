@@ -1,5 +1,6 @@
 import numpy as np
 import copy
+import pdb
 
 def calcbadness(xvals, validcolumns, stimix, results, sessionindicator):
     """
@@ -52,12 +53,14 @@ def calcbadness(xvals, validcolumns, stimix, results, sessionindicator):
     the session under all of the various regularization levels.
     """
     # initialize
+
     badness = np.zeros(
         (results[0].shape[0], len(results))
         )
 
     # calc
     alltheruns = np.arange(len(validcolumns))
+
 
     # z-score transform the single-trial beta weights
     if np.max(sessionindicator) == 1:
@@ -69,7 +72,7 @@ def calcbadness(xvals, validcolumns, stimix, results, sessionindicator):
 
         wh = np.flatnonzero(np.array(sessionindicator) == sess)
 
-        whcol = np.concatenate(np.asarray(validcolumns, dtype='object')[wh])
+        whcol = np.concatenate([validcolumns[x] for x in wh])
 
         # mean of unregularized case
         mn = np.mean(results[0][:, whcol], axis=1)
@@ -97,23 +100,24 @@ def calcbadness(xvals, validcolumns, stimix, results, sessionindicator):
         # to concatenate multiple test runs
         if testix.size > 1:
             # vector of trial indices in the testing data
-            testcols = np.concatenate(np.asarray(validcolumns, dtype='object')[testix])
+            testcols = np.concatenate([validcolumns[x] for x in testix])
 
             # vector of condition-ids in the testing data
-            testids = np.concatenate(np.asarray(stimix, dtype='object')[testix])
+            testids = np.concatenate([stimix[x] for x in testix])
         else:
             # default leave-one-out case.
             # vector of trial indices in the testing data
-            testcols = np.asarray(validcolumns, dtype='object')[testix]
+
+            testcols = validcolumns[testix]
 
             # vector of condition-ids in the testing data
-            testids = np.asarray(stimix, dtype='object')[testix]
+            testids = stimix[testix]
 
         # vector of trial indices in the training data
-        traincols = np.concatenate(np.asarray(validcolumns, dtype='object')[trainix])
+        traincols = np.concatenate([validcolumns[x] for x in trainix])
 
         # vector of condition-ids in the training data
-        trainids = np.concatenate(np.asarray(stimix, dtype='object')[trainix])
+        trainids = np.concatenate([stimix[x] for x in trainix])
 
         # calculate cross-validation performance
         for pcr in range(len(results)):

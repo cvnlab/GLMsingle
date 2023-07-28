@@ -30,16 +30,16 @@ def chunking(vect, num, chunknum=None):
     """
     if chunknum is None:
         nchunk = int(np.ceil(len(vect)/num))
-        f = []
-        for point in range(nchunk):
-            f.append(vect[point*num:np.min((len(vect), int((point+1)*num)))])
 
-        return np.asarray(f, dtype='object')
+        f = np.array_split(vect, nchunk)
+
+        return f
     else:
-        f = chunking(vect, num)
+        nchunk = int(np.ceil(len(vect)/num))
+        f = np.array_split(vect, nchunk)        
         # double check that these behave like in matlab (xbegin)
         xbegin = (chunknum-1)*num+1
         # double check that these behave like in matlab (xend)
         xend = np.min((len(vect), chunknum*num))
 
-        return np.asarray(f[num-1], dtype='object'), xbegin, xend
+        return f[num-1], xbegin, xend
