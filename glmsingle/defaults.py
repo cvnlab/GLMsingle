@@ -2,6 +2,7 @@ import time
 import numpy as np
 
 default_params = {
+    'overwrite':False,
     'numforhrf': 50,
     'hrfthresh': 0.5,
     'hrffitmask': 1,
