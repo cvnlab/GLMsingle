@@ -1,5 +1,6 @@
 import numpy as np
 import copy
+from glmsingle.utils.zerodiv import zerodiv
 
 
 def calcbadness(xvals, validcolumns, stimix, results, sessionindicator):
@@ -61,7 +62,6 @@ def calcbadness(xvals, validcolumns, stimix, results, sessionindicator):
     # calc
     alltheruns = np.arange(len(validcolumns))
 
-
     # z-score transform the single-trial beta weights
     if np.max(sessionindicator) == 1:
         sessions = [1]
@@ -82,10 +82,8 @@ def calcbadness(xvals, validcolumns, stimix, results, sessionindicator):
 
         resultsdm = copy.deepcopy(results)
         for runis in range(len(resultsdm)):
-
             rundemean = results[runis][:, whcol]-mn[:, np.newaxis]
-            with np.errstate(divide="ignore", invalid="ignore"):
-                resultsdm[runis][:, whcol] = rundemean / sd[:, np.newaxis]
+            resultsdm[runis][:, whcol] = zerodiv(rundemean, sd, val=0, wantcaution=0)
 
     # do cross-validation
     for xx in range(len(xvals)):
