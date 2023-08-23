@@ -1,5 +1,6 @@
 import numpy as np
 import warnings
+import pdb
 
 def zerodiv(x, y, val=0, wantcaution=1):
     """zerodiv(data1,data2,val,wantcaution)
@@ -46,11 +47,17 @@ def zerodiv(x, y, val=0, wantcaution=1):
         if wantcaution:
             tmp = y
             tmp[bad2] = 1
-            f = x / tmp[:, np.newaxis]
+            if x.ndim == 1:
+                f = x / tmp
+            else:
+                f = x / tmp[:, np.newaxis]
             f[bad2] = val
         else:
             tmp = y
             tmp[bad] = 1
-            f = x / tmp[:, np.newaxis]
+            if x.ndim == 1:
+                f = x / tmp
+            else:
+                f = x / tmp[:, np.newaxis]
             f[bad] = val
         return f
