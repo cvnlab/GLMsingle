@@ -57,6 +57,11 @@ def check_inputs(data, design):
         err_msg='<design> and <data> should have '
         'the same number of runs')
 
+    # make sure design is in float 32
+    for p in range(len(design)):
+        design[p] = design[p].astype(np.float32, copy=False)
+
+
     # reshape data in 2D mode.
     is3d = data[0].ndim > 2  # is this the X Y Z T case?
     if is3d:
