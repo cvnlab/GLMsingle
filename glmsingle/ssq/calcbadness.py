@@ -144,13 +144,3 @@ def calcbadness(xvals, validcolumns, stimix, results, sessionindicator):
                     # NOTICE the use of results(0)
 
     return badness
-
-
-"""
-# if isempty(hashrec{testids(ttt)})
-# hashrec{testids(ttt)} = \\
-#  mean(results(ll).modelmd{2}(:,traincols(haveix)),2); # voxels x 1
-# hashrec{testids(ttt)} = results(ll).modelmd{2}(:,traincols(haveix));
-# voxels x instances
-# end
-"""
