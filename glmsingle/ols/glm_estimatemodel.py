@@ -11,6 +11,8 @@ from glmsingle.ols.glm_predictresponses import glm_predictresponses
 from glmsingle.ols.make_poly_matrix import (make_polynomial_matrix,
                                              make_projection_matrix)
 from glmsingle.utils.alt_round import alt_round
+from glmsingle.utils.squish import squish
+from ipdb import set_trace
 
 
 def glm_estimatemodel(design, data, stimdur, tr, hrfmodel, hrfknobs,
@@ -422,10 +424,29 @@ def glm_estimatemodel(design, data, stimdur, tr, hrfmodel, hrfknobs,
     """
 
     # DEAL WITH INPUTS, ETC.
-    data, design, xyz = check_inputs(data, design)
 
-    dimdata, dimtime = [0, 1]
-    numvoxels = data[0].shape[dimdata]
+    if type(design) is not list:
+        design = [design]
+
+    if type(data) is not list:
+        data =[data]
+
+    for datai in range(len(data)):
+        data[datai] = data[datai].astype(np.float32)
+
+    # data, design, xyz = check_inputs(data, design)
+    datashape = data[0].shape
+    is3d = False
+    if len(datashape) > 2:
+        is3d=True
+
+    if is3d:
+        dimdata = 2
+        xyzsize = list(data[0].shape[:3])
+    else:
+        dimdata = 0
+        xyzsize = [data[0].shape[0]]
+
     numruns = len(design)
 
     # calc
@@ -440,7 +461,7 @@ def glm_estimatemodel(design, data, stimdur, tr, hrfmodel, hrfknobs,
         opt['maxpolydeg'] = [
             np.arange(
                 alt_round(
-                    ((data[r].shape[1]*tr)/60)/2) + 1
+                    ((data[r].shape[-1]*tr)/60)/2) + 1
                 ) for r in range(numruns)]
 
     if 'seed' not in opt:
@@ -450,7 +471,7 @@ def glm_estimatemodel(design, data, stimdur, tr, hrfmodel, hrfknobs,
         opt['wantfracridge'] = False
 
     if 'bootgroups' not in opt:
-        opt['bootgroups'] = np.ones((1, numruns))
+        opt['bootgroups'] = np.zeros((1, numruns))
 
     if 'numforhrf' not in opt:
         opt['numforhrf'] = 50
@@ -499,8 +520,8 @@ def glm_estimatemodel(design, data, stimdur, tr, hrfmodel, hrfknobs,
 
     # CALCULATE MEAN VOLUME
 
-    volcnt = [x.shape[dimtime] for x in data]
-    meanvol = np.concatenate(data, axis=dimtime).mean(axis=dimtime)
+    volcnt = [x.shape[-1] for x in data]
+    meanvol = np.concatenate(data, axis=-1).mean(axis=-1)
 
     # DEAL WITH NUISANCE COMPONENTS
 
@@ -535,12 +556,12 @@ def glm_estimatemodel(design, data, stimdur, tr, hrfmodel, hrfknobs,
     # and data2 will have both polynomials and extra regressors removed.
     data2 = []  # NOTE: dataw and data2 are big be careful of MEMORY usage.
     dataw = []
-    for p in range(numruns):
-        dataw.append(np.transpose(data[p]))
+    for run_i in range(numruns):
+        dataw.append(np.transpose(squish(data[run_i], dimdata+1)))
         data2.append(
-            combinedmatrix[p].astype(np.float32) @ dataw[p]
+            combinedmatrix[run_i].astype(np.float32) @ dataw[run_i]
         )
-        dataw[p] = polymatrix[p].astype(np.float32) @ dataw[p]
+        dataw[run_i] = polymatrix[run_i].astype(np.float32) @ dataw[run_i]
 
     # note that data and data2 are in flattened format (time x voxels)!!
 
@@ -591,7 +612,7 @@ def glm_estimatemodel(design, data, stimdur, tr, hrfmodel, hrfknobs,
             hrfknobs,
             opt,
             combinedmatrix,
-            cache)[1]
+            cache)[1] # note we index cache here, and not fout
 
         # loop over bootstraps and collect up the analysis results.
         results = []
@@ -600,26 +621,28 @@ def glm_estimatemodel(design, data, stimdur, tr, hrfmodel, hrfknobs,
 
         for p in tqdm(range(resampling)):
             # figure out bootstrap sample
-            boot_inds = np.random.choice(
-                np.arange(len(dataw)), len(dataw)).astype(int)
-
-            boot_design = [design[x] for x in boot_inds]
-            boot_data = [data2[x] for x in boot_inds]
-            boot_combinedmatrix = [combinedmatrix[x] for x in boot_inds]
-
-            """
             ix = []
-            for q in range(np.max(opt['bootgroups']):
-                num = np.sum(opt['bootgroups']==q)  
-                # number in this group
-                # TODO This line
-                ix = [ix subscript(np.where(opt['bootgroups']==q),
-                ceil(rand(1,num)*num))]
-            """
+            boot_groups = np.unique(opt['bootgroups'])
+            # loop over the boot groups
+            for q in boot_groups:
+                # find which run belongs to thew current boot_group
+                indices_in_group_q = np.flatnonzero(opt['bootgroups'] == q)
+                num = len(indices_in_group_q)
+                # next we want to randomly sample with replacement the runs
+                # belonging to this group
+                bootstrapped_indices = np.random.choice(indices_in_group_q, num)
+                # now that we have sampled this group, we extend ix
+                # and move on to the other group if there is one.
+                ix.extend(bootstrapped_indices)
+
+
+            boot_design = [design[x] for x in ix]
+            boot_data = [data2[x] for x in ix]
+            boot_combinedmatrix = [combinedmatrix[x] for x in ix]
+
             # fit the model to the bootstrap sample
             if hrfmodel == 'optimize':
-                boot_design2pre = \
-                    [cache['design2pre'][x] for x in boot_inds]
+                boot_design2pre = [cache['design2pre'][x] for x in ix]
                 cache2 = {'design2pre': boot_design2pre}
             else:
                 cache2 = None
@@ -635,7 +658,7 @@ def glm_estimatemodel(design, data, stimdur, tr, hrfmodel, hrfknobs,
                     boot_combinedmatrix,
                     cache2
                     )[0]
-            )
+            ) # no need for cache here
 
         if opt['suppressoutput'] == 0:
             print('done.\n')
@@ -670,7 +693,7 @@ def glm_estimatemodel(design, data, stimdur, tr, hrfmodel, hrfknobs,
                     opt,
                     list(compress(combinedmatrix, mask))
                     )[0])  # NOTE: no cache
-
+            
             # compute the prediction
             modelfit.append(
                 glm_predictresponses(
@@ -679,12 +702,14 @@ def glm_estimatemodel(design, data, stimdur, tr, hrfmodel, hrfknobs,
                     tr,
                     data2[p].shape[0],
                     0)
-                )  # 1 because results{p} is in flattened format
+                )  # 0 because results{p} is in flattened format
 
-            # massage format
-            # xyzsizefull = list(xyzsize) + [modelfit[p].shape[1]]
-            # modelfit[p] = np.reshape(
-            #    modelfit[p], xyzsizefull)
+            # massage format. the data passed to fit_model and predict
+            # responses were in XYZ flattened, we want to go back to 
+            # volume.
+            xyzsizefull = xyzsize + [modelfit[p].shape[1]]
+            modelfit[p] = np.reshape(
+                modelfit[p], xyzsizefull)
 
         if opt['suppressoutput'] == 0:
             print('done.\n')
@@ -702,10 +727,45 @@ def glm_estimatemodel(design, data, stimdur, tr, hrfmodel, hrfknobs,
         if opt['suppressoutput'] == 0:
             print('preparing output...')
 
+        if hrfmodel in ['fir']:
+            # normal no bootstrap case.
+            if len(results['betas'].shape) == 3:
+                results['betasmd'] = results['betas']
+                results['betasse'] = np.zeros(results['betas'].shape, dtype=results['betas'].dtype)
+            else:
+                # here, the FIR was resampled with bootstrap
+                temp = np.zeros([3] + list(results['betas'].shape[:3]), dtype=results['betas'].dtype)
+                # loop over the different FIR predictors
+                for p in range(results['betas'].shape[2]):  # ugly to avoid memory usage
+                    this_model = results['betas'][:,:,p,:]
+                    temp[:,:, :, p] = np.percentile(this_model, [16, 50, 84],2)
+            
+                results['betasmd'] = temp[1, :, :, :]
+                results['betasse'] = (temp[2, :, :, :] - temp[0, :, :, :])/2
+
+            # massage format
+            # the outputs of FIR will be in format XYZ x 1 x nhrfknobs
+            
+            # the betas could have boots in them at this point, catch this:
+            if results['betas'].ndim==4: # bootstrap case
+                sz = results['betas'].shape[1:]
+                sz2 = results['betas'].shape[1:-1]
+            else:
+                sz = results['betas'].shape[1:]
+                sz2 = results['betas'].shape[1:]
+            
+            results['betas'] = np.reshape(results['betas'],   xyzsize + list(sz))
+            results['betasmd'] = np.reshape(results['betasmd'], xyzsize + list(sz2))
+            results['betasse'] = np.reshape(results['betasse'], xyzsize + list(sz2))
+
+
         if hrfmodel in ['assume', 'optimize']:
             if type(results) is list:
-                temp = [t['hrfknobs'] for t in results]
-                betas = [t['betas'] for t in results]
+                set_trace()
+                temp = [tt['hrfknobs'] for tt in results]
+                betas = [tt['betas'] for tt in results]
+                
+                # TODO test this:
                 results['betas'] = np.concatenate(
                     np.asarray(betas)[:, :, np.newaxis],
                     axis=1
@@ -718,7 +778,7 @@ def glm_estimatemodel(design, data, stimdur, tr, hrfmodel, hrfknobs,
             # deal with {1}
             if results['hrfknobs'].ndim == 1:
                 results['hrfknobsse'] = np.zeros(
-                    results['hrfknobs'].shape).astype(np.float32)
+                    results['hrfknobs'].shape, dtype=results['hrfknobs'].dtype)
             else:
                 temp = np.percentile(results['hrfknobs'], [16, 50, 84], 1)
                 results['hrfknobsmd'] = temp[1, :]
@@ -727,17 +787,27 @@ def glm_estimatemodel(design, data, stimdur, tr, hrfmodel, hrfknobs,
             # deal with {2}
             if results['betas'].ndim == 2 or results['betas'].ndim == 1:
                 if results['betas'].ndim == 1:
-                    results['betas'] = results['betas'].reshape(1, -1)
+                    results['betas'] = results['betas'].reshape(1, -1) # IC: not sure why this
                 # XYZ by n_conditions
                 results['betasmd'] = results['betas'].astype(np.float32)
                 results['betasse'] = np.zeros(
-                    results['betas'].shape).astype(np.float32)
+                    results['betas'].shape, dtype=results['betas'].dtype)
             else:
                 # XYZ by boot by n_conditions
                 results['betasmd'] = np.median(
                     results['betas'], 1).astype(np.float32)
                 temp = np.percentile(results['betas'], [16, 50, 84], 1)
                 results['betasse'] = (temp[2, :, :] - temp[0, :, :])/2
+            
+            # massage format. the data passed to fit_model and predict
+            # responses were in XYZ flattened, we want to go back to 
+            # volume.
+            xyzsizefull = xyzsize + [results['betas'].shape[1]]
+            
+            results['betas'] = np.reshape(results['betas'], xyzsizefull)
+            results['betasmd'] = np.reshape(results['betasmd'], xyzsizefull)
+            results['betasse'] = np.reshape(results['betasse'], xyzsizefull)
+
 
         if opt['suppressoutput'] == 0:
             print('done.\n')
@@ -759,8 +829,8 @@ def glm_estimatemodel(design, data, stimdur, tr, hrfmodel, hrfknobs,
                 results,
                 design,
                 tr,
-                ntimes)
-
+                ntimes,
+                dimdata)
         if resamplecase == 'xval':
             pass
             # in the cross-validation case, we have already computed
@@ -778,19 +848,32 @@ def glm_estimatemodel(design, data, stimdur, tr, hrfmodel, hrfknobs,
             print('computing R^2...')
 
         # remove polynomials from the model fits (or predictions)
-        modelfit = [polymatrix[x] @ modelfit[x] for x in range(numruns)]
-
+        modelfit = [polymatrix[x] @ squish(modelfit[x], dimdata+1).T for x in range(numruns)]
+        
         # calculate overall R^2 [beware: MEMORY] XYZ x time
-        results['R2'] = calc_cod_stack(modelfit, dataw)
+        results['R2'] = np.reshape(calc_cod_stack(modelfit, dataw, 0), xyzsize)
+
+        # TODO: port this stuff
+        # compute residual std
+        # lowthresh = 0.1;  # 0.1 Hz is the upper limit [HARD-CODED]
+        # the data already have polynomials removed.
+        # above, we just removed polynomials from the model fits (or predictions).
+        # so, we just need to subtract these two to get the residuals
+        
+        #results.residstd = reshape(sqrt(sum(catcell(1,cellfun(@(a,b) sum((a-b).^2,1),data,modelfit,'UniformOutput',0)),1) ./ (sum(volcnt)-1)),[xyzsize 1]);
+        #results.residstdlowpass = reshape(sqrt(sum(catcell(1,cellfun(@(a,b) ...
+        #sum( tsfilter((a-b)',constructbutterfilter1D(size(a,1),lowthresh*(size(a,1)*tr)))'.^2,1),data,modelfit,'UniformOutput',0)),1) ./ (sum(volcnt)-1)),[xyzsize 1]);
 
         # [XYZ by time] by n_runs
-        results['R2run'] = [calc_cod(
-            mfit,
-            cdata,
-            dim=0,
-            wantgain=0,
-            wantmeansub=0) for mfit, cdata in zip(modelfit, dataw)]
-
+        results['R2run'] = [
+            np.reshape(
+                calc_cod(
+                    mfit,
+                    cdata,
+                    dim=0,
+                    wantgain=0,
+                    wantmeansub=0),
+                xyzsize) for mfit, cdata in zip(modelfit, dataw)]
         if opt['suppressoutput'] == 0:
             print('done.\n')
 
@@ -808,32 +891,25 @@ def glm_estimatemodel(design, data, stimdur, tr, hrfmodel, hrfknobs,
                     np.abs(
                         results['betasmd']
                     ),
-                    dimdata,
                     dimdata+1
-                )
+                    ),
+                dimdata+1
             )
             results['noise'] = np.mean(
-                np.mean(results['betasse'], dimdata), dimdata+1)
+                np.mean(
+                    results['betasse'],
+                    dimdata+1
+                ), 
+                dimdata+1
+            )
             with np.errstate(divide="ignore", invalid="ignore"):
-                results['SNR'] = results.signal / results.noise
+                results['SNR'] = results['signal'] / results['noise']
 
         if hrfmodel in ['assume', 'optimize']:
-            # betasmd can be either:
-            # XYZ x 1 (ONOFF)
-            # XYZ x n_conds (full, single or cat)
-
-            if results['betasmd'].shape[1] == 1:
-                results['signal'] = np.abs(results['betasmd'])
-                results['noise'] = results['betasse']
-            else:
-                # XYZ x n_conditions
-                results['signal'] = np.max(
-                    np.abs(results['betasmd']),
-                    1
-                )
-                results['noise'] = np.mean(
-                    results['betasse'], 1)
-
+            # betasmd is a volume (most likely)
+            # or a flattented volume
+            results['signal'] = np.max(np.abs(results['betasmd']), axis=dimdata+1)
+            results['noise'] = np.mean(results['betasse'], axis=dimdata+1)
             with np.errstate(divide="ignore", invalid="ignore"):
                 results['SNR'] = results['signal'] / results['noise']
 
@@ -871,14 +947,22 @@ def glm_estimatemodel(design, data, stimdur, tr, hrfmodel, hrfknobs,
     if opt['wantpercentbold'] == 1:
 
         if not(resamplecase == 'xval' and mode == 1):
+
             # XYZ
             con = 1/np.abs(results['meanvol']) * 100
+            
+            numnewdims = results['betas'].ndim - con.ndim
+            slicing = [slice(None)] * con.ndim + [np.newaxis] * numnewdims
+            # Broadcast and multiply
+            results['betas'] = results['betas'] * con[tuple(slicing)]
+            
+            numnewdims = results['betasmd'].ndim - con.ndim
+            slicing = [slice(None)] * con.ndim + [np.newaxis] * numnewdims
+            # Broadcast and multiply         
+            results['betasmd'] = results['betasmd'] * con[tuple(slicing)]
+            numnewdims = results['betasse'].ndim - con.ndim
+            slicing = [slice(None)] * con.ndim + [np.newaxis] * numnewdims
 
-            results['betas'] = np.apply_along_axis(
-                lambda x: x*con, 0, results['betas'])
-            results['betasmd'] = np.apply_along_axis(
-                lambda x: x*con, 0, results['betasmd'])
-            results['betasse'] = np.apply_along_axis(
-                lambda x: x*con, 0, results['betasse'])
+            results['betasse'] = results['betasse'] * con[tuple(slicing)]
 
     return results, cache

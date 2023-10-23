@@ -57,10 +57,7 @@ def make_image_stack(m, wantnorm=0, addborder=1, csize=None, bordersize=1):
     to each other, we just give up and return an image that is all zeros.
     """
     # calc
-    if m.ndim==2:
-        nrows, ncols = m.shape
-    else:
-        nrows, ncols, npages = m.shape
+    nrows, ncols = m.shape[:2]
 
     # make double if necessary
     m = np.float64(m)
