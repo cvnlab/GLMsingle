@@ -46,6 +46,8 @@ hrfii = results{4}.HRFindex(ri,ci);  % HRF index
 meansignal = results{4}.meanvol(ri,ci);  % mean signal
 pts = [];
 
+temp = load('./example2outputs/GLMsingle/DESIGNINFO.mat');
+designSINGLE = temp.designSINGLE;
 for ii=1:length(designSINGLE)
     
     design0 = conv2(designSINGLE{ii},hrflibrary(:,hrfii));  % convolve HRF into design matrix
