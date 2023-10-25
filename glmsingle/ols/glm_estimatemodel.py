@@ -12,7 +12,6 @@ from glmsingle.ols.make_poly_matrix import (make_polynomial_matrix,
                                              make_projection_matrix)
 from glmsingle.utils.alt_round import alt_round
 from glmsingle.utils.squish import squish
-from ipdb import set_trace
 
 
 def glm_estimatemodel(design, data, stimdur, tr, hrfmodel, hrfknobs,

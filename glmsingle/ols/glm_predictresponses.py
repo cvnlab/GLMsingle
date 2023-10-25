@@ -2,7 +2,6 @@ import numpy as np
 from glmsingle.design.construct_stim_matrices import construct_stim_matrices
 from glmsingle.design.convolve_design import convolve_design
 from glmsingle.utils.squish import squish
-from ipdb import set_trace
 
 
 def glm_predictresponses(model, design, tr, numtimepoints, dimdata=0):

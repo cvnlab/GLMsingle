@@ -7,7 +7,6 @@ from glmsingle.design.convolve_design import convolve_design
 from glmsingle.ols.mtimes_stack import mtimes_stack
 from glmsingle.ols.olsmatrix2 import olsmatrix2
 from fracridge import fracridge
-from ipdb import set_trace
 
 
 def fit_model(des, data2, tr, hrfmodel, hrfknobs,

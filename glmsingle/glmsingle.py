@@ -5,7 +5,6 @@ import numpy as np
 import h5py
 from tqdm import tqdm
 import matplotlib as mpl
-mpl.use('Agg')
 import matplotlib.pyplot as plt
 
 from sklearn.preprocessing import normalize
@@ -29,7 +28,6 @@ from glmsingle.utils.cmapsign4 import cmapsign4
 from glmsingle.utils.cmaplookup import cmaplookup
 from glmsingle.utils.calcdmetric import calcdmetric
 
-from ipdb import set_trace
 
 __all__ = ["GLM_single"]
 dir0 = os.path.dirname(os.path.realpath(__file__))
