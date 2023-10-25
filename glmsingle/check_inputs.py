@@ -20,7 +20,14 @@ def check_inputs(data, design):
     """
     # massage <design> and sanity-check it
     if type(design) is not list:
+        # case sparse, not a list:
+        if 'sparse' in str(type(design)):
+            design = np.asarray(design.todense())
         design = [design]
+    else:
+        # it is a list and it list elements are sparse
+        if 'sparse' in str(type(design[0])):
+            design = [np.asarray(d.todense()) for d in design]
 
     numcond = design[0].shape[1]
     for p in range(len(design)):
