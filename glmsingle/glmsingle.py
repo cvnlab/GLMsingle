@@ -1225,7 +1225,7 @@ class GLM_single():
                 noise_pool = noise_pool @ noise_pool.T
                 unitary = np.linalg.svd(noise_pool)[0]
                 unitary = unitary[:, :params['n_pcs']+1]
-                unitary = unitary / np.std(unitary, 0)
+                unitary = unitary / np.std(unitary, 0, ddof=1)
                 pcregressors.append(unitary.astype(np.float32))
 
 

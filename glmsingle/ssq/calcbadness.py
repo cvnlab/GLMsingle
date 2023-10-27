@@ -78,7 +78,7 @@ def calcbadness(xvals, validcolumns, stimix, results, sessionindicator):
         mn = np.mean(results[0][:, whcol], axis=1)
 
         # std dev of unregularized case
-        sd = np.std(results[0][:, whcol], axis=1)
+        sd = np.std(results[0][:, whcol], axis=1, ddof=1)
 
         resultsdm = copy.deepcopy(results)
         for runis in range(len(resultsdm)):
