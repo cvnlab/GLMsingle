@@ -52,7 +52,7 @@ def findtailthreshold(v, figpath=None):
         v2, _, _ = picksubset(v2, maxsz)
 
     # fit mixture of two gaussians
-    gmfit = gmdist(n_components=2, n_init=numreps).fit(v2.reshape(-1, 1))
+    gmfit = gmdist(n_components=2, tol=1e-10, reg_covar=0, n_init=numreps).fit(v2.reshape(-1, 1))
 
     # figure out a nice range
     rng = robustrange(v2.flatten())[0]
