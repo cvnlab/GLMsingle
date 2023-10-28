@@ -784,9 +784,15 @@ class GLM_single():
             if xyz:
                 for rr in range(firR2.shape[0]):
                     filer = os.path.join(figuredir,f'runwiseFIR_R2_run{rr+1:02d}.png')
-                    plt.imsave(filer, np.uint8(255*make_image_stack(firR2[rr,:,:,:],[0, 100])**0.5),cmap=cmap)
+                    plt.imsave(
+                        filer,
+                        np.uint8(255*make_image_stack(firR2[rr,:,:,:],[0, 100])**0.5),
+                        cmap=cmap, vmin=0, vmax=255)
                 filer = os.path.join(figuredir,'runwiseFIR_R2_runavg.png')
-                plt.imsave(filer, np.uint8(255*make_image_stack(firR2mn,[0, 100])**0.5),cmap=cmap)
+                plt.imsave(
+                    filer,
+                    np.uint8(255*make_image_stack(firR2mn,[0, 100])**0.5),
+                    cmap=cmap, vmin=0, vmax=255)
                 
         # save
         if isinstance(outputdir, str):
@@ -874,7 +880,7 @@ class GLM_single():
                 plt.imsave(
                     os.path.join(figuredir, 'meanvol.png'),
                     np.uint8(255*make_image_stack(meanvol,1)),
-                    cmap=cmap
+                    cmap=cmap, vmin=0, vmax=255
                 )
 
         # preserve in memory if desired, and then clean up
@@ -1122,7 +1128,10 @@ class GLM_single():
                 if xyz:
                     cmap = mpl.colormaps['jet'].resampled(256)
                     filer = os.path.join(figuredir,'HRFindex.png')
-                    plt.imsave(filer, np.uint8(255*make_image_stack(HRFindex,[1, nh])),cmap=cmap)
+                    plt.imsave(
+                        filer,
+                        np.uint8(255*make_image_stack(HRFindex,[1, nh])),
+                        cmap=cmap, vmin=0, vmax=255)
 
                 # more figs
                 # Scatter plot
@@ -1162,7 +1171,11 @@ class GLM_single():
                         drng = [np.nanmin(temp.flatten()), np.nanmax(temp.flatten())]
                     cmap = mpl.colormaps['hot'].resampled(256)
                     filer = os.path.join(figuredir,'dmetric_typeB.png')
-                    plt.imsave(filer, np.uint8(255*make_image_stack(temp, drng)), cmap=cmap)
+                    plt.imsave(
+                        filer,
+                        np.uint8(255*make_image_stack(temp, drng)),
+                        cmap=cmap, vmin=0, vmax=255
+                        )
 
             # preserve in memory if desired, and then clean up
             if params['wantmemoryoutputs'][whmodel] == 1:
@@ -1670,12 +1683,16 @@ class GLM_single():
                     if xyz:
                         if noisepool is not None:
                             cmap = mpl.colormaps['gray'].resampled(256)
-                            plt.imsave(os.path.join(figuredir,'noisepool.png'),
-                                np.uint8(255*make_image_stack(noisepool,[0, 1])), cmap=cmap)
+                            plt.imsave(
+                                os.path.join(figuredir,'noisepool.png'),
+                                np.uint8(255*make_image_stack(noisepool,[0, 1])),
+                                cmap=cmap, vmin=0, vmax=255)
 
                         if pcvoxels is not None:
-                            plt.imsave(os.path.join(figuredir,'pcvoxels.png'),
-                                np.uint8(255*make_image_stack(pcvoxels,[0, 1])), cmap=cmap)
+                            plt.imsave(
+                                os.path.join(figuredir,'pcvoxels.png'),
+                                np.uint8(255*make_image_stack(pcvoxels,[0, 1])),
+                                cmap=cmap, vmin=0, vmax=255)
                     
                         if xvaltrend is not None:
                             fig = plt.figure()
@@ -1691,15 +1708,22 @@ class GLM_single():
                 if whmodel == 3:
                     if xyz:
                         cmap = mpl.colormaps['hot'].resampled(256)
-                        plt.imsave(os.path.join(figuredir,'typeD_R2.png'), np.uint8(255*make_image_stack(R2,[0, 100])**0.5), cmap=cmap)
+                        plt.imsave(
+                            os.path.join(figuredir,'typeD_R2.png'),
+                            np.uint8(255*make_image_stack(R2,[0, 100])**0.5),
+                            cmap=cmap, vmin=0, vmax=255)
                         
                         for rr in range(R2run.shape[-1]):
-                            plt.imsave(os.path.join(figuredir,f'typeD_R2_run{rr+1:02}.png'),
-                                np.uint8(255*make_image_stack(R2run[:, :, :, rr],[0, 100])**0.5), cmap=cmap)
+                            plt.imsave(
+                                os.path.join(figuredir,f'typeD_R2_run{rr+1:02}.png'),
+                                np.uint8(255*make_image_stack(R2run[:, :, :, rr],[0, 100])**0.5),
+                                cmap=cmap, vmin=0, vmax=255)
                             
                         cmap = mpl.colormaps['copper'].resampled(256)
-                        plt.imsave(os.path.join(figuredir,'FRACvalue.png'),
-                            np.uint8(255*make_image_stack(FRACvalue,[0, 1])), cmap=cmap)
+                        plt.imsave(
+                            os.path.join(figuredir,'FRACvalue.png'),
+                            np.uint8(255*make_image_stack(FRACvalue,[0, 1])),
+                            cmap=cmap, vmin=0, vmax=255)
                         
                 # beta visualisation
                 temp = squish(modelmd, 3)[onoffvizix, :]
@@ -1718,7 +1742,10 @@ class GLM_single():
                         drng = [np.nanmin(temp.flatten()), np.nanmax(temp.flatten())]
                     cmap = mpl.colormaps['hot'].resampled(256)
                     filer = os.path.join(figuredir,f'dmetric_type{typemod}.png')
-                    plt.imsave(filer, np.uint8(255*make_image_stack(temp, drng)), cmap=cmap)
+                    plt.imsave(
+                        filer,
+                        np.uint8(255*make_image_stack(temp, drng)),
+                        cmap=cmap, vmin=0, vmax=255)
                     
 
             # preserve in memory if desired
