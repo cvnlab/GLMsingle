@@ -486,7 +486,7 @@ class GLM_single():
             True,
             err_msg='fracs must be less than or equal to 1')
 
-        if xyz and figuredir is not None:
+        if figuredir is not None:
             wantfig = 1  # if outputdir is not None, we want figures
         else:
             wantfig = 0
@@ -530,6 +530,10 @@ class GLM_single():
         # if the data was passed as 3d, unpack xyz
         if xyz:
             nx, ny, nz = xyz
+        else:
+            nx = numvoxels
+            ny = 1
+            nz = 1
 
         nh = params['hrflibrary'].shape[1]
 
@@ -1231,7 +1235,7 @@ class GLM_single():
                 polymatrix.append(
                     make_projection_matrix(pmatrix))
 
-                noise_pool = polymatrix[run_i].astype(np.float32) @ noise_pool
+                noise_pool = polymatrix[run_i].astype(np.float32) @ noise_pool.squeeze() # in case 2D
 
                 noise_pool = normalize(noise_pool, axis=0)
 
@@ -1694,16 +1698,16 @@ class GLM_single():
                                 np.uint8(255*make_image_stack(pcvoxels,[0, 1])),
                                 cmap=cmap, vmin=0, vmax=255)
                     
-                        if xvaltrend is not None:
-                            fig = plt.figure()
-                            ax = fig.add_subplot(1, 1, 1)
-                            ax.plot(range(params['n_pcs']+1), xvaltrend)
-                            ax.scatter(pcnum, xvaltrend[pcnum])
-                            ax.set(
-                                xlabel='# GLMdenoise regressors',
-                                ylabel='Cross-val performance (higher is better)')
-                            plt.savefig(os.path.join(figuredir, 'xvaltrend.png'))
-                            plt.close('all')
+                    if xvaltrend is not None:
+                        fig = plt.figure()
+                        ax = fig.add_subplot(1, 1, 1)
+                        ax.plot(range(params['n_pcs']+1), xvaltrend)
+                        ax.scatter(pcnum, xvaltrend[pcnum])
+                        ax.set(
+                            xlabel='# GLMdenoise regressors',
+                            ylabel='Cross-val performance (higher is better)')
+                        plt.savefig(os.path.join(figuredir, 'xvaltrend.png'))
+                        plt.close('all')
 
                 if whmodel == 3:
                     if xyz:
