@@ -2,7 +2,7 @@ import numpy as np
 from glmsingle.utils.zerodiv import zerodiv
 
 
-def calc_cod(x, y, dim=None, wantgain=0, wantmeansub=1):
+def calc_cod(x, y, dim=None, wantgain=0, wantmeansub=1, wantsafe=1):
     """Calculate the coefficient of determination
 
     Args:
@@ -71,27 +71,35 @@ def calc_cod(x, y, dim=None, wantgain=0, wantmeansub=1):
         if wantgain == 2:
             # if the gain was going to be negative, rectify it to 0.
             temp[temp < 0] = 0
-        x = x * temp
+        
+        x = x * temp[:, np.newaxis] if dim == 1 else x * temp
 
     # propagate NaNs (i.e. ignore invalid data points)
-    x[np.isnan(y)] = np.nan
-    y[np.isnan(x)] = np.nan
+    # Handle safe option
+    if wantsafe:
+        mask = np.isnan(x) | np.isnan(y)
+        x[mask] = np.nan
+        y[mask] = np.nan
 
     # handle mean subtraction
     if wantmeansub:
         mn = np.nanmean(y, axis=dim)
-        y = y - mn
-        x = x - mn
-
-    # finally, compute it
-    with np.errstate(divide='ignore', invalid='ignore'):
-        nom = np.nansum((y-x) ** 2, axis=dim)
-        denom = np.nansum((y**2), axis=dim)
-        f = np.nan_to_num(1 - (nom / denom))
-    return 100*f
+        y = y - mn[:, np.newaxis] if dim == 1 else y - mn
+        x = x - mn[:, np.newaxis] if dim == 1 else x - mn
 
 
-def calc_cod_stack(yhat, y):
+    f = 100 * (1 - zerodiv(np.nansum((y - x) ** 2, axis=dim), np.nansum(y ** 2, axis=dim), np.nan, 0))
+
+
+    # # finally, compute it
+    # with np.errstate(divide='ignore', invalid='ignore'):
+    #     nom = np.nansum((y-x) ** 2, axis=dim)
+    #     denom = np.nansum((y**2), axis=dim)
+    #     f = np.nan_to_num(1 - (nom / denom))
+    return f
+
+
+def calc_cod_stack(yhat, y, dim=0):
     """
     [summary]
 
@@ -105,11 +113,11 @@ def calc_cod_stack(yhat, y):
     """
 
     numer = np.asarray(
-        [np.sum((a-b)**2, axis=0) for a, b in zip(yhat, y)]
-        ).sum(axis=0)
+        [np.sum((a-b)**2, axis=dim) for a, b in zip(yhat, y)]
+        ).sum(axis=dim)
     denom = np.asarray(
-        [np.sum(a**2, axis=0) for a in y]
-        ).sum(axis=0)
+        [np.sum(a**2, axis=dim) for a in y]
+        ).sum(axis=dim)
 
     # calculate global R2
 

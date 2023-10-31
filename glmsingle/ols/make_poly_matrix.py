@@ -1,4 +1,4 @@
-from glmsingle.ols.olsmatrix import olsmatrix_ulen
+from glmsingle.ols.olsmatrix import olsmatrix
 from sklearn.preprocessing import normalize
 import numpy as np
 
@@ -14,7 +14,7 @@ def make_projection_matrix(X):
 
     """
 
-    return np.eye(X.shape[0]) - np.einsum('ij,jk', X, olsmatrix_ulen(X))
+    return np.eye(X.shape[0]) - np.einsum('ij,jk', X, olsmatrix(X))
 
 
 def make_polynomial_matrix(n, degrees):

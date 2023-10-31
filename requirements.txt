@@ -6,3 +6,4 @@ tqdm
 fracridge
 nibabel
 h5py
+pandas

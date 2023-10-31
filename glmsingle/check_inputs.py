@@ -15,12 +15,19 @@ def check_inputs(data, design):
     Returns:
     ________
 
-        data (list): flattened XYZ data format
+        data (list): X Y Z T or XYZ 1 1 T  data format
         design (list): design matrix with a list entry per run
     """
     # massage <design> and sanity-check it
     if type(design) is not list:
+        # case sparse, not a list:
+        if 'sparse' in str(type(design)):
+            design = np.asarray(design.todense())
         design = [design]
+    else:
+        # it is a list and it list elements are sparse
+        if 'sparse' in str(type(design[0])):
+            design = [np.asarray(d.todense()) for d in design]
 
     numcond = design[0].shape[1]
     for p in range(len(design)):
@@ -62,30 +69,32 @@ def check_inputs(data, design):
         design[p] = design[p].astype(np.float32, copy=False)
 
 
-    # reshape data in 2D mode.
+    # check whether data is 2d (e.g. surf) or 3d (e.g. vol)
     is3d = data[0].ndim > 2  # is this the X Y Z T case?
-    if is3d:
-        xyz = data[0].shape[:3]
+
+    if not is3d:
+        xyz=False
         for p in range(len(data)):
-            n_times = data[p].shape[3]
-            data[p] = np.reshape(
-                data[p],
-                [np.prod(xyz), n_times])
-            # force to XYZ x T for convenience
+            s = data[p].shape
+            if len(s) == 2:  # If it's just X Y
+                data[p] = data[p].reshape(s[0], 1, 1, s[1])
+            elif len(s) == 3:  # If it's X Y Z
+                data[p] = data[p].reshape(s[0], s[1], 1, s[2])
     else:
-        xyz = False
+        xyz=data[0].shape[:3]
+
 
     # check number of time points and truncate if necessary
     for run_i in np.arange(len(data)):
-        if data[run_i].shape[1] > design[run_i].shape[0]:
+        if data[run_i].shape[3] > design[run_i].shape[0]:
             print(
                 f'WARNING: run {run_i} has more time points'
                 'in <data> than <design>. We are truncating'
                 '<data>.\n')
-            data[run_i] = data[run_i][:, np.arange(
+            data[run_i] = data[run_i][:, :, :, np.arange(
                 design[run_i].shape[0])]
 
-        if data[run_i].shape[1] < design[run_i].shape[0]:
+        if data[run_i].shape[3] < design[run_i].shape[0]:
             print(
                 f'WARNING: run {run_i} has more time points in <design>'
                 'than <data>. We are truncating <design>.\n')

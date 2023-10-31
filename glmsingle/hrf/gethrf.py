@@ -1,6 +1,7 @@
 import os
 import numpy as np
 from scipy.interpolate import pchip
+from glmsingle.utils.alt_round import alt_round
 
 fpath = os.path.dirname(os.path.realpath(__file__))
 
@@ -17,7 +18,7 @@ def getcanonicalhrf(duration, tr):
     trold = 0.1
     hrf = np.convolve(
         hrf,
-        np.ones(int(np.max([1, np.round(duration/trold)])))
+        np.ones(int(np.max([1, alt_round(duration/trold)])))
     )
 
     sampler = np.asarray(np.arange(0, int((hrf.shape[0]-1)*trold), tr))
@@ -75,7 +76,7 @@ def getcanonicalhrflibrary(duration, tr):
         hrfsc.append(
             np.convolve(
                 x,
-                np.ones(int(np.max([1, np.round(duration/trold)])))))
+                np.ones(int(np.max([1, alt_round(duration/trold)])))))
 
     sampler = np.asarray(np.arange(0, int(np.ceil((hrfsc[0].shape[0])*trold)), tr))
 

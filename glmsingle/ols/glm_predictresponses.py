@@ -1,6 +1,7 @@
 import numpy as np
 from glmsingle.design.construct_stim_matrices import construct_stim_matrices
 from glmsingle.design.convolve_design import convolve_design
+from glmsingle.utils.squish import squish
 
 
 def glm_predictresponses(model, design, tr, numtimepoints, dimdata=0):
@@ -57,12 +58,19 @@ def glm_predictresponses(model, design, tr, numtimepoints, dimdata=0):
             # handle special case of onoff design
             design = [p[:, np.newaxis] for p in design]
     
-    dimdata = 0
-    dimtime = dimdata + 1
     if type(model) == list:
-        xyzsize = model[1]['betasmd'].shape[dimdata]
+        modelshape = model[0]['betasmd'].shape        
     else:
-        xyzsize = model['betasmd'].shape[dimdata]
+        modelshape = model['betasmd'].shape
+
+    if len(modelshape) == 2:
+        # case x*x*z conditions
+        dimdata = 0
+        xyzsize = [modelshape[0]]
+    else:
+        dimdata = 2
+        xyzsize = list(modelshape[:dimdata+1])
+    
 
     # make cell
     if type(design) is not list:
@@ -82,29 +90,39 @@ def glm_predictresponses(model, design, tr, numtimepoints, dimdata=0):
               model['hrfknobs'],
               desopt).astype(np.float32)
 
+            tempdata = squish(model['betasmd'], dimdata+1).T 
+
+            tempmodel = dm @ tempdata
             # weight by the amplitudes # X x Y x Z x time
             responses.append(
-                dm @ model['betasmd'].T
+                np.reshape(
+                  tempmodel.T,
+                  xyzsize + [numtimepoints[p]]
+                )
             )
 
         # case of individual timecourses
         else:
 
             # length of each timecourse (L)
-            timecourselen = model['betasmd'].shape[dimtime]
+            timecourselen = model['betasmd'].shape[-1]
 
             # expand design matrix using delta functions
             temp = construct_stim_matrices(
                 design[p].T,
                 prenumlag=0,
-                postnumlag=timecourselen
+                postnumlag=timecourselen-1
             ).astype(np.float32)  # time*L x conditions
 
             # weight design matrix by the timecourses
-            responses.append(
+            tempdata = squish(np.transpose(squish(model['betasmd'], dimdata+1), [2, 1, 0]),2)
+            
+            tempmodel = temp @ tempdata
+
+            responses.append(            
                 np.reshape(
-                    temp @ model['betasmd'].reshape(xyzsize, -1),
-                    [xyzsize, numtimepoints[p]])
+                    tempmodel.T,
+                   xyzsize + [numtimepoints[p]])
             )
 
     # undo cell if necessary

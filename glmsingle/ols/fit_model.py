@@ -5,14 +5,14 @@ from glmsingle.design.construct_stim_matrices import construct_stim_matrices
 from glmsingle.design.make_design_matrix import make_design
 from glmsingle.design.convolve_design import convolve_design
 from glmsingle.ols.mtimes_stack import mtimes_stack
-from glmsingle.ols.olsmatrix import olsmatrix
+from glmsingle.ols.olsmatrix2 import olsmatrix2
 from fracridge import fracridge
 
 
-def fit_model(design, data2, tr, hrfmodel, hrfknobs,
+def fit_model(des, data2, tr, hrfmodel, hrfknobs,
               opt, combinedmatrix, cache=None):
     """[summary]
-    f, cache = fit_model(design, data2, tr, hrfmodel, hrfknobs,
+    f, cache = fit_model(des, data2, tr, hrfmodel, hrfknobs,
               opt, combinedmatrix, cache)
 
     if hrfmodel is 'fir', then <f> will be voxels x conditions x time
@@ -26,7 +26,7 @@ def fit_model(design, data2, tr, hrfmodel, hrfknobs,
         'optimize'.
 
     Args:
-        design ([list]): [description]
+        des ([list]): [description]
         data2 ([list]): [description]
         tr ([int]): [description]
         hrfmodel ([str]): [description]
@@ -53,10 +53,7 @@ def fit_model(design, data2, tr, hrfmodel, hrfknobs,
     for p in range(len(data2)):
         data2[p] = data2[p].astype(np.float32, copy=False)
 
-    # for p in range(len(design)):
-    #     design[p] = design[p].astype(np.float32, copy=False)
-
-    n_runs = len(design)
+    n_runs = len(des)
 
     if cache is None:
         cache = {}
@@ -64,21 +61,21 @@ def fit_model(design, data2, tr, hrfmodel, hrfknobs,
         cache['rawdesign'] = [None for x in range(n_runs)]
 
     if hrfmodel == 'fir':
-
         # since 'fir', we can assume design is not the onset case, but check it
-        np.testing.assert_equal(type(design[0]) is int, True)
+        des = [dest.astype(int) for dest in des]
+        # np.testing.assert_equal(des[0].dtype is np.dtype(np.int64), True)
 
         # calc
-        numconditions = design[0].shape[1]
+        numconditions = des[0].shape[1]
 
         # prepare design matrix
         desw = []
-        for p in range(len(design)):
+        for p in range(len(des)):
 
             # expand original design matrix using delta basis functions.
             # the length of each timecourse is L.
             desw.append(construct_stim_matrices(
-                design[p].T,
+                des[p].T,
                 0,
                 hrfknobs,
                 0).astype(np.float32))
@@ -104,14 +101,14 @@ def fit_model(design, data2, tr, hrfmodel, hrfknobs,
 
         else:
             f = mtimes_stack(
-                olsmatrix(np.concatenate(desw)),
+                olsmatrix2(np.concatenate(desw)),
                 data2)  # L*conditions x voxels
 
         # voxels x conditions x L
-        f = np.transpose(np.reshape(f, [hrfknobs+1, numconditions]), [2, 1, 0])
+        f = np.transpose(np.reshape(f, [hrfknobs+1, numconditions, -1]), [2, 1, 0])
 
         fout = {}
-        fout['betas'] = f.T.astype(np.float32)
+        fout['betas'] = f
         fout['hrffitvoxels'] = hrffitvoxels
 
     elif hrfmodel == 'assume':
@@ -128,7 +125,7 @@ def fit_model(design, data2, tr, hrfmodel, hrfknobs,
             # number of time points
             desw.append(
                 convolve_design(
-                    design[p],
+                    des[p],
                     hrfknobs,
                     desopts).astype(np.float32))
 
@@ -151,7 +148,7 @@ def fit_model(design, data2, tr, hrfmodel, hrfknobs,
             # conditions x voxels
         else:
             f = mtimes_stack(
-                olsmatrix(np.concatenate(desw)),
+                olsmatrix2(np.concatenate(desw)),
                 data2)  # conditions x voxels
 
         fout = {}
@@ -163,14 +160,14 @@ def fit_model(design, data2, tr, hrfmodel, hrfknobs,
 
         # since 'optimize', we can assume design is not the onset case,
         # but check it
-        np.testing.assert_true(type(design[0]), list)
+        np.testing.assert_true(type(des[0]), list)
 
         # calc
         numinhrf = len(hrfknobs)
-        numconds = design[0].shape[1]
+        numconds = des[0].shape[1]
 
-        numruns = len(design)
-        numconds = design[0].shape[1]
+        numruns = len(des)
+        numconds = des[0].shape[1]
         postnumlag = numinhrf - 1
 
         if 'design2pre' not in cache:
@@ -180,10 +177,10 @@ def fit_model(design, data2, tr, hrfmodel, hrfknobs,
             for p in range(len(data2)):
 
                 # expand design matrix using delta functions
-                ntime = design[p].shape[0]  # number of time points
+                ntime = des[p].shape[0]  # number of time points
                 design2pre.append(
                     construct_stim_matrices(
-                        design[p].T,
+                        des[p].T,
                         prenumlag=0,
                         postnumlag=postnumlag
                     ).reshape(
@@ -217,7 +214,7 @@ def fit_model(design, data2, tr, hrfmodel, hrfknobs,
                     # number of time points
                     design2.append(
                         make_design(
-                            design[p],
+                            des[p],
                             tr,
                             ntimes[p],
                             currenthrf
@@ -230,7 +227,7 @@ def fit_model(design, data2, tr, hrfmodel, hrfknobs,
 
                 # estimate the amplitudes (output: conditions x voxels)
                 currentbeta = mtimes_stack(
-                    olsmatrix(np.vstack(design2)),
+                    olsmatrix2(np.vstack(design2)),
                     data2
                     )
 
@@ -297,7 +294,7 @@ def fit_model(design, data2, tr, hrfmodel, hrfknobs,
 
                 stackdesign = stackdesign.reshape(
                     (ntime * nhrfvox, numinhrf), order='F')
-                stackdesign = olsmatrix(stackdesign)
+                stackdesign = olsmatrix2(stackdesign)
                 currenthrf = np.asarray(stackdesign.dot(
                     datasubset.reshape((-1), order='F')))[0]
 
@@ -330,7 +327,7 @@ def fit_model(design, data2, tr, hrfmodel, hrfknobs,
                     "use the initial seed as the HRF estimate.\n"
                 )
                 fout = fit_model(
-                    design,
+                    des,
                     data2,
                     tr,
                     'assume',
