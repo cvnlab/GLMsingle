@@ -647,6 +647,7 @@ for p=1:length(design)
   designSINGLE{p} = zeros(size(design{p},1),numtrials);
   for q=1:size(design{p},1)
     temp = find(design{p}(q,:));
+    assert(length(temp) <= 1,'two conditions have exactly the same trial onset! this is not allowed!');
     if ~isempty(temp)
       cnt = cnt + 1;
       designSINGLE{p}(q,cnt) = 1;
