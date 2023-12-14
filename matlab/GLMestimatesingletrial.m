@@ -1583,7 +1583,11 @@ for p=1:max(stimorder)
     sdcnt = sdcnt + 1;
   end
 end
-f = sqrt(mean(tempmn.^2,4)) ./ sqrt(mean(tempsd.^2,4));  % RMSdeviationfromzero ./ noisesd
+if isempty(tempsd)
+  f = NaN(size(tempmn));  % if there are no repeats, dmetric is undefined
+else
+  f = sqrt(mean(tempmn.^2,4)) ./ sqrt(mean(tempsd.^2,4));  % RMSdeviationfromzero ./ noisesd
+end
 
 %%%%%%%%%%%%%%%%%%% JUNK:
 
