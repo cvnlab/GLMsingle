@@ -576,6 +576,9 @@ if length(outputdir) < 2
 end
 
 % deal with length issues and other miscellaneous things
+if ~iscell(opt.extraregressors)
+  opt.extraregressors = {opt.extraregressors};
+end
 if length(opt.maxpolydeg) == 1
   opt.maxpolydeg = repmat(opt.maxpolydeg,[1 numruns]);
 end
@@ -718,7 +721,7 @@ firR2 = [];   % X x Y x Z x runs (R2 of FIR model for each run)
 firtcs = [];  % X x Y x Z x 1 x time x runs (FIR timecourse for each run)
 for p=1:length(data)
   results0 = GLMestimatemodel(design0(p),data(p),stimdur,tr,'fir',floor(opt.firdelay/tr),0, ...
-                              struct('extraregressors',{opt.extraregressors}, ...
+                              struct('extraregressors',{opt.extraregressors(p)}, ...
                                      'maxpolydeg',opt.maxpolydeg, ...
                                      'wantpercentbold',opt.wantpercentbold, ...
                                      'suppressoutput',1));
