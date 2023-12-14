@@ -422,6 +422,8 @@ function [results,resultsdesign] = GLMestimatesingletrial(design,data,stimdur,tr
 % black line. Note that these reflect any user-specified customization (as 
 % controlled via opt.hrftoassume and opt.hrflibrary).
 %
+% runwiseFIR_summaryvoxels.png - the voxels that were used for runwiseFIR.png
+%
 % typeD_R2_runXX.png - the R^2 of the final type-D model computed using data
 % from individual runs (sqrt hot colormap between 0% and 100%)
 %
@@ -793,6 +795,7 @@ if wantfig
       imwrite(uint8(255*makeimagestack(firR2(:,:,:,rr),[0 100]).^0.5),hot(256),fullfile(outputdir{2},sprintf('runwiseFIR_R2_run%02d.png',rr)));
     end
     imwrite(uint8(255*makeimagestack(firR2mn,[0 100]).^0.5),hot(256),fullfile(outputdir{2},'runwiseFIR_R2_runavg.png'));
+    imwrite(uint8(255*makeimagestack(firR2mn > firthresh,[0 1])),gray(256),fullfile(outputdir{2},'runwiseFIR_summaryvoxels.png'));
   end
 
 end
