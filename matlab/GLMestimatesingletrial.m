@@ -696,6 +696,17 @@ if any(endbuffers < 8)
   warning('You have specified trial onsets that occur less than 8 seconds from the end of at least one of the runs. This may cause estimation problems! As a solution, consider simply omitting specification of these ending trials from the original design matrix.');
 end
 
+% issue warning if no repeats
+if all(condinruns <= 1)
+  warning('None of your conditions occur in more than one run. Are you sure this is what you intend?');
+  if opt.wantglmdenoise
+    error('Since there are no repeats, <wantglmdenoise> cannot be used and should be set to 0.');
+  end
+  if opt.wantfracridge
+    error('Since there are no repeats, <wantfracridge> cannot be used and should be set to 0.');
+  end
+end
+
 % construct a nice output struct for this design-related stuff
 varstoinsert = {'design' 'stimdur' 'tr' 'opt' 'designSINGLE' 'stimorder' 'numtrialrun' 'condcounts' 'condinruns' 'endbuffers'};
 resultsdesign = struct; 
