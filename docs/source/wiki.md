@@ -184,6 +184,8 @@ outputs.
 
 GLMsingle's approach is to estimate percent signal change (PSC) by dividing estimated response amplitudes by the mean signal intensity at each given voxel. In voxels that have very little MR signal (e.g. voxels that are outside the brain), the PSC values might blow up. This is fine and not a reason for concern, as you should simply ignore the data from voxels outside of the brain. Alternatively, if you want to apply a brain mask to your data prior to GLMsingle, that would be fine too.
 
+Likewise, given GLMsingle's algorithmic procedures, it will attempt to identify the optimal HRF even for voxels outside of the brain. This is of course somewhat nonsensical if there is no real signal to begin with. The user can/should simply ignore HRF estimates for these voxels.
+
 ### How do I interpret the fractional ridge regression values?
 
 In cases where there are strong BOLD responses from the experiment, you should notice that some voxels in the brain have large fractions (i.e. fractions near 1). This indicates that very little regularization is recommended for these voxels. However, if signal-to-noise ratio is weak, the optimal fractions might be near 0. By default, the smallest fraction that is evaluated is 0.05. Hence, it might be the case that most (or all) voxels might have the optimal fraction selected to be 0.05. The interpretation of this, if it occurs, is that heavy regularization of single-trial betas is necessary to improve generalization performance. This does indicate that signals appear to be weak; however, it does not necessarily indicate that there is a problem with the data or analysis per se.
@@ -195,6 +197,8 @@ Furthermore, if you inspect the typeD_R2 and the FRACvalue outputs from GLMsingl
 ### How should I design my design matrix?
 
 For some experiments, thinking about how to setup the design matrix is a major challenge that deserves careful thought. For example, consider an experiment where there are occasional one-back events, and these events are actually not of interest. Moreover, suppose you do not want to assume that the brain response to these one-back events are somehow similar to other trials in the experiment. Then, what you could do is to code these one-back events as unique conditions that have only one presentation. For example, if there are 30 one-back events, you could just add 30 new columns to your design matrix and indicate the onset of each one-back event in one of the columns. Then, after you obtain betas from GLMsingle, you can either just ignore all of the betas associated with those columns, or use them for some purpose!
+
+Note that it is okay if your final design matrices have one or more blank columns. For example, perhaps the trials associated with a given condition do not occur in a given run, but rather occur in other runs.
 
 ### Do I need blanks?
 
@@ -302,6 +306,8 @@ The R<sup>2</sup> values from the other models are not very informative.
 The extent to which using a better HRF improves GLM outcomes (like beta estimates) depends on how different the shape of the timecourse of the chosen HRF is from some alternative default HRF. If the shape is only slightly different, beta estimates will only slightly change. If the shape is radically different, the beta estimates will change substantially.
 
 In the brain, hemodynamic timecourses can vary due to variations in vasculature distributions (e.g. close to a vein, far from a vein). If the imaging resolution is high, these variations can be substantial. How much impact timecourse variations have can also depend on the experiment. In general, block designs tend to create experimental predictors that are less affected by HRF variations than event-related designs. Thus, for event-related designs especially, getting the HRF right becomes more critical for achieving accurate beta estimates.
+
+Of course, one general consideration here is that the ability to achieve benefits from HRF selection does depend on signal to noise ratio and the amount of data available. If signal to noise is very weak, it may be practically impossible to accurately estimate HRFs. In such cases, the user can consider fixing the HRF to a canonical HRF, or perhaps to a subject-specific HRF (for example, as estimated through the diagnostic FIR model).
 
 ### Why does ridge regression improve beta estimates?
 
