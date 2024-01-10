@@ -13,20 +13,20 @@ function [results,resultsdesign] = GLMestimatesingletrial(design,data,stimdur,tr
 %      can have different numbers of time points. However, all A's must have
 %      the same number of conditions.
 %
-% Note that we ultimately compute single-trial response estimates (one estimate for 
+% Note that we ultimately compute single-trial response estimates (one estimate for
 % each condition onset), and these will be provided in chronological order. However,
 % by specifying that a given condition occurs more than one time over the course
 % of the experiment, this information can and will be used for cross-validation purposes.
 %
-% <data> is the time-series data with dimensions X x Y x Z x time or a cell vector of 
-% elements that are each X x Y x Z x time. XYZ can be collapsed such that the data 
+% <data> is the time-series data with dimensions X x Y x Z x time or a cell vector of
+% elements that are each X x Y x Z x time. XYZ can be collapsed such that the data
 % are given as a 2D matrix (units x time), which is useful for surface-format data.
-% The dimensions of <data> should mirror that of <design>. For example, <design> and 
+% The dimensions of <data> should mirror that of <design>. For example, <design> and
 % <data> should have the same number of runs, the same number of time points, etc.
-% <data> should not contain any NaNs. We automatically convert <data> to single 
+% <data> should not contain any NaNs. We automatically convert <data> to single
 % format if not already in single format.
 %
-% <stimdur> is the duration of a trial in seconds. For example, 3.5 means that you 
+% <stimdur> is the duration of a trial in seconds. For example, 3.5 means that you
 % expect the neural activity from a given trial to last for 3.5 s.
 %
 % <tr> is the sampling rate in seconds. For example, 1 means that we get a new
@@ -68,18 +68,18 @@ function [results,resultsdesign] = GLMestimatesingletrial(design,data,stimdur,tr
 %
 %   <xvalscheme> (optional) is a cell vector of vectors of run indices, indicating the
 %   cross-validation scheme. For example, if we have 8 runs, we could use
-%   {[1 2] [3 4] [5 6] [7 8]} which indicates to do 4 folds of cross-validation, 
+%   {[1 2] [3 4] [5 6] [7 8]} which indicates to do 4 folds of cross-validation,
 %   first holding out the 1st and 2nd runs, then the 3rd and 4th runs, etc.
 %   Default: {[1] [2] [3] ... [n]} where n is the number of runs.
 %
 %   <sessionindicator> (optional) is 1 x n (where n is the number of runs) with
 %   positive integers indicating the run groupings that are interpreted as
 %   "sessions". The purpose of this input is to allow for session-wise z-scoring
-%   of single-trial beta weights for the purposes of hyperparameter evaluation. 
+%   of single-trial beta weights for the purposes of hyperparameter evaluation.
 %   For example, if you are analyzing data aggregated from multiple scan sessions,
 %   you may want beta weights to be z-scored per voxel within each session in order
 %   to compensate for any potential gross changes in betas across scan sessions.
-%   Note that the z-scoring has effect only INTERNALLY: it is used merely to 
+%   Note that the z-scoring has effect only INTERNALLY: it is used merely to
 %   calculate the cross-validation performance and the associated hyperparameter
 %   selection; the outputs of this function do not reflect z-scoring, and the user
 %   may wish to post-hoc apply z-scoring. Default: 1*ones(1,n) which means to interpret
@@ -105,39 +105,39 @@ function [results,resultsdesign] = GLMestimatesingletrial(design,data,stimdur,tr
 %   *** GLM FLAGS ***
 %
 %   <extraregressors> (optional) is time x regressors or a cell vector
-%   of elements that are each time x regressors. The dimensions of 
-%   <extraregressors> should mirror that of <design> (i.e. same number of 
-%   runs, same number of time points). The number of extra regressors 
-%   does not have to be the same across runs, and each run can have zero 
-%   or more extra regressors. If [] or not supplied, we do 
+%   of elements that are each time x regressors. The dimensions of
+%   <extraregressors> should mirror that of <design> (i.e. same number of
+%   runs, same number of time points). The number of extra regressors
+%   does not have to be the same across runs, and each run can have zero
+%   or more extra regressors. If [] or not supplied, we do
 %   not use extra regressors in the model.
 %
-%   <maxpolydeg> (optional) is a non-negative integer with the maximum 
+%   <maxpolydeg> (optional) is a non-negative integer with the maximum
 %   polynomial degree to use for polynomial nuisance functions, which
 %   are used to capture low-frequency noise fluctuations in each run.
 %   Can be a vector with length equal to the number of runs (this
-%   allows you to specify different degrees for different runs).  
-%   Default is to use round(L/2) for each run where L is the 
+%   allows you to specify different degrees for different runs).
+%   Default is to use round(L/2) for each run where L is the
 %   duration in minutes of a given run.
 %
 %   <wantpercentbold> (optional) is whether to convert amplitude estimates
 %   to percent BOLD change. This is done as the very last step, and is
-%   accomplished by dividing by the absolute value of 'meanvol' and 
+%   accomplished by dividing by the absolute value of 'meanvol' and
 %   multiplying by 100. (The absolute value prevents negative values in
 %   'meanvol' from flipping the sign.) Default: 1.
 %
 %   *** HRF FLAGS ***
-% 
+%
 %   <hrftoassume> (optional) is time x 1 with an assumed HRF that characterizes the evoked
-%   response to each trial. We automatically divide by the maximum value so that the 
-%   peak is equal to 1. Default is to generate a canonical HRF (see getcanonicalhrf.m). 
-%   Note that the HRF supplied in <hrftoassume> is used in only two instances: 
-%   (1) it is used for the simple ONOFF type-A model, and (2) if the user sets 
+%   response to each trial. We automatically divide by the maximum value so that the
+%   peak is equal to 1. Default is to generate a canonical HRF (see getcanonicalhrf.m).
+%   Note that the HRF supplied in <hrftoassume> is used in only two instances:
+%   (1) it is used for the simple ONOFF type-A model, and (2) if the user sets
 %   <wantlibrary> to 0, it is also used for the type-B, type-C, and type-D models.
 %
 %   <hrflibrary> (optional) is time x H with H different HRFs to choose from for the
-%   library-of-HRFs approach. We automatically normalize each HRF to peak at 1. 
-%   Default is to generate a library of 20 HRFs (see getcanonicalhrflibrary.m). 
+%   library-of-HRFs approach. We automatically normalize each HRF to peak at 1.
+%   Default is to generate a library of 20 HRFs (see getcanonicalhrflibrary.m).
 %   Note that if <wantlibrary> is 0, <hrflibrary> is clobbered with the contents
 %   of <hrftoassume>, which in effect causes a single assumed HRF to be used.
 %
@@ -147,7 +147,7 @@ function [results,resultsdesign] = GLMestimatesingletrial(design,data,stimdur,tr
 %   the run-wise FIR model (where we assume an ONOFF design matrix in which all
 %   conditions are collapsed together). Default: 30.
 %
-%   <firpct> (optional) is a percentile threshold. We average the FIR model 
+%   <firpct> (optional) is a percentile threshold. We average the FIR model
 %   R2 values across runs and then select voxels that pass this threshold.
 %   These voxels are used for the FIR timecourse summaries. Default: 99.
 %
@@ -156,17 +156,17 @@ function [results,resultsdesign] = GLMestimatesingletrial(design,data,stimdur,tr
 %   (none)
 %
 %   *** MODEL TYPE B (FITHRF) FLAGS ***
-%   
+%
 %   <wantlss> (optional) is 0/1 indicating whether "least-squares-separate" estimates
 %   are desired. If 1, then the type-B model will be estimated using the least-squares-
 %   separate method (as opposed to ordinary least squares). Default: 0.
 %
 %   *** MODEL TYPE C (FITHRF_GLMDENOISE) FLAGS ***
-% 
+%
 %   <numpcstotry> (optional) is a non-negative integer indicating the maximum
 %   number of PCs to enter into the model. Default: 10.
 %
-%   <brainthresh> (optional) is [A B] where A is a percentile for voxel intensity 
+%   <brainthresh> (optional) is [A B] where A is a percentile for voxel intensity
 %   values and B is a fraction to apply to the percentile. These parameters
 %   are used in the selection of the noise pool. Default: [99 0.1].
 %
@@ -174,32 +174,32 @@ function [results,resultsdesign] = GLMestimatesingletrial(design,data,stimdur,tr
 %   voxels whose R^2 is below this value are allowed to enter the noise pool.
 %   Default is [] which means to automatically determine a good value.
 %
-%   <brainexclude> (optional) is X x Y x Z (or XYZ x 1) with 1s indicating voxels to 
-%   specifically exclude when selecting the noise pool. 0 means all voxels can be 
+%   <brainexclude> (optional) is X x Y x Z (or XYZ x 1) with 1s indicating voxels to
+%   specifically exclude when selecting the noise pool. 0 means all voxels can be
 %   potentially chosen. Default: 0.
 %
 %   <pcR2cutoff> (optional) is an R^2 value (percentage). To decide the number
-%   of PCs to include, we examine a subset of the available voxels. Specifically, 
+%   of PCs to include, we examine a subset of the available voxels. Specifically,
 %   we examine voxels whose type-A model R^2 is above <pcR2cutoff>. Default is []
 %   which means to automatically determine a good value.
 %
 %   <pcR2cutoffmask> (optional) is X x Y x Z (or XYZ x 1) with 1s indicating all possible
-%   voxels to consider when selecting the subset of voxels. 1 means all voxels 
+%   voxels to consider when selecting the subset of voxels. 1 means all voxels
 %   can be potentially selected. Default: 1.
 %
 %   <pcstop> (optional) is
 %
-%     - A: a number greater than or equal to 1 indicating when to stop adding PCs 
-%       into the model. For example, 1.05 means that if the cross-validation 
-%       performance with the current number of PCs is within 5% of the maximum 
-%       observed, then use that number of PCs. (Performance is measured 
-%       relative to the case of 0 PCs.) When <pcstop> is 1, the selection 
+%     - A: a number greater than or equal to 1 indicating when to stop adding PCs
+%       into the model. For example, 1.05 means that if the cross-validation
+%       performance with the current number of PCs is within 5% of the maximum
+%       observed, then use that number of PCs. (Performance is measured
+%       relative to the case of 0 PCs.) When <pcstop> is 1, the selection
 %       strategy reduces to simply choosing the PC number that achieves
 %       the maximum. The advantage of stopping early is to achieve a selection
-%       strategy that is robust to noise and shallow performance curves and 
+%       strategy that is robust to noise and shallow performance curves and
 %       that avoids overfitting.
-%     - -B: where B is the number of PCs to use for the final model. B can be any 
-%       integer between 0 and opt.numpcstotry. Note that if -B case is used, 
+%     - -B: where B is the number of PCs to use for the final model. B can be any
+%       integer between 0 and opt.numpcstotry. Note that if -B case is used,
 %       cross-validation is NOT performed for the type-C model, and instead we
 %       blindly use B PCs.
 %     - Default: 1.05.
@@ -207,11 +207,11 @@ function [results,resultsdesign] = GLMestimatesingletrial(design,data,stimdur,tr
 %   *** MODEL TYPE D (FITHRF_GLMDENOISE_RR) FLAGS ***
 %
 %   <fracs> (optional) is a vector of fractions that are greater than 0
-%   and less than or equal to 1. We automatically sort in descending order and 
+%   and less than or equal to 1. We automatically sort in descending order and
 %   ensure the fractions are unique. These fractions indicate the regularization
 %   levels to evaluate using fractional ridge regression (fracridge) and
 %   cross-validation. Default: fliplr(.05:.05:1). A special case is when <fracs>
-%   is specified as a single scalar value. In this case, cross-validation 
+%   is specified as a single scalar value. In this case, cross-validation
 %   is NOT performed for the type-D model, and we instead blindly use
 %   the supplied fractional value for the type-D model.
 %
@@ -219,7 +219,7 @@ function [results,resultsdesign] = GLMestimatesingletrial(design,data,stimdur,tr
 %   the model estimates from the type-D model to best match the unregularized
 %   estimates. Default: 1.
 %
-% This function computes up to four model outputs (called type-A (ONOFF), 
+% This function computes up to four model outputs (called type-A (ONOFF),
 % type-B (FITHRF), type-C (FITHRF_GLMDENOISE), and type-D (FITHRF_GLMDENOISE_RR)),
 % and either saves the model outputs to disk, or returns them in <results>, or both,
 % depending on what the user specifies.
@@ -256,12 +256,12 @@ function [results,resultsdesign] = GLMestimatesingletrial(design,data,stimdur,tr
 %
 % Note that if you set wantglmdenoise=1, you MUST have repeats of conditions and
 % an associated cross-validation scheme (<opt.xvalscheme>), UNLESS you specify
-% opt.pcstop = -B. In other words, you can perform wantglmdenoise without any 
+% opt.pcstop = -B. In other words, you can perform wantglmdenoise without any
 % cross-validation, but you need to provide opt.pcstop = -B.
 %
 % Note that if you set wantfracridge=1, you MUST have repeats of conditions and
 % an associated cross-validation scheme (<opt.xvalscheme>), UNLESS you specify
-% a single scalar opt.fracs. In other words, you can perform wantfracridge 
+% a single scalar opt.fracs. In other words, you can perform wantfracridge
 % without any cross-validation, but you need to provide opt.fracs as a scalar.
 %
 %
@@ -270,7 +270,7 @@ function [results,resultsdesign] = GLMestimatesingletrial(design,data,stimdur,tr
 %
 % We return model results in the output variable <results>.
 % These results are saved to disk in files called 'TYPEA...',
-% 'TYPEB...', and so on. There are various outputs for each 
+% 'TYPEB...', and so on. There are various outputs for each
 % of the four model types:
 %
 % <modelmd> is either
@@ -332,14 +332,14 @@ function [results,resultsdesign] = GLMestimatesingletrial(design,data,stimdur,tr
 % each trial (in chronological order) belongs to
 %
 % <numtrialrun> is a row vector with the number of trials in each run
-% 
+%
 % <condcounts> is a row vector with the number of trials
 % associated with each condition
-% 
+%
 % <condinruns> is a row vector with the number of runs that
 % each condition shows up in
 %
-% <endbuffers> is a row vector with the number of seconds after the 
+% <endbuffers> is a row vector with the number of seconds after the
 % last trial onset in each run
 %
 %
@@ -371,18 +371,18 @@ function [results,resultsdesign] = GLMestimatesingletrial(design,data,stimdur,tr
 %
 % betaviz_type[B,C,D].png - an image visualization of betas obtained
 % under the type-B, type-C, and type-D models. The matrix dimensions
-% are 1,000 voxels x trials. We choose 1,000 voxels equally spaced in 
+% are 1,000 voxels x trials. We choose 1,000 voxels equally spaced in
 % descending order from the 100th to 75th percentiles of
 % the R^2 values produced by the ONOFF model. The colormap is
-% cmapsign4.m (blueish colors to black to reddish colors) from 
-% -X to X where X is the 99th percentile of the absolute value 
+% cmapsign4.m (blueish colors to black to reddish colors) from
+% -X to X where X is the 99th percentile of the absolute value
 % of the betas in the first model that is actually
-% computed (typically, this will be the type-B model). 
+% computed (typically, this will be the type-B model).
 %
 % dmetric_type[B,C,D].png - a "deviation from zero" metric calculated
 % based on the betas obtained under the type-B, type-C, and type-D models.
 % We use a hot colormap ranging between the min and max of the values
-% obtained for the first model that is computed (typically, this will be 
+% obtained for the first model that is computed (typically, this will be
 % the type-B model).
 %
 % FRACvalue.png - chosen fractional ridge regression value
@@ -392,17 +392,17 @@ function [results,resultsdesign] = GLMestimatesingletrial(design,data,stimdur,tr
 % (jet colormap between 1 and the number of HRFs in the library)
 %
 % meanvol.png - simply the mean across all data volumes
-% 
+%
 % noisepool.png - voxels selected for the noise pool (white means selected)
-% 
-% onoffR2_vs_HRFindex.png - scatter plot of the R^2 of the ONOFF model 
-% against the chosen HRF index. All voxels are shown. A small amount of 
+%
+% onoffR2_vs_HRFindex.png - scatter plot of the R^2 of the ONOFF model
+% against the chosen HRF index. All voxels are shown. A small amount of
 % jitter is added to the HRF index in order to aid visibility.
 %
 % onoffR2.png - R^2 of the ONOFF model (sqrt hot colormap between 0% and 100%)
 %
 % onoffR2hist.png - depicts the finding of an automatic threshold on the ONOFF
-% model R^2. This is used in determining the noise pool (but can be 
+% model R^2. This is used in determining the noise pool (but can be
 % overridden by opt.brainR2).
 %
 % pcvoxels.png - voxels used to summarize GLMdenoise cross-validation results
@@ -414,12 +414,12 @@ function [results,resultsdesign] = GLMestimatesingletrial(design,data,stimdur,tr
 % runwiseFIR_R2_runavg.png - simply the average of the R^2 across runs
 %
 % runwiseFIR.png - Upper left shows run-wise FIR estimates. The estimates reflect
-% the mean FIR timecourse averaged across a set of "best" voxels (see opt.firpct). 
-% The mean of these mean FIR timecourses across runs is indicated by the thick 
+% the mean FIR timecourse averaged across a set of "best" voxels (see opt.firpct).
+% The mean of these mean FIR timecourses across runs is indicated by the thick
 % red line. Upper right shows FIR amplitudes at the peak time observed in the
-% grand mean timecourse (indicated by the dotted black line). Bottom left shows 
-% the HRFs in the library as colored lines and the "assumed HRF" as a thick 
-% black line. Note that these reflect any user-specified customization (as 
+% grand mean timecourse (indicated by the dotted black line). Bottom left shows
+% the HRFs in the library as colored lines and the "assumed HRF" as a thick
+% black line. Note that these reflect any user-specified customization (as
 % controlled via opt.hrftoassume and opt.hrflibrary).
 %
 % runwiseFIR_summaryvoxels.png - the voxels that were used for runwiseFIR.png
@@ -427,10 +427,10 @@ function [results,resultsdesign] = GLMestimatesingletrial(design,data,stimdur,tr
 % typeD_R2_runXX.png - the R^2 of the final type-D model computed using data
 % from individual runs (sqrt hot colormap between 0% and 100%)
 %
-% typeD_R2.png - the R^2 of the final type-D model (using all data) 
+% typeD_R2.png - the R^2 of the final type-D model (using all data)
 %
 % xvaltrend.png - shows the cross-validation performance for different numbers
-% of GLMdenoise regressors. Note that the y-axis units are correct but not 
+% of GLMdenoise regressors. Note that the y-axis units are correct but not
 % easy to interpret.
 
 %% %%%%%%%%%%%%%%%%%%% DEAL WITH INPUTS
@@ -642,7 +642,7 @@ numtrials = sum(numtrialrun);  % number of total trials
 % create a single-trial design matrix and calculate a bunch of extra information
 designSINGLE = {};
 cnt = 0;
-stimorder = [];                   % 1 x numtrials indicating which condition each trial belongs to 
+stimorder = [];                   % 1 x numtrials indicating which condition each trial belongs to
 validcolumns = cell(1,numruns);   % each element is the vector of trial indices associated with the run
 stimix = cell(1,numruns);         % each element is the vector of actual condition numbers occurring with a given run
 for p=1:length(design)
@@ -700,16 +700,16 @@ end
 if all(condinruns <= 1)
   warning('None of your conditions occur in more than one run. Are you sure this is what you intend?');
   if opt.wantglmdenoise
-    error('Since there are no repeats, <wantglmdenoise> cannot be used and should be set to 0.');
+    warning('Since there are no repeats, standard cross-validation usage of <wantglmdenoise> cannot be performed.');
   end
   if opt.wantfracridge
-    error('Since there are no repeats, <wantfracridge> cannot be used and should be set to 0.');
+    warning('Since there are no repeats, standard cross-validation usage of <wantfracridge> cannot be performed.');
   end
 end
 
 % construct a nice output struct for this design-related stuff
 varstoinsert = {'design' 'stimdur' 'tr' 'opt' 'designSINGLE' 'stimorder' 'numtrialrun' 'condcounts' 'condinruns' 'endbuffers'};
-resultsdesign = struct; 
+resultsdesign = struct;
 for p=1:length(varstoinsert)
   resultsdesign.(varstoinsert{p}) = eval(varstoinsert{p});
 end
@@ -891,7 +891,7 @@ if opt.wantfileoutputs(2)==0 && opt.wantmemoryoutputs(2)==0 && size(opt.hrflibra
 
   % short-circuit all of the work
   HRFindex = ones(nx,ny,nz);  % easy peasy
-  
+
 else
 
   % define
@@ -921,7 +921,7 @@ else
       modelmd0(:,:,:,:,p) = results0.modelmd{2};
       clear results0;
     end
-  
+
     % keep only the betas we want
     [~,ii] = max(FitHRFR2(chunks{z},:,:,:),[],4);
     modelmd(chunks{z},:,:,:) = matrixindex(modelmd0,repmat(ii,[1 1 1 size(modelmd0,4)]),5);
@@ -953,23 +953,23 @@ else
     fprintf('*** FITTING TYPE-B MODEL (FITHRF but with LSS estimation) ***\n');
     for z=1:length(chunks)
       fprintf('working on chunk %d of %d.\n',z,length(chunks));
-  
+
       % loop over possible HRFs
       for hh=1:size(opt.hrflibrary,2)
-  
+
         % figure out which voxels to process.
         % this will be a vector of indices into the small chunk that we are processing.
         % our goal is to fully process this set of voxels!
         goodix = flatten(find(HRFindex(chunks{z},:,:)==hh));
-      
+
         % extract the data we want to process.
         data0 = cellfun(@(x) subscript(squish(x(chunks{z},:,:,:),3),{goodix ':'}),data,'UniformOutput',0);
-      
+
         % calculate the corresponding indices relative to the full volume
         temp = zeros(size(HRFindex));
         temp(chunks{z},:,:) = 1;
         relix = subscript(find(temp),goodix);
-  
+
         % define options
         optA = struct('extraregressors',{opt.extraregressors}, ...
                       'maxpolydeg',opt.maxpolydeg, ...
@@ -989,11 +989,11 @@ else
           end
           cnt = cnt + numtrialrun(rrr);
         end
-  
+
       end
-    
+
     end
-  
+
     % deal with dimensions
     modelmd = reshape(modelmd,[nx ny nz numtrials]);
 
@@ -1011,12 +1011,12 @@ else
 
   % figures?
   if wantfig
-    
+
     % HRFindex in slices
     if is3d
       imwrite(uint8(255*makeimagestack(HRFindex,[1 nh])),jet(256),fullfile(outputdir{2},'HRFindex.png'));
     end
-    
+
     % ONOFFR2 vs. HRFindex scatter
     figureprep([100 100 600 600]); hold on;
     scatter(onoffR2(:),HRFindex(:)+0.2*randn(size(HRFindex(:))),9,'r.');
@@ -1025,14 +1025,14 @@ else
     xlabel('ON-OFF model R^2');
     ylabel('HRF index (with small amount of jitter)');
     figurewrite('onoffR2_vs_HRFindex',[],[],outputdir{2});
-    
+
     % beta visualization
     temp = subscript(squish(modelmd,3),{onoffvizix ':'});
     if ~exist('betavizmx','var')
       betavizmx = prctile(abs(temp(:)),99);
     end
     imwrite(cmaplookup(temp,-betavizmx,betavizmx,[],cmapsign4(256)),fullfile(outputdir{2},'betaviz_typeB.png'));
-    
+
     % dmetric visualization
     if is3d
       temp = calcdmetric(modelmd,stimorder);
@@ -1041,7 +1041,7 @@ else
       end
       imwrite(uint8(255*makeimagestack(temp,drng)),hot(256),fullfile(outputdir{2},'dmetric_typeB.png'));
     end
-    
+
   end
 
   % preserve in memory if desired, and then clean up
@@ -1115,10 +1115,10 @@ elseif opt.pcstop <= 0
 
 % otherwise, we have to do a lot of work
 else
-  
+
   % initialize
   glmbadness = zeros(nx*ny*nz,1+opt.numpcstotry,'single');    % X * Y * Z x 1+npc  [squared beta error for different numbers of PCs]
-  
+
   % loop over chunks
   fprintf('*** CROSS-VALIDATING DIFFERENT NUMBERS OF REGRESSORS ***\n');
   for z=1:length(chunks)
@@ -1126,24 +1126,24 @@ else
 
     % loop over possible HRFs
     for hh=1:size(opt.hrflibrary,2)
-  
+
       % figure out which voxels to process.
       % this will be a vector of indices into the small chunk that we are processing.
       % our goal is to fully process this set of voxels!
       goodix = flatten(find(HRFindex(chunks{z},:,:)==hh));
-      
+
       % extract the data we want to process.
       data0 = cellfun(@(x) subscript(squish(x(chunks{z},:,:,:),3),{goodix ':'}),data,'UniformOutput',0);
-      
+
       % calculate the corresponding indices relative to the full volume
       temp = zeros(size(HRFindex));
       temp(chunks{z},:,:) = 1;
       relix = subscript(find(temp),goodix);
-  
+
       % perform GLMdenoise
       clear results0;
       for ll=0:opt.numpcstotry
-  
+
         % define options
         optA = struct('maxpolydeg',opt.maxpolydeg, ...
                       'wantpercentbold',0, ...
@@ -1154,23 +1154,23 @@ else
             optA.extraregressors{rr} = cat(2,optA.extraregressors{rr},pcregressors{rr}(:,1:ll));
           end
         end
-        
+
         % do the GLM
         [results0(ll+1),cache] = GLMestimatemodel(designSINGLE,data0, ...
                                    stimdur,tr,'assume',opt.hrflibrary(:,hh),0,optA);
-  
+
         % save some memory
         results0(ll+1).models = [];
         results0(ll+1).modelse = [];
-      
+
       end
-  
+
       % compute the cross-validation performance values
       glmbadness(relix,:) = calcbadness(opt.xvalscheme,validcolumns,stimix,results0,opt.sessionindicator);  % voxels x regularization levels
       clear results0;
-  
+
     end
-    
+
   end
 
   % compute xvaltrend
@@ -1193,36 +1193,36 @@ else
   % create for safe-keeping
   pcvoxels = logical(zeros(nx,ny,nz));
   pcvoxels(ix) = 1;
-  
+
   % choose number of PCs
   chosen = 0;  % this is the fall-back
   curve = xvaltrend - xvaltrend(1);  % this is the performance curve that starts at 0 (corresponding to 0 PCs)
   mx = max(curve);                   % store the maximum of the curve
   best = -Inf;                       % initialize (this will hold the best performance observed thus far)
   for p=0:opt.numpcstotry
-  
+
     % if better than best so far
     if curve(1+p) > best
-  
+
       % record this number of PCs as the best
       chosen = p;
       best = curve(1+p);
-    
+
       % if we are within opt.pcstop of the max, then we stop.
       if best*opt.pcstop >= mx
         break;
       end
-    
+
     end
-  
+
   end
-  
+
   % record the number of PCs
   pcnum = chosen;
-  
+
   % deal with dimensions
   glmbadness = reshape(glmbadness,nx,ny,nz,[]);
-  
+
 end
 
 %% %%%%%%%%%%%%%%%%%%% FIT TYPE-C + TYPE-D MODELS [FITHRF_GLMDENOISE, FITHRF_GLMDENOISE_RR]
@@ -1241,51 +1241,51 @@ for ttt=1:length(todo)
   whmodel = todo(ttt);
 
   %% we need to do some tricky setup
-  
+
   % if this is just a GLMdenoise case, we need to fake it
   if whmodel==3
     fracstouse = [1];    % here, we need to fake this in order to get the outputs
     fractoselectix = 1;
     autoscaletouse = 0;  % not necessary, so turn off
   end
-  
+
   % if this is a fracridge case
   if whmodel==4
-  
+
     % if the user specified only one fraction
     if length(opt.fracs)==1
-    
+
       % if the first one is 1, this is easy
       if opt.fracs(1)==1
         fracstouse = [1];
         fractoselectix = 1;
         autoscaletouse = 0;  % not necessary, so turn off
- 
+
       % if the first one is not 1, we might need 1
       else
         fracstouse = [1 opt.fracs];
         fractoselectix = 2;
         autoscaletouse = opt.wantautoscale;
       end
-    
+
     % otherwise, we have to do costly cross-validation
     else
 
       % set these
       fractoselectix = NaN;
       autoscaletouse = opt.wantautoscale;
-    
+
       % if the first one is 1, this is easy
       if opt.fracs(1)==1
         fracstouse = opt.fracs;
-      
+
       % if the first one is not 1, we might need 1
       else
         fracstouse = [1 opt.fracs];
       end
 
     end
-    
+
   end
 
   %% ok, proceed
@@ -1318,10 +1318,10 @@ for ttt=1:length(todo)
       % this will be a vector of indices into the small chunk that we are processing.
       % our goal is to fully process this set of voxels!
       goodix = flatten(find(HRFindex(chunks{z},:,:)==hh));
-    
+
       % extract the data we want to process.
       data0 = cellfun(@(x) subscript(squish(x(chunks{z},:,:,:),3),{goodix ':'}),data,'UniformOutput',0);
-    
+
       % calculate the corresponding indices relative to the full volume
       temp = zeros(size(HRFindex));
       temp(chunks{z},:,:) = 1;
@@ -1346,16 +1346,16 @@ for ttt=1:length(todo)
         % fit the entire dataset using the specific frac
         [results0(ll),cache] = GLMestimatemodel(designSINGLE,data0, ...
                                  stimdur,tr,'assume',opt.hrflibrary(:,hh),0,optA);
-      
+
         % save some memory
         results0(ll).models = [];
         results0(ll).modelse = [];
-    
+
       end
-      
+
       % perform cross-validation if necessary
       if isnan(fractoselectix)
-        
+
         % compute the cross-validation performance values
         rrbadness0 = calcbadness(opt.xvalscheme,validcolumns,stimix,results0,opt.sessionindicator);
 
@@ -1373,12 +1373,12 @@ for ttt=1:length(todo)
       else
         FRACindex0 = fractoselectix*ones(length(relix),1);
       end
-    
+
       % prepare output
       FRACvalue(relix) = fracstouse(FRACindex0);
       for ll=1:length(fracstouse)
         ii = find(FRACindex0==ll);  % indices of voxels that chose the llth frac
-      
+
         % scale and offset to match the unregularized result
         if autoscaletouse
           for vv=1:length(ii)
@@ -1394,7 +1394,7 @@ for ttt=1:length(todo)
           scaleoffset = [];
           modelmd(relix(ii),:) = results0(ll).modelmd{2}(ii,:);
         end
-      
+
         R2(relix(ii))        = results0(ll).R2(ii);
         R2run(relix(ii),:)   = results0(ll).R2run(ii,:);
       end
@@ -1413,7 +1413,7 @@ for ttt=1:length(todo)
   if isnan(fractoselectix)
     rrbadness = reshape(rrbadness,nx,ny,nz,[]);
   end
-  
+
   % save to disk if desired
   if whmodel==3
     allvars = {'HRFindex','HRFindexrun','glmbadness','pcvoxels','pcnum','xvaltrend', ...
@@ -1531,20 +1531,20 @@ for xx=1:length(xvals)
   % calc
   testix = xvals{xx};                    % which runs are testing, e.g. [3 4]
   trainix = setdiff(alltheruns,testix);  % which runs are training, e.g. [1 2 5 6 7 8 9 10 11 12]
-  
+
   % calc
   testcols = catcell(2,validcolumns(testix));    % vector of trial indices in the testing data
   traincols = catcell(2,validcolumns(trainix));  % vector of trial indices in the training data
   testids = catcell(2,stimix(testix));           % vector of condition-ids in the testing data
   trainids = catcell(2,stimix(trainix));         % vector of condition-ids in the training data
-  
+
   % calculate cross-validation performance
   for ll=1:length(results)
 %    hashrec = cell(1,max(testids));  % speed-up by caching results
     for ttt=1:length(testids)
       haveix = find(trainids==testids(ttt));  % which training trials match the current condition-id?
       if ~isempty(haveix)
-        
+
         % NOTE:
         % testcols(ttt) tells us which trial in the testing runs to pull betas for (these are 1-based trial numbers)
         % traincols(haveix) tells us the corresponding trials (isolated within the training runs) to pull betas for (these are 1-based trial numbers)
@@ -1553,7 +1553,7 @@ for xx=1:length(xvals)
 %          hashrec{testids(ttt)} = mean(results(ll).modelmd{2}(:,traincols(haveix)),2);  % voxels x 1
 %          hashrec{testids(ttt)} = results(ll).modelmd{2}(:,traincols(haveix));  % voxels x instances
 %        end
-        
+
         % compute squared error of all training betas against the current testing beta, and accumulate!!
         badness(:,ll) = badness(:,ll) + sum((results(ll).modelmd{2}(:,traincols(haveix)) - ...
                                              repmat(results(1).modelmd{2}(:,testcols(ttt)),[1 length(haveix)])).^2,2);  % NOTICE the use of results(1)
@@ -1605,7 +1605,7 @@ end
   % xlabel('number of pcs');
   % ylabel('median badness, z-scored');
   % figurewrite('checkbadness',[],[],outputtempdir);
-  % 
+  %
   % % visualize  [PERHAPS GO BACK TO LINEAR; USE SCATTERSPARSE?]
   % rvals = [1 5 20];
   % colors = {'r' 'g' 'b'};
@@ -1622,4 +1622,3 @@ end
   %   ylabel(sprintf('log error for %d pcs',p));
   %   figurewrite(sprintf('scatter%02d',p),[],[],outputtempdir);
   % end
-
