@@ -117,7 +117,7 @@ class GLM_single():
          runs, we could use [[0, 1], [2, 3], [4, 5], [6, 7]] which indicates
          to do 4 folds of cross-validation, first holding out the 1st and 2nd
          runs, then the 3rd and 4th runs, etc.
-         Default: [[0], [1], [2], ... [n-1]] where n is the number of runs. 
+         Default: [[0], [1], [2], ... [n-1]] where n is the number of runs.
          Notice the 0-based indexing here.
 
        <sessionindicator> (optional) is 1 x n (where n is the number of runs)
@@ -455,14 +455,17 @@ class GLM_single():
 
         if 'hrflibrary' not in params:
             params['hrflibrary'] = getcanonicalhrflibrary(stimdur, tr).T
-        
+
         if 'firdelay' not in params:
             params['firdelay'] = 30
-        
+
         if 'firpct' not in params:
             params['firpct'] = 99
 
         # deal with length issues and other miscellaneous things
+        if not isinstance(params['extra_regressors'], list):
+            params['extra_regressors'] = [params['extra_regressors']]
+
         if type(params['maxpolydeg']) is int:
             params['maxpolydeg'] = np.tile(
                 params['maxpolydeg'], numruns
@@ -485,6 +488,8 @@ class GLM_single():
             np.all(params['fracs'] <= 1),
             True,
             err_msg='fracs must be less than or equal to 1')
+
+        assert len(params['extra_regressors']) == numruns, '<extra_regressors> should match the number of runs'
 
         if figuredir is not None:
             wantfig = 1  # if outputdir is not None, we want figures
@@ -603,6 +608,7 @@ class GLM_single():
                 # if a condition was presented on that volume
                 # find which
                 temp = np.where(self.design[run_i][cond_i, :])[0]
+                assert len(temp) <= 1, 'two conditions have exactly the same trial onset! this is not allowed!'
 
                 # if that volume had a condition shown
                 if not np.size(temp) == 0:
@@ -615,7 +621,7 @@ class GLM_single():
             validcolumns.append(np.asarray(run_validcolumns))
 
             stimix.append(np.asarray(stimorder)[np.asarray(run_validcolumns)])
-        
+
         # Calculate number of trials for each condition
         condcounts = [np.sum(np.asarray(stimorder) == p) for p in range(0, numcond )]
 
@@ -648,7 +654,22 @@ class GLM_single():
                   ' ending trials from the original design matrix.'
             warnings.warn(msg)
 
-        
+        # Issue warning if no repeats
+        if np.all(np.array(condinruns) <= 1):
+            msg = 'None of your conditions occur in more than one run.' + \
+                  ' Are you sure this is what you intend?'
+            warnings.warn(msg)
+
+            if params['wantglmdenoise']:
+                msg = 'Since there are no repeats, standard cross-validation usage of' + \
+                    ' <wantglmdenoise> cannot be performed.'
+                warnings.warn(msg)
+
+            if params['wantfracridge']:
+                msg = 'Since there are no repeats, standard cross-validation usage of' + \
+                    ' <wantfracridge> cannot be performed.'
+                warnings.warn(msg)
+
         # Construct a nice output dictionary for this design-related stuff
         resultsdesign = {
             'design': self.design,
@@ -676,12 +697,12 @@ class GLM_single():
         print('*** FITTING DIAGNOSTIC RUN-WISE FIR MODEL ***')
 
         opt0 = {
-            'extraregressors': params['extra_regressors'],
+            'extra_regressors': params['extra_regressors'],
             'maxpolydeg': params['maxpolydeg'],
             'wantpercentbold': params['wantpercentbold'],
             'suppressoutput': 1
         }
-        
+
         firR2 = []
         firtcs= []
         design0 = [np.sum(run, axis=1, keepdims=True, dtype=np.int64) for run in self.design]
@@ -696,7 +717,7 @@ class GLM_single():
                 0,
                 opt0
             )[0]
-            
+
             firR2.append(results0['R2'])
             firtcs.append(results0['betasmd'])
 
@@ -713,7 +734,7 @@ class GLM_single():
         for rr in range(len(data)):
             temp = squish(firtcs[rr, ...], 4)[firix, :]  # voxels x time
             firavg.append(np.median(temp, axis=0))
-        
+
         firavg=np.array(firavg)
 
         firgrandavg = np.mean(firavg, axis=0)  # time x 1
@@ -742,7 +763,7 @@ class GLM_single():
             plt.xlabel('Time from trial onset (s)')
             plt.ylabel('BOLD (%)')
             plt.legend(legh, legendlabs, loc='upper right')
-            
+
 
             # Plot BOLD at peak time for each run number
             plt.subplot(2, 2, 2)
@@ -776,7 +797,7 @@ class GLM_single():
             plt.xlabel('Time from trial onset (s)')
             plt.ylabel('BOLD (a.u.)')
             plt.legend(legh, legendlabs, loc='upper right', fontsize='xx-small')
-            
+
             plt.tight_layout()
             plt.savefig(os.path.join(figuredir, 'runwiseFIR.png'))
             plt.clf()
@@ -797,7 +818,16 @@ class GLM_single():
                     filer,
                     np.uint8(255*make_image_stack(firR2mn,[0, 100])**0.5),
                     cmap=cmap, vmin=0, vmax=255)
-                
+
+                cmap_gray = mpl.colormaps['gray'].resampled(256)
+                filer = os.path.join(figuredir,'runwiseFIR_summaryvoxels.png')
+                plt.imsave(
+                    filer,
+                    np.uint8(255*make_image_stack(firR2mn > firthresh, [0, 1])),
+                    cmap=cmap_gray, vmin=0, vmax=255)
+
+
+
         # save
         if isinstance(outputdir, str):
             file0 = os.path.join(outputdir,'RUNWISEFIR.npy')
@@ -810,7 +840,7 @@ class GLM_single():
             }
             print(f'*** Saving FIR results to {file0}. ***\n')
             np.save(file0, resultsfir, allow_pickle='True')
-        
+
         # FIT TYPE-A MODEL [ON-OFF]
         # The approach:
         # (1) Every stimulus is treated as the same.
@@ -858,7 +888,7 @@ class GLM_single():
                 file0 = os.path.join(outputdir, 'TYPEA_ONOFF.npy')
 
             print(f'\n*** Saving results to {file0}. ***\n')
-    
+
             results_out = {
                 'onoffR2': onoffR2,
                 'meanvol': meanvol,
@@ -893,7 +923,7 @@ class GLM_single():
                 'onoffR2': onoffR2,
                 'meanvol': meanvol,
                 'betasmd': betasmd
-            }                
+            }
 
         # DETERMINE THRESHOLDS
         if wantfig:
@@ -979,14 +1009,14 @@ class GLM_single():
                         results0['R2run']), [1, 2, 3, 0])
                     modelmd0[:, :, :, :, ph] = results0['betasmd']
 
-                # keep only the betas we want                        
+                # keep only the betas we want
                 # find the hrf for which the R2 is largest
                 ii = np.argmax(FitHRFR2[this_chunk, :, :, :], axis=-1)
 
                 # flatten ii tile it as someXYZ x numtrials
                 iiflat = np.tile(
                     ii.flatten()[:, np.newaxis], numtrials).flatten()
-                
+
                 # squish modelmd0
                 modelmd0=squish(modelmd0,4)
 
@@ -1002,7 +1032,7 @@ class GLM_single():
 
             iiflat = np.tile(HRFindex.flatten()[:, np.newaxis], (1, FitHRFR2run.shape[3])).flatten()
             flatFitHRFR2run = squish(FitHRFR2run,4)
-            
+
             # using each voxel's best HRF, what are the corresponding R2run values?
             R2run = flatFitHRFR2run[np.arange(flatFitHRFR2run.shape[0]), iiflat].reshape((nx, ny, nz, numruns))
 
@@ -1040,7 +1070,7 @@ class GLM_single():
                             HRFindex[this_chunk, :, :] == hh)
 
                         if goodix.size!=0:
-                            
+
                             data0 = [squish(
                                         x[this_chunk, ...],
                                         3
@@ -1091,7 +1121,7 @@ class GLM_single():
                                         results0['betasmd'][:, 0]
 
                                 cnt = cnt + numtrialrun[rrr]
-            
+
                 # deal with dimensions
                 modelmd = np.reshape(modelmd,(nx, ny, nz, numtrials))
 
@@ -1167,11 +1197,11 @@ class GLM_single():
                 cmap = cmapsign4(256)
                 colormap_to_plot = cmaplookup(temp,-betavizmx,betavizmx,0,cmap)
                 plt.imsave(filer, colormap_to_plot)
-                    
+
                 # dmetric visualization
                 if xyz:
                     temp = calcdmetric(modelmd, np.asarray(stimorder))
-                    if drng is None:                    
+                    if drng is None:
                         drng = [np.nanmin(temp.flatten()), np.nanmax(temp.flatten())]
                     cmap = mpl.colormaps['hot'].resampled(256)
                     filer = os.path.join(figuredir,'dmetric_typeB.png')
@@ -1286,7 +1316,7 @@ class GLM_single():
                     # our goal is to fully process this set of voxels!
                     goodix = np.flatnonzero(
                         HRFindex[this_chunk, :, :] == hh)
-                    
+
                     if goodix.size != 0:
                         # skip chunks and hrfs with no hrf found fitting this chunk
                         data0 = \
@@ -1340,7 +1370,7 @@ class GLM_single():
                             results0,
                             params['sessionindicator']
                             )  # voxels x regularization levels
-        
+
             # compute xvaltrend
             ix = np.flatnonzero(
                 (onoffR2.flatten() > params['pcR2cutoff']) * (np.asarray(
@@ -1477,7 +1507,7 @@ class GLM_single():
                     # our goal is to fully process this set of voxels!
                     goodix = np.flatnonzero(
                         HRFindex[this_chunk, :, :] == hh)
-                    
+
                     if goodix.size!=0:
 
                         data0 = \
@@ -1595,8 +1625,8 @@ class GLM_single():
                             indexings = np.unravel_index(relix[ii], R2.shape)
                             R2[indexings] = r20[fracl][ii]
                             R2run[relix[ii], :] = np.stack(r2run0[fracl])[:, ii].T
-                
-            
+
+
             # deal with dimensions
             modelmd = np.reshape(modelmd, [nx, ny, nz, numtrials])
             # deal with the broadcasting of meanvol into the n_conditions
@@ -1604,7 +1634,7 @@ class GLM_single():
             numnewdims = modelmd.ndim - meanvol.ndim
             slicing = [slice(None)] * meanvol.ndim + [np.newaxis] * numnewdims
             modelmd = (modelmd / np.abs(meanvol[tuple(slicing)])) * 100
-               
+
             R2run = np.reshape(R2run,[nx, ny, nz, numruns])
             if scaleoffset.size > 0:
                 scaleoffset = np.reshape(scaleoffset, [nx, ny, nz, 2])
@@ -1624,7 +1654,7 @@ class GLM_single():
                         outputdir,
                         'TYPEC_FITHRF_GLMDENOISE.npy'
                     )
-               
+
                 outdict = {
                     'HRFindex': HRFindex,
                     'HRFindexrun': HRFindexrun,
@@ -1633,7 +1663,7 @@ class GLM_single():
                     'pcnum': pcnum,
                     'xvaltrend': xvaltrend,
                     'noisepool': noisepool,
-                    'pcregressors': pcregressors,                    
+                    'pcregressors': pcregressors,
                     'betasmd': modelmd,
                     'R2': R2,
                     'R2run': R2run,
@@ -1697,7 +1727,7 @@ class GLM_single():
                                 os.path.join(figuredir,'pcvoxels.png'),
                                 np.uint8(255*make_image_stack(pcvoxels,[0, 1])),
                                 cmap=cmap, vmin=0, vmax=255)
-                    
+
                     if xvaltrend is not None:
                         fig = plt.figure()
                         ax = fig.add_subplot(1, 1, 1)
@@ -1716,19 +1746,19 @@ class GLM_single():
                             os.path.join(figuredir,'typeD_R2.png'),
                             np.uint8(255*make_image_stack(R2,[0, 100])**0.5),
                             cmap=cmap, vmin=0, vmax=255)
-                        
+
                         for rr in range(R2run.shape[-1]):
                             plt.imsave(
                                 os.path.join(figuredir,f'typeD_R2_run{rr+1:02}.png'),
                                 np.uint8(255*make_image_stack(R2run[:, :, :, rr],[0, 100])**0.5),
                                 cmap=cmap, vmin=0, vmax=255)
-                            
+
                         cmap = mpl.colormaps['copper'].resampled(256)
                         plt.imsave(
                             os.path.join(figuredir,'FRACvalue.png'),
                             np.uint8(255*make_image_stack(FRACvalue,[0, 1])),
                             cmap=cmap, vmin=0, vmax=255)
-                        
+
                 # beta visualisation
                 temp = squish(modelmd, 3)[onoffvizix, :]
                 if betavizmx is None:
@@ -1739,10 +1769,10 @@ class GLM_single():
                 colormap_to_plot = cmaplookup(temp,-betavizmx,betavizmx,0,cmap)
                 plt.imsave(filer, colormap_to_plot)
 
-                if xyz:  
+                if xyz:
                     # detric visualisation
                     temp = calcdmetric(modelmd, np.asarray(stimorder))
-                    if drng is None:                    
+                    if drng is None:
                         drng = [np.nanmin(temp.flatten()), np.nanmax(temp.flatten())]
                     cmap = mpl.colormaps['hot'].resampled(256)
                     filer = os.path.join(figuredir,f'dmetric_type{typemod}.png')
@@ -1750,7 +1780,7 @@ class GLM_single():
                         filer,
                         np.uint8(255*make_image_stack(temp, drng)),
                         cmap=cmap, vmin=0, vmax=255)
-                    
+
 
             # preserve in memory if desired
             if params['wantmemoryoutputs'][whmodel] == 1:

@@ -453,7 +453,7 @@ def glm_estimatemodel(design, data, stimdur, tr, hrfmodel, hrfknobs,
     if opt is None:
         opt = {}
 
-    if 'extra_regressors' not in opt or opt['extra_regressors'] is False:
+    if 'extra_regressors' not in opt or opt['extra_regressors'] is False or opt['extra_regressors'] == []:
         opt['extra_regressors'] = [None for x in range(numruns)]
 
     if 'maxpolydeg' not in opt:
@@ -538,14 +538,13 @@ def glm_estimatemodel(design, data, stimdur, tr, hrfmodel, hrfknobs,
 
         extra_regressors = opt['extra_regressors'][p]
 
-        # this projects out both of them
-        if extra_regressors is not None:
-            if extra_regressors.any():
-                combinedmatrix.append(
-                    make_projection_matrix(
-                        np.c_[pmatrix, extra_regressors]
-                    )
+        # this projects out both of them (second condition checks for empty matrix)
+        if extra_regressors is not None and extra_regressors.any():
+            combinedmatrix.append(
+                make_projection_matrix(
+                    np.c_[pmatrix, extra_regressors]
                 )
+            )
         else:
             combinedmatrix.append(
                 make_projection_matrix(pmatrix))
@@ -692,7 +691,7 @@ def glm_estimatemodel(design, data, stimdur, tr, hrfmodel, hrfknobs,
                     opt,
                     list(compress(combinedmatrix, mask))
                     )[0])  # NOTE: no cache
-            
+
             # compute the prediction
             modelfit.append(
                 glm_predictresponses(
@@ -704,7 +703,7 @@ def glm_estimatemodel(design, data, stimdur, tr, hrfmodel, hrfknobs,
                 )  # 0 because results{p} is in flattened format
 
             # massage format. the data passed to fit_model and predict
-            # responses were in XYZ flattened, we want to go back to 
+            # responses were in XYZ flattened, we want to go back to
             # volume.
             xyzsizefull = xyzsize + [modelfit[p].shape[1]]
             modelfit[p] = np.reshape(
@@ -738,13 +737,13 @@ def glm_estimatemodel(design, data, stimdur, tr, hrfmodel, hrfknobs,
                 for p in range(results['betas'].shape[2]):  # ugly to avoid memory usage
                     this_model = results['betas'][:,:,p,:]
                     temp[:,:, :, p] = np.percentile(this_model, [16, 50, 84],2)
-            
+
                 results['betasmd'] = temp[1, :, :, :]
                 results['betasse'] = (temp[2, :, :, :] - temp[0, :, :, :])/2
 
             # massage format
             # the outputs of FIR will be in format XYZ x 1 x nhrfknobs
-            
+
             # the betas could have boots in them at this point, catch this:
             if results['betas'].ndim==4: # bootstrap case
                 sz = results['betas'].shape[1:]
@@ -752,7 +751,7 @@ def glm_estimatemodel(design, data, stimdur, tr, hrfmodel, hrfknobs,
             else:
                 sz = results['betas'].shape[1:]
                 sz2 = results['betas'].shape[1:]
-            
+
             results['betas'] = np.reshape(results['betas'],   xyzsize + list(sz))
             results['betasmd'] = np.reshape(results['betasmd'], xyzsize + list(sz2))
             results['betasse'] = np.reshape(results['betasse'], xyzsize + list(sz2))
@@ -760,10 +759,10 @@ def glm_estimatemodel(design, data, stimdur, tr, hrfmodel, hrfknobs,
 
         if hrfmodel in ['assume', 'optimize']:
             if type(results) is list:
-                set_trace()
+
                 temp = [tt['hrfknobs'] for tt in results]
                 betas = [tt['betas'] for tt in results]
-                
+
                 # TODO test this:
                 results['betas'] = np.concatenate(
                     np.asarray(betas)[:, :, np.newaxis],
@@ -797,12 +796,12 @@ def glm_estimatemodel(design, data, stimdur, tr, hrfmodel, hrfknobs,
                     results['betas'], 1).astype(np.float32)
                 temp = np.percentile(results['betas'], [16, 50, 84], 1)
                 results['betasse'] = (temp[2, :, :] - temp[0, :, :])/2
-            
+
             # massage format. the data passed to fit_model and predict
-            # responses were in XYZ flattened, we want to go back to 
+            # responses were in XYZ flattened, we want to go back to
             # volume.
             xyzsizefull = xyzsize + [results['betas'].shape[1]]
-            
+
             results['betas'] = np.reshape(results['betas'], xyzsizefull)
             results['betasmd'] = np.reshape(results['betasmd'], xyzsizefull)
             results['betasse'] = np.reshape(results['betasse'], xyzsizefull)
@@ -848,7 +847,7 @@ def glm_estimatemodel(design, data, stimdur, tr, hrfmodel, hrfknobs,
 
         # remove polynomials from the model fits (or predictions)
         modelfit = [polymatrix[x] @ squish(modelfit[x], dimdata+1).T for x in range(numruns)]
-        
+
         # calculate overall R^2 [beware: MEMORY] XYZ x time
         results['R2'] = np.reshape(calc_cod_stack(modelfit, dataw, 0), xyzsize)
 
@@ -858,7 +857,7 @@ def glm_estimatemodel(design, data, stimdur, tr, hrfmodel, hrfknobs,
         # the data already have polynomials removed.
         # above, we just removed polynomials from the model fits (or predictions).
         # so, we just need to subtract these two to get the residuals
-        
+
         #results.residstd = reshape(sqrt(sum(catcell(1,cellfun(@(a,b) sum((a-b).^2,1),data,modelfit,'UniformOutput',0)),1) ./ (sum(volcnt)-1)),[xyzsize 1]);
         #results.residstdlowpass = reshape(sqrt(sum(catcell(1,cellfun(@(a,b) ...
         #sum( tsfilter((a-b)',constructbutterfilter1D(size(a,1),lowthresh*(size(a,1)*tr)))'.^2,1),data,modelfit,'UniformOutput',0)),1) ./ (sum(volcnt)-1)),[xyzsize 1]);
@@ -898,7 +897,7 @@ def glm_estimatemodel(design, data, stimdur, tr, hrfmodel, hrfknobs,
                 np.mean(
                     results['betasse'],
                     dimdata+1
-                ), 
+                ),
                 dimdata+1
             )
             with np.errstate(divide="ignore", invalid="ignore"):
@@ -949,15 +948,15 @@ def glm_estimatemodel(design, data, stimdur, tr, hrfmodel, hrfknobs,
 
             # XYZ
             con = 1/np.abs(results['meanvol']) * 100
-            
+
             numnewdims = results['betas'].ndim - con.ndim
             slicing = [slice(None)] * con.ndim + [np.newaxis] * numnewdims
             # Broadcast and multiply
             results['betas'] = results['betas'] * con[tuple(slicing)]
-            
+
             numnewdims = results['betasmd'].ndim - con.ndim
             slicing = [slice(None)] * con.ndim + [np.newaxis] * numnewdims
-            # Broadcast and multiply         
+            # Broadcast and multiply
             results['betasmd'] = results['betasmd'] * con[tuple(slicing)]
             numnewdims = results['betasse'].ndim - con.ndim
             slicing = [slice(None)] * con.ndim + [np.newaxis] * numnewdims
