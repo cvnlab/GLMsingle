@@ -589,7 +589,7 @@ opt.hrflibrary = normalizemax(opt.hrflibrary,1);
 opt.fracs = sort(unique(opt.fracs),'descend');
 assert(all(opt.fracs>0),'fracs must be greater than 0');
 assert(all(opt.fracs<=1),'fracs must be less than or equal to 1');
-assert(length(opt.extraregressors)==numruns,'<extraregressors> should match the number of runs);
+assert(length(opt.extraregressors)==numruns,'<extraregressors> should match the number of runs');
 wantfig = ischar(outputdir{2});  % if outputdir{2} is not NaN, we want figures
 
 % deal with output directory
