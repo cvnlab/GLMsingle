@@ -463,6 +463,9 @@ class GLM_single():
             params['firpct'] = 99
 
         # deal with length issues and other miscellaneous things
+        if not isinstance(params['extra_regressors'], list):
+            params['extra_regressors'] = [params['extra_regressors']]
+
         if type(params['maxpolydeg']) is int:
             params['maxpolydeg'] = np.tile(
                 params['maxpolydeg'], numruns
@@ -485,6 +488,8 @@ class GLM_single():
             np.all(params['fracs'] <= 1),
             True,
             err_msg='fracs must be less than or equal to 1')
+
+        assert len(params['extra_regressors']) == numruns, '<extra_regressors> should match the number of runs'
 
         if figuredir is not None:
             wantfig = 1  # if outputdir is not None, we want figures
@@ -692,7 +697,7 @@ class GLM_single():
         print('*** FITTING DIAGNOSTIC RUN-WISE FIR MODEL ***')
 
         opt0 = {
-            'extraregressors': params['extra_regressors'],
+            'extra_regressors': params['extra_regressors'],
             'maxpolydeg': params['maxpolydeg'],
             'wantpercentbold': params['wantpercentbold'],
             'suppressoutput': 1
