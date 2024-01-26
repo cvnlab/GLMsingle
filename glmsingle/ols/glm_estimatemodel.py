@@ -453,7 +453,7 @@ def glm_estimatemodel(design, data, stimdur, tr, hrfmodel, hrfknobs,
     if opt is None:
         opt = {}
 
-    if 'extra_regressors' not in opt or opt['extra_regressors'] is False or opt['extra_regressors'] == []:
+    if 'extra_regressors' not in opt or opt['extra_regressors'][0] is False or not np.any(opt['extra_regressors'][0]):
         opt['extra_regressors'] = [None for x in range(numruns)]
 
     if 'maxpolydeg' not in opt:

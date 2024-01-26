@@ -489,7 +489,9 @@ class GLM_single():
             True,
             err_msg='fracs must be less than or equal to 1')
 
-        assert len(params['extra_regressors']) == numruns, '<extra_regressors> should match the number of runs'
+        if params['extra_regressors']:
+            if params['extra_regressors'][0] is not False:
+                assert len(params['extra_regressors']) == numruns, '<extra_regressors> should match the number of runs'
 
         if figuredir is not None:
             wantfig = 1  # if outputdir is not None, we want figures
@@ -1341,7 +1343,7 @@ class GLM_single():
                             }
                             if n_pc > 0:
                                 for rr in range(numruns):
-                                    if not params['extra_regressors'] or \
+                                    if not params['extra_regressors'][0] or \
                                         not np.any(params['extra_regressors'][rr]):
 
                                         optA['extra_regressors'][rr] = \
@@ -1537,7 +1539,7 @@ class GLM_single():
 
                             if pcnum > 0:
                                 for run_i in range(numruns):
-                                    if not params['extra_regressors'] or \
+                                    if not params['extra_regressors'][0] or \
                                         not np.any(params['extra_regressors'][run_i]):
 
                                         optA['extra_regressors'][run_i] = \
