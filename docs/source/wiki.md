@@ -127,6 +127,10 @@ GLMsingle should be applied to pre-processed fMRI data. But which types of pre-p
 
 ## Things to watch out for when applying GLMsingle
 
+### Edge / head-motion effects
+
+During motion correction, parts of your volume that move outside of the imaged field-of-view will no longer have any valid data. Typical approaches are to "zero out" such areas. These areas are typically on the edge slices of your acquisition.  You will want to make sure that this is done carefully and that, for example, a voxel doesn't sometimes have valid data and sometimes does not have valid data.  The safest approach is to completely zero out the data for a voxel that does not have full data for all of the runs that you are analyzing with GLMsingle.
+
 ### Data from multiple scan sessions
 
 BOLD response amplitudes can change substantially across scan sessions (days) for a single individual. Thus, if you are applying GLMsingle to data concatenated across days, this may pose some problems (since the amplitude changes will appear to be "noise" to GLMsingle and may confuse it). One approach is to use the `sessionindicator` input (see below). Another approach is to just apply GLMsingle separately to each scan session. Note that this approach is effective, but does push the issue down the line: you will eventually have to decide whether and how you will want to normalize betas from different scan sessions.
