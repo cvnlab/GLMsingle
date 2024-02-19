@@ -1708,7 +1708,13 @@ class GLM_single():
                 if params['wanthdf5'] == 1:
                     hf = h5py.File(file0, 'w')
                     for k, v in outdict.items():
-                        hf.create_dataset(k, data=v)
+                        if isinstance(v, list):
+                            v = np.array(v)
+                        if v is not None:
+                            hf.create_dataset(k, data=v)
+                        else:
+                            msg = f"Skipping key '{k}' because its value is None or unsupported: {v}"
+                            warnings.warn(msg)
                     hf.close()
                 else:
                     np.save(file0, outdict)
