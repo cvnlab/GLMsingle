@@ -64,7 +64,9 @@ function [results,resultsdesign] = GLMestimatesingletrial(design,data,stimdur,tr
 %
 %   <chunknum> (optional) is the number of voxels that we will process at the same time.
 %   This number should be large in order to speed computation, but should not be so
-%   large that you run out of RAM. Default: 50000.
+%   large that you run out of RAM. Note that the <chunknum> that you choose does not
+%   affect any of the results or outputs; it merely affects execution time and RAM 
+%   usage. Default: 50000.
 %
 %   <xvalscheme> (optional) is a cell vector of vectors of run indices, indicating the
 %   cross-validation scheme. For example, if we have 8 runs, we could use
