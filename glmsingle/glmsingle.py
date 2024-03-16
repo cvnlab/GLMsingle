@@ -109,7 +109,9 @@ class GLM_single():
 
        <chunklen> (optional) is the number of voxels that we will process at
          the same time. This number should be large in order to speed
-         computation, but should not be so large that you run out of RAM.
+         computation, but should not be so large that you run out of RAM. 
+         Note that the <chunklen> you choose does not affect any of the
+         results or outputs; it merely affects execution time and RAM usage.
          Default: 50000.
 
         <xvalscheme> (optional) is a list of lists or list of run indices,
