@@ -1345,9 +1345,8 @@ class GLM_single():
                             }
                             if n_pc > 0:
                                 for rr in range(numruns):
-                                    if not params['extra_regressors'][0] or \
+                                    if params['extra_regressors'][0] is False or \
                                         not np.any(params['extra_regressors'][rr]):
-
                                         optA['extra_regressors'][rr] = \
                                             pcregressors[rr][:, :n_pc]
                                     else:
@@ -1541,7 +1540,7 @@ class GLM_single():
 
                             if pcnum > 0:
                                 for run_i in range(numruns):
-                                    if not params['extra_regressors'][0] or \
+                                    if params['extra_regressors'][0] is False or \
                                         not np.any(params['extra_regressors'][run_i]):
 
                                         optA['extra_regressors'][run_i] = \
