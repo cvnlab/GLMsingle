@@ -109,7 +109,9 @@ class GLM_single():
 
        <chunklen> (optional) is the number of voxels that we will process at
          the same time. This number should be large in order to speed
-         computation, but should not be so large that you run out of RAM.
+         computation, but should not be so large that you run out of RAM. 
+         Note that the <chunklen> you choose does not affect any of the
+         results or outputs; it merely affects execution time and RAM usage.
          Default: 50000.
 
         <xvalscheme> (optional) is a list of lists or list of run indices,
@@ -1345,9 +1347,8 @@ class GLM_single():
                             }
                             if n_pc > 0:
                                 for rr in range(numruns):
-                                    if not params['extra_regressors'][0] or \
+                                    if params['extra_regressors'][0] is False or \
                                         not np.any(params['extra_regressors'][rr]):
-
                                         optA['extra_regressors'][rr] = \
                                             pcregressors[rr][:, :n_pc]
                                     else:
@@ -1541,7 +1542,7 @@ class GLM_single():
 
                             if pcnum > 0:
                                 for run_i in range(numruns):
-                                    if not params['extra_regressors'][0] or \
+                                    if params['extra_regressors'][0] is False or \
                                         not np.any(params['extra_regressors'][run_i]):
 
                                         optA['extra_regressors'][run_i] = \
