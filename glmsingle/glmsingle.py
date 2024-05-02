@@ -664,13 +664,15 @@ class GLM_single():
 
             if params['wantglmdenoise']:
                 msg = 'Since there are no repeats, standard cross-validation usage of' + \
-                    ' <wantglmdenoise> cannot be performed.'
+                    ' <wantglmdenoise> cannot be performed. Setting <wantglmdenoise> to 0.'
                 warnings.warn(msg)
+                params['wantglmdenoise'] = 0;
 
             if params['wantfracridge']:
                 msg = 'Since there are no repeats, standard cross-validation usage of' + \
-                    ' <wantfracridge> cannot be performed.'
+                    ' <wantfracridge> cannot be performed. Setting <wantfracridge> to 0.'
                 warnings.warn(msg)
+                params['wantfracridge'] = 0;
 
         # Construct a nice output dictionary for this design-related stuff
         resultsdesign = {
