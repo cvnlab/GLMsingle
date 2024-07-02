@@ -703,12 +703,20 @@ end
 if all(condinruns <= 1)
   warning('None of your conditions occur in more than one run. Are you sure this is what you intend?');
   if opt.wantglmdenoise
-    warning('Since there are no repeats, standard cross-validation usage of <wantglmdenoise> cannot be performed. Setting <wantglmdenoise> to 0.');
-    opt.wantglmdenoise = 0;
+    if opt.pcstop <= 0
+      warning('pcstop is specified as the -B case. We will not be performing cross-validation, but will be performing glmdenoise using B number of PCs');
+    else
+      warning('Since there are no repeats, standard cross-validation usage of <wantglmdenoise> cannot be performed. Setting <wantglmdenoise> to 0.');
+      opt.wantglmdenoise = 0;
+    end
   end
   if opt.wantfracridge
-    warning('Since there are no repeats, standard cross-validation usage of <wantfracridge> cannot be performed. Setting <wantfracridge> to 0.');
-    opt.wantfracridge = 0;
+    if length(opt.fracs)==1
+      warning('fracs is specified as the single scalar case. We will not be performing cross-validation, but will be performing ridge regression using the user-supplied fraction');
+    else
+      warning('Since there are no repeats, standard cross-validation usage of <wantfracridge> cannot be performed. Setting <wantfracridge> to 0.');
+      opt.wantfracridge = 0;
+    end
   end
 end
 
