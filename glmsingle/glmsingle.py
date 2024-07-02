@@ -665,16 +665,27 @@ class GLM_single():
             warnings.warn(msg)
 
             if params['wantglmdenoise']:
-                msg = 'Since there are no repeats, standard cross-validation usage of' + \
-                    ' <wantglmdenoise> cannot be performed. Setting <wantglmdenoise> to 0.'
-                warnings.warn(msg)
-                params['wantglmdenoise'] = 0;
+                if params['pcstop'] <= 0:
+                    msg = 'pcstop is specified as the -B case. We will not be performing ' + \
+                          'cross-validation, but will be performing glmdenoise using B number of PCs'
+                    warnings.warn(msg)
+                else:
+                    msg = 'Since there are no repeats, standard cross-validation usage of ' + \
+                          '<wantglmdenoise> cannot be performed. Setting <wantglmdenoise> to 0.'
+                    warnings.warn(msg)
+                    params['wantglmdenoise'] = 0
 
             if params['wantfracridge']:
-                msg = 'Since there are no repeats, standard cross-validation usage of' + \
-                    ' <wantfracridge> cannot be performed. Setting <wantfracridge> to 0.'
-                warnings.warn(msg)
-                params['wantfracridge'] = 0;
+                if len(params['fracs']) > 1:
+                    msg = 'Since there are no repeats, standard cross-validation usage of' + \
+                        ' <wantfracridge> cannot be performed. Setting <wantfracridge> to 0.'
+                    warnings.warn(msg)
+                    params['wantfracridge'] = 0
+                else:
+                    msg = 'fracs is specified as the single scalar case. We will not be' + \
+                        'performing cross-validation, but will be performing ridge regression ' + \
+                        'using the user-supplied fraction'
+                    warnings.warn(msg)
 
         # Construct a nice output dictionary for this design-related stuff
         resultsdesign = {
