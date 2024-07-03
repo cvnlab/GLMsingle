@@ -38,7 +38,7 @@ def cmapturbo(n=256):
     # do it
     f = []
     for p in range(nchan):
-      f.append(interp1d(range(ncols), cols[:,p].T)(xx))
+      f.append(np.interp(xx, range(ncols), cols[:,p].T)) 
 
     return np.asarray(f).T
     
