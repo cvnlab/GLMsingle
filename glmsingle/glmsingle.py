@@ -914,7 +914,12 @@ class GLM_single():
             if params['wanthdf5'] == 1:
                 hf = h5py.File(file0, 'w')
                 for k, v in results_out.items():
-                    hf.create_dataset(k, data=v)
+                    if isinstance(v, list):
+                        v = np.array(v)
+                    if v is not None:
+                        hf.create_dataset(k, data=v)
+                    else:
+                        hf.create_dataset(k, data=h5py.Empty("f"))
                 hf.close()
             else:
                 np.save(file0, results_out)
@@ -1165,11 +1170,16 @@ class GLM_single():
                     file0 = os.path.join(outputdir, 'TYPEB_FITHRF.npy')
 
                 print(f'\n*** Saving results to {file0}. ***\n')
-
+                
                 if params['wanthdf5'] == 1:
                     hf = h5py.File(file0, 'w')
                     for k, v in results_out.items():
-                        hf.create_dataset(k, data=v)
+                        if isinstance(v, list):
+                            v = np.array(v)
+                        if v is not None:
+                            hf.create_dataset(k, data=v)
+                        else:
+                            hf.create_dataset(k, data=h5py.Empty("f"))
                     hf.close()
                 else:
                     np.save(file0, results_out)
@@ -1722,7 +1732,12 @@ class GLM_single():
                 if params['wanthdf5'] == 1:
                     hf = h5py.File(file0, 'w')
                     for k, v in outdict.items():
-                        hf.create_dataset(k, data=v)
+                        if isinstance(v, list):
+                            v = np.array(v)
+                        if v is not None:
+                            hf.create_dataset(k, data=v)
+                        else:
+                            hf.create_dataset(k, data=h5py.Empty("f"))
                     hf.close()
                 else:
                     np.save(file0, outdict)
