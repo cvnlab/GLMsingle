@@ -1,6 +1,7 @@
 from __future__ import absolute_import, division, print_function
 import os
 import warnings
+import copy
 import numpy as np
 import h5py
 from tqdm import tqdm
@@ -281,7 +282,7 @@ class GLM_single():
          unregularized estimates. Default: 1.
         """
 
-        params = params or dict()
+        params = copy.deepcopy(params) if params else dict()
         for key, _ in default_params.items():
             if key not in params.keys():
                 params[key] = default_params[key]
