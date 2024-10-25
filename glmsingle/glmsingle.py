@@ -436,10 +436,6 @@ class GLM_single():
         if 'xvalscheme' not in params:
             params['xvalscheme'] = np.arange(numruns)
 
-        # additional check for the file format
-        if 'wanthdf5' not in params:
-            params['wanthdf5'] = 0
-
         if 'sessionindicator' not in params:
             params['sessionindicator'] = np.ones((1, numruns)).astype(int)
 
@@ -458,12 +454,6 @@ class GLM_single():
 
         if 'hrflibrary' not in params:
             params['hrflibrary'] = getcanonicalhrflibrary(stimdur, tr).T
-
-        if 'firdelay' not in params:
-            params['firdelay'] = 30
-
-        if 'firpct' not in params:
-            params['firpct'] = 99
 
         # deal with length issues and other miscellaneous things
         if not isinstance(params['extra_regressors'], list):
