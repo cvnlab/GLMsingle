@@ -31,5 +31,7 @@ default_params = {
     'wantautoscale': 1,
     'seed': time.time(),
     'suppressoutput': 0,
-    'lambda': 0
+    'lambda': 0,
+    'firdelay': 30,
+    'firpct': 99,
 }

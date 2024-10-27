@@ -1,6 +1,7 @@
 from __future__ import absolute_import, division, print_function
 import os
 import warnings
+import copy
 import numpy as np
 import h5py
 from tqdm import tqdm
@@ -281,7 +282,7 @@ class GLM_single():
          unregularized estimates. Default: 1.
         """
 
-        params = params or dict()
+        params = copy.deepcopy(params) if params else dict()
         for key, _ in default_params.items():
             if key not in params.keys():
                 params[key] = default_params[key]
@@ -435,10 +436,6 @@ class GLM_single():
         if 'xvalscheme' not in params:
             params['xvalscheme'] = np.arange(numruns)
 
-        # additional check for the file format
-        if 'wanthdf5' not in params:
-            params['wanthdf5'] = 0
-
         if 'sessionindicator' not in params:
             params['sessionindicator'] = np.ones((1, numruns)).astype(int)
 
@@ -457,12 +454,6 @@ class GLM_single():
 
         if 'hrflibrary' not in params:
             params['hrflibrary'] = getcanonicalhrflibrary(stimdur, tr).T
-
-        if 'firdelay' not in params:
-            params['firdelay'] = 30
-
-        if 'firpct' not in params:
-            params['firpct'] = 99
 
         # deal with length issues and other miscellaneous things
         if not isinstance(params['extra_regressors'], list):
