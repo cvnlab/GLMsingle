@@ -442,7 +442,7 @@ class GLM_single():
         if 'maxpolydeg' not in params:
             params['maxpolydeg'] = [
                     alt_round(
-                        ((self.data[r].shape[-1]*tr)/60)/2) + 1
+                        ((self.data[r].shape[-1]*tr)/60)/2)
                     for r in np.arange(numruns)]
 
         if 'hrftoassume' not in params:
