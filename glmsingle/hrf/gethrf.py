@@ -21,7 +21,7 @@ def getcanonicalhrf(duration, tr):
         np.ones(int(np.max([1, alt_round(duration/trold)])))
     )
 
-    sampler = np.asarray(np.arange(0, int((hrf.shape[0]-1)*trold), tr))
+    sampler = np.asarray(np.arange(0, (hrf.shape[0]-1)*trold, tr))
 
     # resample to desired TR
     hrf = pchip(
