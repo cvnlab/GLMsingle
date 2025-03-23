@@ -460,7 +460,7 @@ def glm_estimatemodel(design, data, stimdur, tr, hrfmodel, hrfknobs,
         opt['maxpolydeg'] = [
             np.arange(
                 alt_round(
-                    ((data[r].shape[-1]*tr)/60)/2) + 1
+                    ((data[r].shape[-1]*tr)/60)/2)
                 ) for r in range(numruns)]
 
     if 'seed' not in opt:
