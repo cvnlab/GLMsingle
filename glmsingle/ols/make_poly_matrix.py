@@ -22,12 +22,17 @@ def make_polynomial_matrix(n, degrees):
 
     Args:
         n (int): number of points
-        degrees (array): vector of polynomial degrees
+        degrees (array or int): vector of polynomial degrees or single degree
 
     Returns:
-        polynomials: array of n x len(degrees)
+        polynomials: array of n x len(degrees) if degrees is array, or n x (degree+1) if degrees is int
     """
     time_points = np.linspace(-1, 1, n)[np.newaxis].T
+    
+    # Convert single integer to array of degrees from 0 to degrees
+    if isinstance(degrees, (int, np.integer)):
+        degrees = np.arange(degrees + 1)
+        
     polynomials = np.zeros((n, len(degrees)))
 
     # Loop over degrees
