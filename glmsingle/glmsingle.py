@@ -968,6 +968,7 @@ class GLM_single():
 
             # short-circuit all of the work
             HRFindex = np.ones(xyz)  # easy peasy
+            HRFindexrun = np.ones((nx,ny,nz,nh)) # easy peasy
 
         else:
 
