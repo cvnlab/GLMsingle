@@ -904,6 +904,7 @@ if opt.wantfileoutputs(2)==0 && opt.wantmemoryoutputs(2)==0 && size(opt.hrflibra
 
   % short-circuit all of the work
   HRFindex = ones(nx,ny,nz);  % easy peasy
+  HRFindexrun = ones(nx,ny,nz,nh);  % easy peasy
 
 else
 
