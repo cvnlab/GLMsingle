@@ -12,6 +12,7 @@ function f = constructpolynomialmatrix(n,degrees)
 % beware of numerical precision issues for high degrees...
 %
 % history:
+% - 2025/05/21 - change implementation to avoid projectionmatrix
 % - 2014/07/31 - now, we orthogonalize and make unit length.
 %                this changes previous behavior!
 %
@@ -28,7 +29,13 @@ for p=1:length(degrees)
   polyvector = temp .^ degrees(p);
   
   % orthogonalize with respect to earlier polynomials and make unit length
-  polyvector = unitlength(projectionmatrix(f)*polyvector);
+  if isempty(f)
+    polyvector = unitlength(polyvector);
+  else
+    polyvector = unitlength(polyvector-f*(olsmatrix(f)*polyvector));
+  end
+% This was removed because it can take a lot of memory for long time series:
+%  polyvector = unitlength(projectionmatrix(f)*polyvector);
 
   % record
   f = cat(2,f,polyvector);
