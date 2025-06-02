@@ -89,7 +89,6 @@ def load_glmsingle_outputs_h5(filename):
                 elif isinstance(item, h5py.Group):
                     # Check if this is a ragged list group
                     if '__glmsingle_ragged_list__' in item.attrs:
-                        print('hi')
                         # Reconstruct ragged list of arrays
                         ragged_list = []
                         # Sort by numeric key to maintain order
