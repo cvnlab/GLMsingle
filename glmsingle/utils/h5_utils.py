@@ -19,7 +19,7 @@ def save_glmsingle_outputs_h5(filename: str, outdict: dict) -> None:
     with h5py.File(filename, 'w') as f:
         for k, v in outdict.items():
             try:
-                # Handle None values first - save as empty dataset like original GLMsingle
+                # Handle None values first - save as empty dataset
                 if v is None:
                     f.create_dataset(k, data=h5py.Empty("f"))
                 # save as normal if array-like and non-ragged
@@ -79,7 +79,7 @@ def load_glmsingle_outputs_h5(filename):
                 item = f[key]
                 
                 if isinstance(item, h5py.Dataset):
-                    # Handle empty datasets (None values) - check shape/size, not dtype
+                    # Handle empty datasets (None values) - check shape/size
                     if item.shape is None or item.size is None:
                         outdict[key] = None
                     else:
@@ -98,7 +98,7 @@ def load_glmsingle_outputs_h5(filename):
                         outdict[key] = ragged_list
                     else:
                         # Handle other group types if needed
-                        print(f"Warning: Unrecognized group structure for key '{key}'")
+                        print(f"Warning: Unrecognized group structure for key '{key}'; outputting None")
                         outdict[key] = None
                         
     except FileNotFoundError:
