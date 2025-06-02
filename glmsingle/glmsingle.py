@@ -28,7 +28,7 @@ from glmsingle.utils.cmapturbo import cmapturbo
 from glmsingle.utils.cmapsign4 import cmapsign4
 from glmsingle.utils.cmaplookup import cmaplookup
 from glmsingle.utils.calcdmetric import calcdmetric
-from GLMsingle.glmsingle.utils.h5_utils import save_glmsingle_outputs_h5
+from glmsingle.utils.h5_utils import save_glmsingle_outputs_h5
 
 __all__ = ["GLM_single"]
 dir0 = os.path.dirname(os.path.realpath(__file__))
