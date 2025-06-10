@@ -364,7 +364,9 @@ class GLM_single():
 
         <modelmd> is either
          (1) the HRF (time x 1) and ON-OFF beta weights (X x Y x Z)
-         (2) the full set of single-trial beta weights (X x Y x Z x TRIALS)
+         (2) the full set of single-trial beta weights (X x Y x Z x TRIALS),
+             note that the order of beta weights reflects the chronological
+             order of the trials.
 
         <R2> is model accuracy expressed in terms of R^2 (percentage).
 
