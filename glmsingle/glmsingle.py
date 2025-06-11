@@ -464,6 +464,9 @@ class GLM_single():
             params['maxpolydeg'] = np.tile(
                 params['maxpolydeg'], numruns
             ).tolist()
+        
+        if type(params['maxpolydeg']) is list:
+            params['maxpolydeg'] = [np.arange(d + 1) for d in params['maxpolydeg']]    
 
         # normalise maximal amplitude on hrfs
         params['hrftoassume'] = normalisemax(
