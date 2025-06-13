@@ -28,7 +28,7 @@ from glmsingle.utils.cmapturbo import cmapturbo
 from glmsingle.utils.cmapsign4 import cmapsign4
 from glmsingle.utils.cmaplookup import cmaplookup
 from glmsingle.utils.calcdmetric import calcdmetric
-
+from glmsingle.utils.h5_utils import save_glmsingle_outputs_h5
 
 __all__ = ["GLM_single"]
 dir0 = os.path.dirname(os.path.realpath(__file__))
@@ -904,15 +904,7 @@ class GLM_single():
                 'betasmd': betasmd
             }
             if params['wanthdf5'] == 1:
-                hf = h5py.File(file0, 'w')
-                for k, v in results_out.items():
-                    if isinstance(v, list):
-                        v = np.array(v)
-                    if v is not None:
-                        hf.create_dataset(k, data=v)
-                    else:
-                        hf.create_dataset(k, data=h5py.Empty("f"))
-                hf.close()
+                save_glmsingle_outputs_h5(file0, results_out)
             else:
                 np.save(file0, results_out)
 
@@ -1165,15 +1157,7 @@ class GLM_single():
                 print(f'\n*** Saving results to {file0}. ***\n')
                 
                 if params['wanthdf5'] == 1:
-                    hf = h5py.File(file0, 'w')
-                    for k, v in results_out.items():
-                        if isinstance(v, list):
-                            v = np.array(v)
-                        if v is not None:
-                            hf.create_dataset(k, data=v)
-                        else:
-                            hf.create_dataset(k, data=h5py.Empty("f"))
-                    hf.close()
+                    save_glmsingle_outputs_h5(file0, results_out)
                 else:
                     np.save(file0, results_out)
 
@@ -1723,15 +1707,7 @@ class GLM_single():
                 print(f'\n*** Saving results to {file0}. ***\n')
 
                 if params['wanthdf5'] == 1:
-                    hf = h5py.File(file0, 'w')
-                    for k, v in outdict.items():
-                        if isinstance(v, list):
-                            v = np.array(v)
-                        if v is not None:
-                            hf.create_dataset(k, data=v)
-                        else:
-                            hf.create_dataset(k, data=h5py.Empty("f"))
-                    hf.close()
+                    save_glmsingle_outputs_h5(file0, outdict)
                 else:
                     np.save(file0, outdict)
 
