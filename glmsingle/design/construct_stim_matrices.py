@@ -18,7 +18,8 @@ def construct_stim_matrices(m, prenumlag=0, postnumlag=0, wantwrap=0):
             stimulus points in the future
 
         wantwrap (bool, optional): Defaults to False. whether to wrap
-            around
+            around. Not Implemented.
+
     Returns:
         [2d matrix]: a stimulus matrix of dimensions
             size(m,2) x ((prenumlag+postnumlag+1)*size(m,1)).
@@ -63,7 +64,8 @@ def construct_stim_matrix(v, prenumlag, postnumlag, wantwrap=0):
 
         postnumlag ([int]): this is the number of stimulus points in the future
 
-        wantwrap (int, optional): Defaults to 0. whether to wrap around
+        wantwrap (int, optional): Defaults to 0. whether to wrap around. Not 
+            implemented.
 
 
     Returns:
@@ -88,6 +90,9 @@ def construct_stim_matrix(v, prenumlag, postnumlag, wantwrap=0):
                 # vindx = range(len(v), 1 - temp)
                 # findx = range(len(v)+temp)
                 # f[findx, p] = v[vindx]
+            elif len(v) - temp <= 0:
+                # no more stimulus points to add
+                break
             else:
                 f[temp:, p] = v[: len(v) - temp]
     return f
