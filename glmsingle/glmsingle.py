@@ -1549,7 +1549,7 @@ class GLM_single():
                                         optA['extra_regressors'][run_i] = \
                                             np.c_[
                                                 params['extra_regressors'][run_i],
-                                                pcregressors[run_i][:, :n_pc]]
+                                                pcregressors[run_i][:, :pcnum]]
 
                             # fit the entire dataset using the specific frac
                             temp, cache = glm_estimatemodel(
