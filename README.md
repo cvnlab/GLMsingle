@@ -90,6 +90,7 @@ If you use GLMsingle in your research, please cite the following paper:
 
 ## Change history
 
+* 2025/08/28 - Fixed two small bugs in the Python implementation, to ensure GLMdenoise PC selection and cross-validation performance evaluation work as intended. Python GLMsingle users who have input custom noise regressors and/or multiple sessions of data at once should take note of the updates: https://github.com/cvnlab/GLMsingle/pull/189
 * 2023/03/27 - More diagnostic figures added.
 * 2023/03/26 - A number of new useful diagnostics are computed: these include diagnostics of the design matrix (information is shown in the command window), new figure visualizations, and a new run-wise FIR model that is used to generate diagnostic figures. These changes are currently implemented in MATLAB and will be ported to Python soon. The changes are described in the function documentation and covered in the new video walkthrough of figure outputs (see above).
 * 2022/11/28 - Version 1.1 of GLMsingle is now released. A git tag has been added to the repo. This version corresponds to what is described in the Prince et al. 2022 paper.
