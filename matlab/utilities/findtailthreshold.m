@@ -28,6 +28,7 @@ function [f,mns,sds,gmfit] = findtailthreshold(v,wantfig)
 numreps = 3;      % number of restarts for the GMM
 maxsz = 1000000;  % maximum number of values to consider
 nprecision = 500; % linearly spaced values between lower and upper robust range
+regval = eps;     % regularization value
 
 % inputs
 if ~exist('wantfig','var') || isempty(wantfig)
@@ -42,7 +43,9 @@ if length(v) > maxsz
 end
 
 % fit mixture of two gaussians
-gmfit = fitgmdist(v(:),2,'Replicates',numreps);
+% NOTE: the RegularizationValue being set to eps is a hack. There appears to be
+% some rare cases that tends to push the std dev down to tiny values.
+gmfit = fitgmdist(v(:),2,'Replicates',numreps,'RegularizationValue',regval);
 
 % figure out a nice range
 rng = robustrange(v(:));
