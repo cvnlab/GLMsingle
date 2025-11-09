@@ -67,7 +67,8 @@ def calcbadness(xvals, validcolumns, stimix, results, sessionindicator):
         sessions = [1]
     else:
         sessions = range(1, np.max(sessionindicator) + 1)
-
+        
+    resultsdm = copy.deepcopy(results)
     for sess in sessions:
 
         wh = np.flatnonzero(np.array(sessionindicator) == sess)
@@ -80,7 +81,6 @@ def calcbadness(xvals, validcolumns, stimix, results, sessionindicator):
         # std dev of unregularized case
         sd = np.std(results[0][:, whcol], axis=1, ddof=1)
 
-        resultsdm = copy.deepcopy(results)
         for runis in range(len(resultsdm)):
             rundemean = results[runis][:, whcol]-mn[:, np.newaxis]
             resultsdm[runis][:, whcol] = zerodiv(rundemean, sd, val=0, wantcaution=0)
