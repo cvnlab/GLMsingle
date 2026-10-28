@@ -35,6 +35,18 @@ dir0 = os.path.dirname(os.path.realpath(__file__))
 
 warnings.simplefilter(action='ignore', category=RuntimeWarning)
 
+
+def run_opts(opt, p):
+    """Copy of <opt> for fitting run <p> alone: the per-run entries
+    (extra_regressors, maxpolydeg) are sliced to that run."""
+    out = dict(opt)
+    for key in ('extra_regressors', 'maxpolydeg'):
+        val = opt.get(key)
+        if isinstance(val, (list, np.ndarray)) and len(val) > 1:
+            out[key] = [val[p]]
+    return out
+
+
 class GLM_single():
 
     def __init__(self, params=None):
@@ -724,7 +736,7 @@ class GLM_single():
                 'fir',
                 np.floor(params['firdelay']/tr).astype(int),
                 0,
-                opt0
+                run_opts(opt0, p)
             )[0]
 
             firR2.append(results0['R2'])
@@ -1122,7 +1134,7 @@ class GLM_single():
                                         'assume',
                                         params['hrflibrary'][:, hh],
                                         0,
-                                        optA
+                                        run_opts(optA, rrr)
                                     )
                                     modelmd[relix, cnt+ccc] = \
                                         results0['betasmd'][:, 0]
