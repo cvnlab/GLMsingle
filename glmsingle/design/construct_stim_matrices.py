@@ -73,21 +73,23 @@ def construct_stim_matrix(v, prenumlag, postnumlag, wantwrap=0):
             a particular time lag.
     """
     v = np.asarray(v)
+    n = len(v)
     total = prenumlag + postnumlag + 1
-    f = np.zeros((len(v), total))
+    f = np.zeros((n, total))
     for p in range(total):
-        i = p + 1
-        if False:
-            pass
-            # shift = [0 - prenumlag + (p-1)]
-            # f[:, p] = np.roll(v, shift, axis=(0, 1)).T
+        if wantwrap:
+            # f(:,p) = circshift(v,[0 -prenumlag+(p-1)]).'
+            f[:, p] = np.roll(v, -prenumlag + p)
         else:
-            temp = -prenumlag + (i - 1)
+            temp = -prenumlag + p
             if temp < 0:
-                pass
-                # vindx = range(len(v), 1 - temp)
-                # findx = range(len(v)+temp)
-                # f[findx, p] = v[vindx]
+                # f(1:end+temp,p) = v(1-temp:end)
+                # (in matlab an empty index range is a silent no-op)
+                if n + temp > 0:
+                    f[:n + temp, p] = v[-temp:]
             else:
-                f[temp:, p] = v[: len(v) - temp]
+                # f(temp+1:end,p) = v(1:end-temp)
+                # (in matlab an empty index range is a silent no-op)
+                if n - temp > 0:
+                    f[temp:, p] = v[:n - temp]
     return f
