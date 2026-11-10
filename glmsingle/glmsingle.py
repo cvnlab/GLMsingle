@@ -1353,7 +1353,10 @@ class GLM_single():
                                 'maxpolydeg': params['maxpolydeg'],
                                 'wantpercentbold': 0,
                                 'suppressoutput': 1,
-                                'extra_regressors': [None for r in range(numruns)]
+                                'extra_regressors': [
+                                    None if params['extra_regressors'][0] is False
+                                    else params['extra_regressors'][r]
+                                    for r in range(numruns)]
                             }
                             if n_pc > 0:
                                 for rr in range(numruns):
@@ -1547,7 +1550,9 @@ class GLM_single():
                                     'suppressoutput': 1,
                                     'frac': fracstouse[fracl],
                                     'extra_regressors': [
-                                        None for r in range(numruns)]
+                                        None if params['extra_regressors'][0] is False
+                                        else params['extra_regressors'][r]
+                                        for r in range(numruns)]
                                     }
 
                             if pcnum > 0:
