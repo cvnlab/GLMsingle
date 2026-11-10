@@ -1164,7 +1164,7 @@ else
         optA = struct('maxpolydeg',opt.maxpolydeg, ...
                       'wantpercentbold',0, ...
                       'suppressoutput',1);
-        optA.extraregressors = cell(1,length(data0));
+        optA.extraregressors = opt.extraregressors;
         if ll>0
           for rr=1:length(data0)
             optA.extraregressors{rr} = cat(2,optA.extraregressors{rr},pcregressors{rr}(:,1:ll));
@@ -1352,7 +1352,7 @@ for ttt=1:length(todo)
                       'wantpercentbold',0, ...
                       'suppressoutput',1, ...
                       'frac',fracstouse(ll));
-        optA.extraregressors = cell(1,length(data0));
+        optA.extraregressors = opt.extraregressors;
         if pcnum > 0
           for rr=1:length(data0)
             optA.extraregressors{rr} = cat(2,optA.extraregressors{rr},pcregressors{rr}(:,1:pcnum));
