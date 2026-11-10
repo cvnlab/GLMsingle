@@ -46,3 +46,16 @@ def test_zero_run1_keeps_other_runs_regressors():
     # and match a fit where run 1 simply has no regressors (None)
     betas_ref, _ = fit(design, data, [None, extra[1]])
     assert np.allclose(betas, betas_ref)
+
+
+def test_empty_list_run_matches_none():
+    design, data, rng = make_inputs()
+    extra = rng.standard_normal((LENGTHS[1], 3))
+
+    betas_list, _ = fit(design, data, [[], extra])
+    betas_none, _ = fit(design, data, [None, extra])
+    assert np.allclose(betas_list, betas_none)
+
+    betas_list, _ = fit(design, data, [extra[:LENGTHS[0]], []])
+    betas_none, _ = fit(design, data, [extra[:LENGTHS[0]], None])
+    assert np.allclose(betas_list, betas_none)

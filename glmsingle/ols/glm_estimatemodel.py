@@ -541,7 +541,7 @@ def glm_estimatemodel(design, data, stimdur, tr, hrfmodel, hrfknobs,
         extra_regressors = opt['extra_regressors'][p]
 
         # this projects out both of them (second condition checks for empty matrix)
-        if extra_regressors is not None and extra_regressors.any():
+        if extra_regressors is not None and np.any(extra_regressors):
             combinedmatrix.append(
                 make_projection_matrix(
                     np.c_[pmatrix, extra_regressors]
