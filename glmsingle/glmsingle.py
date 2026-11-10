@@ -1353,7 +1353,11 @@ class GLM_single():
                                 'maxpolydeg': params['maxpolydeg'],
                                 'wantpercentbold': 0,
                                 'suppressoutput': 1,
-                                'extra_regressors': [None for r in range(numruns)]
+                                # start from the user's extra regressors (as in matlab)
+                                'extra_regressors': [
+                                    None if params['extra_regressors'][0] is False
+                                    else params['extra_regressors'][r]
+                                    for r in range(numruns)]
                             }
                             if n_pc > 0:
                                 for rr in range(numruns):
@@ -1546,8 +1550,11 @@ class GLM_single():
                                     'wantpercentbold': 0,
                                     'suppressoutput': 1,
                                     'frac': fracstouse[fracl],
+                                    # start from the user's extra regressors (as in matlab)
                                     'extra_regressors': [
-                                        None for r in range(numruns)]
+                                        None if params['extra_regressors'][0] is False
+                                        else params['extra_regressors'][r]
+                                        for r in range(numruns)]
                                     }
 
                             if pcnum > 0:

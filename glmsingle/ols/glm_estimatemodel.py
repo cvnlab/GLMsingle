@@ -453,7 +453,9 @@ def glm_estimatemodel(design, data, stimdur, tr, hrfmodel, hrfknobs,
     if opt is None:
         opt = {}
 
-    if 'extra_regressors' not in opt or opt['extra_regressors'][0] is False or not np.any(opt['extra_regressors'][0]):
+    # only the package default (False) means 'no extra regressors at all';
+    # an empty or all-zero matrix for an individual run is handled per run below
+    if 'extra_regressors' not in opt or opt['extra_regressors'][0] is False:
         opt['extra_regressors'] = [None for x in range(numruns)]
 
     if 'maxpolydeg' not in opt:
