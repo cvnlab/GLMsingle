@@ -1353,7 +1353,6 @@ class GLM_single():
                                 'maxpolydeg': params['maxpolydeg'],
                                 'wantpercentbold': 0,
                                 'suppressoutput': 1,
-                                # start from the user's extra regressors (as in matlab)
                                 'extra_regressors': [
                                     None if params['extra_regressors'][0] is False
                                     else params['extra_regressors'][r]
@@ -1550,7 +1549,6 @@ class GLM_single():
                                     'wantpercentbold': 0,
                                     'suppressoutput': 1,
                                     'frac': fracstouse[fracl],
-                                    # start from the user's extra regressors (as in matlab)
                                     'extra_regressors': [
                                         None if params['extra_regressors'][0] is False
                                         else params['extra_regressors'][r]
